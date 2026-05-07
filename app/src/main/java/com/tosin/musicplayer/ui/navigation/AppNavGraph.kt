@@ -26,7 +26,7 @@ fun AppNavGraph(
         }
 
         composable("player") {
-            PlayerScreen(viewModel)
+            PlayerScreen(viewModel, onOpenPlaylist = { /* no-op: implement playlist navigation if added */ })
         }
     }
 }

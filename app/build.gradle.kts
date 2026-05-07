@@ -59,6 +59,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // Palette for extracting colors from album art
+    implementation("androidx.palette:palette:1.0.0")
+
     // Add this line
     implementation(libs.androidx.compose.material.icons.extended)
 

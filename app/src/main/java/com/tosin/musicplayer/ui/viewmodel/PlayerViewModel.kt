@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -29,19 +30,43 @@ class PlayerViewModel(
     private val _selectedLibraryTab = MutableStateFlow(LibraryTab.All)
     private var songsJob: Job? = null
 
+    private val _shuffle = MutableStateFlow(false)
+    val shuffleEnabled = _shuffle.asStateFlow()
+
+    private val _repeatMode = MutableStateFlow(RepeatMode.OFF)
+    val repeatMode = _repeatMode.asStateFlow()
+
+    private val _lyricsVisible = MutableStateFlow(false)
+    val lyricsVisible = _lyricsVisible.asStateFlow()
+
     val uiState: StateFlow<PlayerUiState> = combine(
         _songs,
         _isLoading,
         playerController.currentSong,
         playerController.isPlaying,
-        playerController.progress
-    ) { songs, isLoading, currentSong, isPlaying, progress ->
+        playerController.progress,
+        _shuffle,
+        _repeatMode,
+        _lyricsVisible
+    ) { args ->
+        val songs = args[0] as List<Song>
+        val isLoading = args[1] as Boolean
+        val currentSong = args[2] as Song?
+        val isPlaying = args[3] as Boolean
+        val progress = args[4] as Long
+        val shuffle = args[5] as Boolean
+        val repeatMode = args[6] as RepeatMode
+        val lyricsVisible = args[7] as Boolean
+        
         PlayerUiState(
             songs = songs,
             currentSong = currentSong,
             isPlaying = isPlaying,
             progress = progress,
-            isLoading = isLoading
+            isLoading = isLoading,
+            shuffleEnabled = shuffle,
+            repeatMode = repeatMode,
+            lyricsVisible = lyricsVisible
         )
     }.stateIn(
         scope = viewModelScope,
@@ -159,8 +184,37 @@ class PlayerViewModel(
 
     fun seekTo(position: Long) = playerController.seekTo(position)
 
+    fun toggleShuffle() {
+        _shuffle.value = !_shuffle.value
+        playerController.setShuffleEnabled(_shuffle.value)
+    }
+
+    fun toggleLyrics() {
+        _lyricsVisible.value = !_lyricsVisible.value
+    }
+
+    fun cycleRepeatMode() {
+        _repeatMode.value = when (_repeatMode.value) {
+            RepeatMode.OFF -> RepeatMode.REPEAT_ALL
+            RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
+            RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ONE_ONCE
+            RepeatMode.PLAY_ONE_ONCE -> RepeatMode.PLAY_ALL_ONCE
+            RepeatMode.PLAY_ALL_ONCE -> RepeatMode.OFF
+        }
+        playerController.setRepeatMode(_repeatMode.value)
+    }
+
     override fun onCleared() {
         super.onCleared()
         playerController.release()
     }
+}
+
+// Repeat modes requested by UI
+enum class RepeatMode {
+    OFF,
+    REPEAT_ALL,
+    REPEAT_ONE,
+    PLAY_ONE_ONCE,
+    PLAY_ALL_ONCE
 }

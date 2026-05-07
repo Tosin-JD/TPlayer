@@ -11,6 +11,7 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -115,6 +116,32 @@ class PlayerController(private val context: Context) {
 
     fun previous() {
         mediaController?.seekToPrevious()
+    }
+
+    fun setShuffleEnabled(enabled: Boolean) {
+        mediaController?.shuffleModeEnabled = enabled
+    }
+
+    fun setRepeatMode(mode: RepeatMode) {
+        val controller = mediaController ?: return
+        when (mode) {
+            RepeatMode.OFF -> {
+                controller.repeatMode = Player.REPEAT_MODE_OFF
+            }
+            RepeatMode.REPEAT_ALL -> {
+                controller.repeatMode = Player.REPEAT_MODE_ALL
+            }
+            RepeatMode.REPEAT_ONE -> {
+                controller.repeatMode = Player.REPEAT_MODE_ONE
+            }
+            RepeatMode.PLAY_ONE_ONCE -> {
+                controller.repeatMode = Player.REPEAT_MODE_OFF
+                // Note: Implementing "Play One Once" might need extra transition logic
+            }
+            RepeatMode.PLAY_ALL_ONCE -> {
+                controller.repeatMode = Player.REPEAT_MODE_OFF
+            }
+        }
     }
 
     fun release() {

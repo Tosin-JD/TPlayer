@@ -6,59 +6,116 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.tosin.musicplayer.ui.components.PlayPauseButton
 import com.tosin.musicplayer.ui.components.ProgressBar
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.R
+import com.tosin.musicplayer.ui.viewmodel.RepeatMode
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.ui.graphics.luminance
+import androidx.palette.graphics.Palette
+import android.graphics.drawable.BitmapDrawable
+
+import androidx.compose.foundation.background
 
 @Composable
 public fun PlayerScreen(
-    viewModel: PlayerViewModel
+    viewModel: PlayerViewModel,
+    onOpenPlaylist: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    val rotation by rememberInfiniteTransition().animateFloat(
-        initialValue = 0f,
-        targetValue = if (state.isPlaying) 360f else 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing)
-        )
-    )
+    val context = LocalContext.current
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    
+    var bgColor by remember { mutableStateOf(surfaceColor) }
+    var contentColor by remember { mutableStateOf(onSurfaceColor) }
+
+    LaunchedEffect(state.currentSong?.albumArt) {
+        val data = state.currentSong?.albumArt
+        try {
+            val request = ImageRequest.Builder(context)
+                .data(data ?: R.drawable.album_art)
+                .allowHardware(false)
+                .build()
+
+            val result = ImageLoader(context).execute(request)
+            if (result is SuccessResult) {
+                val drawable = result.drawable
+                val bitmap = (drawable as? BitmapDrawable)?.bitmap
+                bitmap?.let {
+                    val palette = Palette.from(it).generate()
+                    val swatch = palette.dominantSwatch ?: palette.vibrantSwatch
+                    swatch?.rgb?.let { colorInt ->
+                        bgColor = Color(colorInt)
+                        contentColor = if (palette.dominantSwatch?.titleTextColor != null) {
+                            Color(palette.dominantSwatch!!.titleTextColor)
+                        } else {
+                            if (Color(colorInt).luminance() > 0.5f) Color.Black else Color.White
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            bgColor = surfaceColor
+            contentColor = onSurfaceColor
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(bgColor)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Spacer(Modifier.height(40.dp))
 
-        // 🎨 Album Art (Animated rotation)
-        AsyncImage(
-            model = state.currentSong?.albumArt,
-            contentDescription = null,
+        // 🎨 Album Art (static) - Requirement 1: Removed rotation (already static)
+        Card(
             modifier = Modifier
-                .size(300.dp)
-                .rotate(rotation)
-        )
+                .size(320.dp)
+                .aspectRatio(1f),
+            shape = RoundedCornerShape(28.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
+            AsyncImage(
+                model = state.currentSong?.albumArt ?: R.drawable.album_art,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         // 🎵 Song Info
         Text(
-            text = state.currentSong?.title ?: "",
-            style = MaterialTheme.typography.titleLarge
+            text = state.currentSong?.title ?: "No Song Playing",
+            style = MaterialTheme.typography.headlineMedium,
+            color = contentColor
         )
 
         Text(
-            text = state.currentSong?.artist ?: "",
-            style = MaterialTheme.typography.bodyMedium
+            text = state.currentSong?.artist ?: "Unknown Artist",
+            style = MaterialTheme.typography.titleMedium,
+            color = contentColor.copy(alpha = 0.7f)
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         // 📊 Progress
         ProgressBar(
@@ -67,15 +124,24 @@ public fun PlayerScreen(
             onSeek = { viewModel.seekTo(it) }
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         // ▶️ Controls
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            TextButton(onClick = { viewModel.previous() }) {
-                Text("Prev")
+            IconButton(
+                onClick = { viewModel.previous() },
+                modifier = Modifier.size(56.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.SkipPrevious,
+                    contentDescription = "Previous",
+                    modifier = Modifier.size(36.dp),
+                    tint = contentColor
+                )
             }
 
             PlayPauseButton(
@@ -86,8 +152,64 @@ public fun PlayerScreen(
                 }
             )
 
-            TextButton(onClick = { viewModel.next() }) {
-                Text("Next")
+            IconButton(
+                onClick = { viewModel.next() },
+                modifier = Modifier.size(56.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.SkipNext,
+                    contentDescription = "Next",
+                    modifier = Modifier.size(36.dp),
+                    tint = contentColor
+                )
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        // Bottom row with shuffle, lyrics, playlist, repeat - Requirement 6
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        ) {
+            IconButton(onClick = { viewModel.toggleShuffle() }) {
+                Icon(
+                    imageVector = if (state.shuffleEnabled) Icons.Rounded.ShuffleOn else Icons.Rounded.Shuffle,
+                    contentDescription = "Shuffle",
+                    tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            IconButton(onClick = { viewModel.toggleLyrics() }) {
+                Icon(
+                    imageVector = Icons.Rounded.Lyrics,
+                    contentDescription = "Lyrics",
+                    tint = if (state.lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            IconButton(onClick = { onOpenPlaylist() }) {
+                Icon(
+                    imageVector = Icons.Rounded.PlaylistPlay,
+                    contentDescription = "Playlist",
+                    tint = contentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            IconButton(onClick = { viewModel.cycleRepeatMode() }) {
+                Icon(
+                    imageVector = when (state.repeatMode) {
+                        RepeatMode.OFF -> Icons.Rounded.Repeat
+                        RepeatMode.REPEAT_ALL -> Icons.Rounded.Repeat
+                        RepeatMode.REPEAT_ONE -> Icons.Rounded.RepeatOne
+                        RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.RepeatOne
+                        RepeatMode.PLAY_ALL_ONCE -> Icons.Rounded.Repeat
+                    },
+                    contentDescription = "Repeat",
+                    tint = if (state.repeatMode == RepeatMode.OFF) contentColor.copy(alpha = 0.6f) else MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
