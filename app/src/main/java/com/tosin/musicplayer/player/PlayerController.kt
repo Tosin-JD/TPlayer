@@ -69,6 +69,9 @@ class PlayerController(private val context: Context) {
                             id = it.mediaId.toLongOrNull() ?: 0L,
                             title = it.mediaMetadata.title?.toString() ?: "",
                             artist = it.mediaMetadata.artist?.toString() ?: "",
+                            album = it.mediaMetadata.albumTitle?.toString() ?: "Unknown album",
+                            genre = null,
+                            folder = null,
                             uri = it.localConfiguration?.uri?.toString() ?: "",
                             albumArt = it.mediaMetadata.artworkUri?.toString(),
                             duration = controller.duration

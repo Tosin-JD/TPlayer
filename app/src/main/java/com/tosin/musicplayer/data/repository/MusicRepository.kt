@@ -10,8 +10,9 @@ class MusicRepository(
 ) {
 
     fun getSongs(): Flow<List<Song>> = flow {
-        emit(emptyList()) // optional loading state
-        val songs = musicLoader.loadSongs()
-        emit(songs)
+        emit(
+            musicLoader.loadSongs()
+                .sortedBy { it.title.trim().lowercase() }
+        )
     }
 }

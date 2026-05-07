@@ -7,7 +7,10 @@ import com.tosin.musicplayer.ui.screens.PlayerScreen
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 
 @Composable
-fun AppNavGraph(viewModel: PlayerViewModel) {
+fun AppNavGraph(
+    viewModel: PlayerViewModel,
+    onRequestAudioPermission: () -> Unit
+) {
     val navController = rememberNavController()
 
     NavHost(navController, startDestination = "home") {
@@ -17,7 +20,8 @@ fun AppNavGraph(viewModel: PlayerViewModel) {
                 viewModel = viewModel,
                 onNavigateToPlayer = {
                     navController.navigate("player")
-                }
+                },
+                onRequestAudioPermission = onRequestAudioPermission
             )
         }
 

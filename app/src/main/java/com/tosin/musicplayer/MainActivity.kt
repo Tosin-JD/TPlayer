@@ -1,47 +1,67 @@
 package com.tosin.musicplayer
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.tosin.musicplayer.data.local.MusicLoader
+import com.tosin.musicplayer.data.repository.MusicRepository
+import com.tosin.musicplayer.player.PlayerController
+import com.tosin.musicplayer.ui.navigation.AppNavGraph
 import com.tosin.musicplayer.ui.theme.TPlayerTheme
+import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            TPlayerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+
+        val factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val musicLoader = MusicLoader(contentResolver)
+                val repository = MusicRepository(musicLoader)
+                val playerController = PlayerController(this@MainActivity)
+                @Suppress("UNCHECKED_CAST")
+                return PlayerViewModel(repository, playerController) as T
             }
         }
-    }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+        val viewModel = ViewModelProvider(this, factory).get(PlayerViewModel::class.java)
+        val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        val permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            viewModel.onAudioPermissionResult(isGranted)
+        }
+        val hasAudioPermission = ContextCompat.checkSelfPermission(
+            this,
+            audioPermission
+        ) == PackageManager.PERMISSION_GRANTED
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TPlayerTheme {
-        Greeting("Android")
+        viewModel.onAudioPermissionResult(hasAudioPermission)
+
+        setContent {
+            TPlayerTheme {
+                AppNavGraph(
+                    viewModel = viewModel,
+                    onRequestAudioPermission = { permissionLauncher.launch(audioPermission) }
+                )
+            }
+        }
+
+        if (!hasAudioPermission) {
+            permissionLauncher.launch(audioPermission)
+        }
     }
 }

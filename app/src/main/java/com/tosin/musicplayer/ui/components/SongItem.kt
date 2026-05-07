@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
@@ -16,28 +18,61 @@ fun SongItem(
     isPlaying: Boolean,
     onClick: () -> Unit
 ) {
-    val bgColor by animateColorAsState(
-        if (isPlaying) MaterialTheme.colorScheme.secondary
-        else MaterialTheme.colorScheme.background
+    val containerColor by animateColorAsState(
+        targetValue = if (isPlaying) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        label = "song-item-container"
     )
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(12.dp)
+    Surface(
+        color = containerColor,
+        shape = MaterialTheme.shapes.large,
+        tonalElevation = if (isPlaying) 4.dp else 1.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        AsyncImage(
-            model = song.albumArt,
-            contentDescription = null,
-            modifier = Modifier.size(56.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            AsyncImage(
+                model = song.albumArt,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(MaterialTheme.shapes.medium)
+            )
 
-        Spacer(Modifier.width(12.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "${song.artist} • ${song.album}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-        Column(Modifier.weight(1f)) {
-            Text(song.title, style = MaterialTheme.typography.titleMedium)
-            Text(song.artist, style = MaterialTheme.typography.bodyMedium)
+            if (isPlaying) {
+                AssistChip(
+                    onClick = onClick,
+                    label = { Text("Playing") }
+                )
+            }
         }
     }
 }
