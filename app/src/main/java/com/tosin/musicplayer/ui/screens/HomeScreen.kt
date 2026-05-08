@@ -67,7 +67,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 fun HomeScreen(
     viewModel: PlayerViewModel,
     onNavigateToPlayer: () -> Unit,
-    onRequestAudioPermission: () -> Unit
+    onRequestAudioPermission: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
@@ -118,7 +119,7 @@ fun HomeScreen(
                     },
                     actions = {
                         // Requirement 4: settings icon on top right
-                        IconButton(onClick = { /* open settings */ }) {
+                        IconButton(onClick = onNavigateToSettings ) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
                                 contentDescription = "Settings",

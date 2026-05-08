@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.material3)
 
     // Media3
     implementation(libs.androidx.media3.exoplayer)
@@ -60,9 +61,8 @@ dependencies {
     implementation(libs.coil.compose)
 
     // Palette for extracting colors from album art
-    implementation("androidx.palette:palette:1.0.0")
-
-    // Add this line
+    implementation(libs.androidx.palette)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.androidx.navigation.compose)
