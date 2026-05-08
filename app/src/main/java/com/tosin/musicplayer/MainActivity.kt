@@ -35,6 +35,9 @@ class MainActivity : ComponentActivity() {
                     modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
                         PlayerViewModel(repository, playerController) as T
                     }
+                    modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
+                        SettingsViewModel() as T
+                    }
                     else -> throw IllegalArgumentException("Unknown ViewModel class")
                 }
             }
@@ -43,9 +46,6 @@ class MainActivity : ComponentActivity() {
         val playerViewModel = ViewModelProvider(this, factory)[PlayerViewModel::class.java]
         val settingsViewModel = ViewModelProvider(this, factory)[SettingsViewModel::class.java]
 
-
-
-        val viewModel = ViewModelProvider(this, factory).get(PlayerViewModel::class.java)
         val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
@@ -54,19 +54,20 @@ class MainActivity : ComponentActivity() {
         val permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted ->
-            viewModel.onAudioPermissionResult(isGranted)
+            playerViewModel.onAudioPermissionResult(isGranted)
         }
         val hasAudioPermission = ContextCompat.checkSelfPermission(
             this,
             audioPermission
         ) == PackageManager.PERMISSION_GRANTED
 
-        viewModel.onAudioPermissionResult(hasAudioPermission)
+        playerViewModel.onAudioPermissionResult(hasAudioPermission)
 
         setContent {
             TPlayerTheme {
                 AppNavGraph(
-                    viewModel = viewModel,
+                    viewModel = playerViewModel,
+                    settingsViewModel = settingsViewModel,
                     onRequestAudioPermission = { permissionLauncher.launch(audioPermission) }
                 )
             }

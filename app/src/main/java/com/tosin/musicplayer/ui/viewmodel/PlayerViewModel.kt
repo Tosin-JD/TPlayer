@@ -47,7 +47,8 @@ class PlayerViewModel(
         playerController.progress,
         _shuffle,
         _repeatMode,
-        _lyricsVisible
+        _lyricsVisible,
+        playerController.queue
     ) { args ->
         val songs = args[0] as List<Song>
         val isLoading = args[1] as Boolean
@@ -57,9 +58,11 @@ class PlayerViewModel(
         val shuffle = args[5] as Boolean
         val repeatMode = args[6] as RepeatMode
         val lyricsVisible = args[7] as Boolean
+        val queue = args[8] as List<Song>
         
         PlayerUiState(
             songs = songs,
+            queue = queue,
             currentSong = currentSong,
             isPlaying = isPlaying,
             progress = progress,
@@ -202,6 +205,13 @@ class PlayerViewModel(
             RepeatMode.PLAY_ALL_ONCE -> RepeatMode.OFF
         }
         playerController.setRepeatMode(_repeatMode.value)
+    }
+
+    fun playSongFromQueue(song: Song) {
+        val index = uiState.value.queue.indexOfFirst { it.id == song.id }
+        if (index != -1) {
+            playerController.seekToMediaItem(index)
+        }
     }
 
     override fun onCleared() {

@@ -35,10 +35,17 @@ class PlayerController(private val context: Context) {
     private val _progress = MutableStateFlow(0L)
     val progress = _progress.asStateFlow()
 
+    private val _queue = MutableStateFlow<List<Song>>(emptyList())
+    val queue = _queue.asStateFlow()
+
     private var progressJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main)
-    
+
     private var playlist: List<Song> = emptyList()
+        set(value) {
+            field = value
+            _queue.value = value
+        }
 
     init {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
@@ -104,6 +111,11 @@ class PlayerController(private val context: Context) {
 
     fun pause() {
         mediaController?.pause()
+    }
+
+    fun seekToMediaItem(index: Int) {
+        mediaController?.seekTo(index, 0)
+        mediaController?.play()
     }
 
     fun seekTo(position: Long) {
