@@ -1,6 +1,8 @@
 package com.tosin.musicplayer.data.local
 
 import android.content.ContentResolver
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import com.tosin.musicplayer.data.models.Song
@@ -77,7 +79,8 @@ class MusicLoader(
                         folder = extractFolderName(folder),
                         uri = contentUri.toString(),
                         albumArt = albumArtUri,
-                        duration = duration
+                        duration = duration,
+                        lyrics = null // Note: Standard Android APIs don't support embedded lyrics extraction.
                     )
                 )
             }

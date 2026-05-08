@@ -32,7 +32,8 @@ import androidx.compose.foundation.background
 @Composable
 public fun PlayerScreen(
     viewModel: PlayerViewModel,
-    onOpenPlaylist: () -> Unit = {}
+    onOpenPlaylist: () -> Unit = {},
+    onOpenLyrics: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -182,7 +183,7 @@ public fun PlayerScreen(
                 )
             }
 
-            IconButton(onClick = { viewModel.toggleLyrics() }) {
+            IconButton(onClick = { onOpenLyrics() }) {
                 Icon(
                     imageVector = Icons.Rounded.Lyrics,
                     contentDescription = "Lyrics",

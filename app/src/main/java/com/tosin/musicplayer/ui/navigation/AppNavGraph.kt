@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.tosin.musicplayer.ui.screens.CurrentPlaylistScreen
 import com.tosin.musicplayer.ui.screens.HomeScreen
+import com.tosin.musicplayer.ui.screens.LyricsScreen
 import com.tosin.musicplayer.ui.screens.PlayerScreen
 import com.tosin.musicplayer.ui.screens.SettingsScreen
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -38,6 +39,9 @@ fun AppNavGraph(
                 viewModel = viewModel,
                 onOpenPlaylist = {
                     navController.navigate("currentPlaylist")
+                },
+                onOpenLyrics = {
+                    navController.navigate("lyrics")
                 }
             )
         }
@@ -50,6 +54,13 @@ fun AppNavGraph(
                     viewModel.playSongFromQueue(song)
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable("lyrics") {
+            LyricsScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
