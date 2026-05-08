@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
@@ -29,6 +31,16 @@ fun CurrentPlaylistScreen(
     val uiState by viewModel.uiState.collectAsState()
     val queue = uiState.queue
     val currentSong = uiState.currentSong
+    
+    val listState = rememberLazyListState()
+
+    // Requirement 3: Scroll to currently playing song
+    LaunchedEffect(currentSong) {
+        val index = queue.indexOfFirst { it.id == currentSong?.id }
+        if (index >= 0) {
+            listState.animateScrollToItem(index)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -46,6 +58,7 @@ fun CurrentPlaylistScreen(
         }
     ) { paddingValues ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
@@ -84,10 +97,22 @@ private fun PlaylistItem(
     isCurrentlyPlaying: Boolean,
     onItemClick: () -> Unit
 ) {
+    // Requirement 3: Background of current song should be different
     Card(
         onClick = onItemClick,
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = if (isCurrentlyPlaying) {
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        } else {
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isCurrentlyPlaying) 4.dp else 2.dp),
         modifier = Modifier.animateContentSize()
     ) {
         Row(
@@ -112,12 +137,16 @@ private fun PlaylistItem(
                 Text(
                     text = song.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = if (isCurrentlyPlaying) FontWeight.Bold else FontWeight.Normal
                 )
                 Text(
                     text = song.artist,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = if (isCurrentlyPlaying) {
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    }
                 )
             }
 

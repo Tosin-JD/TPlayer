@@ -28,12 +28,14 @@ import androidx.palette.graphics.Palette
 import android.graphics.drawable.BitmapDrawable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 
 @Composable
 public fun PlayerScreen(
     viewModel: PlayerViewModel,
     onOpenPlaylist: () -> Unit = {},
-    onOpenLyrics: () -> Unit = {}
+    onOpenLyrics: () -> Unit = {},
+    onNavigateBack: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -82,8 +84,22 @@ public fun PlayerScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Requirement 2: Button to take user to Library/HomeScreen
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = "Back to Library",
+                    tint = contentColor,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(16.dp))
 
         // 🎨 Album Art (static) - Requirement 1: Removed rotation (already static)
         Card(
@@ -103,11 +119,13 @@ public fun PlayerScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        // 🎵 Song Info
+        // 🎵 Song Info - Requirement 1: Marquee for long names
         Text(
             text = state.currentSong?.title ?: "No Song Playing",
             style = MaterialTheme.typography.headlineMedium,
-            color = contentColor
+            color = contentColor,
+            maxLines = 1,
+            modifier = Modifier.basicMarquee()
         )
 
         Text(

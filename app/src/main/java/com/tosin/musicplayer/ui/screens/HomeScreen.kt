@@ -68,7 +68,8 @@ fun HomeScreen(
     viewModel: PlayerViewModel,
     onNavigateToPlayer: () -> Unit,
     onRequestAudioPermission: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToGroupDetail: (LibraryTab, String) -> Unit
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
@@ -180,7 +181,10 @@ fun HomeScreen(
                     )
                     else -> LibraryGroupsTab(
                         tab = contentState.selectedTab,
-                        groups = uiState.libraryGroups
+                        groups = uiState.libraryGroups,
+                        onGroupClick = { group ->
+                            onNavigateToGroupDetail(contentState.selectedTab, group.title)
+                        }
                     )
                 }
             }
@@ -235,7 +239,8 @@ private fun AllSongsTab(
 @Composable
 private fun LibraryGroupsTab(
     tab: LibraryTab,
-    groups: List<LibraryGroup>
+    groups: List<LibraryGroup>,
+    onGroupClick: (LibraryGroup) -> Unit
 ) {
     if (groups.isEmpty()) {
         EmptyLibraryState(
@@ -259,6 +264,7 @@ private fun LibraryGroupsTab(
 
         items(groups, key = { it.id }) { group ->
             Surface(
+                onClick = { onGroupClick(group) },
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = 2.dp

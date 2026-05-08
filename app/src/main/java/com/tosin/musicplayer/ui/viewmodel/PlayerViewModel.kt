@@ -214,6 +214,17 @@ class PlayerViewModel(
         }
     }
 
+    fun getSongsForGroup(tab: LibraryTab, title: String): List<Song> {
+        val allSongs = _songs.value
+        return when (tab) {
+            LibraryTab.All -> allSongs
+            LibraryTab.Album -> allSongs.filter { it.album == title || (it.album.isBlank() && title == "Unknown album") }
+            LibraryTab.Genre -> allSongs.filter { it.genre == title || (it.genre.isNullOrBlank() && title == "Unknown genre") }
+            LibraryTab.Folder -> allSongs.filter { it.folder == title || (it.folder.isNullOrBlank() && title == "Unknown folder") }
+            LibraryTab.Artist -> allSongs.filter { it.artist == title || (it.artist.isBlank() && title == "Unknown artist") }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         playerController.release()

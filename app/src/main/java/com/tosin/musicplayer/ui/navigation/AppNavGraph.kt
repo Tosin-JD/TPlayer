@@ -5,11 +5,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.tosin.musicplayer.ui.screens.CurrentPlaylistScreen
 import com.tosin.musicplayer.ui.screens.HomeScreen
+import com.tosin.musicplayer.ui.screens.LibraryGroupDetailScreen
 import com.tosin.musicplayer.ui.screens.LyricsScreen
 import com.tosin.musicplayer.ui.screens.PlayerScreen
 import com.tosin.musicplayer.ui.screens.SettingsScreen
+import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun AppNavGraph(
@@ -30,7 +35,29 @@ fun AppNavGraph(
                 onNavigateToSettings = {
                     navController.navigate("settings")
                 },
+                onNavigateToGroupDetail = { tab, title ->
+                    val encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8.toString())
+                    navController.navigate("groupDetail/${tab.name}/$encodedTitle")
+                },
                 onRequestAudioPermission = onRequestAudioPermission
+            )
+        }
+
+        composable(
+            route = "groupDetail/{tabName}/{groupTitle}"
+        ) { backStackEntry ->
+            val tabName = backStackEntry.arguments?.getString("tabName")
+            val groupTitle = backStackEntry.arguments?.getString("groupTitle")?.let {
+                URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+            }
+            val tab = LibraryTab.valueOf(tabName ?: LibraryTab.Album.name)
+
+            LibraryGroupDetailScreen(
+                viewModel = viewModel,
+                tab = tab,
+                groupTitle = groupTitle ?: "Unknown",
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPlayer = { navController.navigate("player") }
             )
         }
 
@@ -42,6 +69,9 @@ fun AppNavGraph(
                 },
                 onOpenLyrics = {
                     navController.navigate("lyrics")
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
