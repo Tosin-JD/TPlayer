@@ -41,7 +41,7 @@ fun SongItem(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             AsyncImage(
-                model = song.albumArt,
+                model = song.albumArt ?: com.tosin.musicplayer.R.drawable.album_art,
                 contentDescription = null,
                 modifier = Modifier
                     .size(58.dp)

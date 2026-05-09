@@ -19,21 +19,24 @@ import com.tosin.musicplayer.ui.theme.TPlayerTheme
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
+import com.tosin.musicplayer.data.repository.StatsRepository
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // In MainActivity.kt inside onCreate
+        val statsRepository = StatsRepository(this)
+
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val musicLoader = MusicLoader(contentResolver)
                 val repository = MusicRepository(musicLoader)
-                val playerController = PlayerController(this@MainActivity)
+                val playerController = PlayerController(this@MainActivity, statsRepository)
 
                 return when {
                     modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
-                        PlayerViewModel(repository, playerController) as T
+                        PlayerViewModel(repository, playerController, statsRepository) as T
                     }
                     modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
                         SettingsViewModel() as T

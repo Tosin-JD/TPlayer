@@ -57,10 +57,24 @@ import com.tosin.musicplayer.ui.state.HomeUiState
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -72,6 +86,9 @@ fun HomeScreen(
     onNavigateToGroupDetail: (LibraryTab, String) -> Unit
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
+    val pagerState = rememberPagerState(pageCount = { uiState.tabOrder.size })
+    val coroutineScope = rememberCoroutineScope()
+    
     val colorScheme = MaterialTheme.colorScheme
     val brush = remember(
         colorScheme.surface,
@@ -85,6 +102,22 @@ fun HomeScreen(
                 colorScheme.surfaceContainerHigh
             )
         )
+    }
+
+    // Sync pager with selected tab
+    LaunchedEffect(uiState.selectedTab) {
+        val index = uiState.tabOrder.indexOf(uiState.selectedTab)
+        if (index != -1 && index != pagerState.currentPage) {
+            pagerState.animateScrollToPage(index)
+        }
+    }
+
+    // Sync selected tab with pager
+    LaunchedEffect(pagerState.currentPage) {
+        val tab = uiState.tabOrder[pagerState.currentPage]
+        if (tab != uiState.selectedTab) {
+            viewModel.selectLibraryTab(tab)
+        }
     }
 
     Scaffold(
@@ -102,7 +135,6 @@ fun HomeScreen(
 
                             Spacer(Modifier.width(12.dp))
 
-                            // Requirement 5: expressive alpha chip with outline
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
@@ -119,7 +151,6 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        // Requirement 4: settings icon on top right
                         IconButton(onClick = onNavigateToSettings ) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
@@ -129,14 +160,39 @@ fun HomeScreen(
                         }
                     }
                 )
+                
+                var showReorderDialog by remember { mutableStateOf(false) }
+
+                if (showReorderDialog) {
+                    TabReorderDialog(
+                        tabOrder = uiState.tabOrder,
+                        onReorder = { from, to -> viewModel.reorderTabs(from, to) },
+                        onDismiss = { showReorderDialog = false }
+                    )
+                }
+
                 PrimaryScrollableTabRow(
-                    selectedTabIndex = LibraryTab.entries.indexOf(uiState.selectedTab),
+                    selectedTabIndex = pagerState.currentPage,
                     edgePadding = 16.dp
                 ) {
-                    LibraryTab.entries.forEach { tab ->
+                    uiState.tabOrder.forEachIndexed { index, tab ->
                         Tab(
                             selected = uiState.selectedTab == tab,
-                            onClick = { viewModel.selectLibraryTab(tab) },
+                            onClick = { 
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            modifier = Modifier.combinedClickable(
+                                onClick = { 
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                                onLongClick = {
+                                    showReorderDialog = true
+                                }
+                            ),
                             text = { Text(tab.label) },
                             icon = {
                                 Icon(
@@ -157,35 +213,42 @@ fun HomeScreen(
                 .background(brush)
                 .padding(innerPadding)
         ) {
-            AnimatedContent(
-                targetState = HomeContentState(
-                    selectedTab = uiState.selectedTab,
-                    isLoading = uiState.isLoading,
-                    hasAudioPermission = uiState.hasAudioPermission
-                ),
-                transitionSpec = {
-                    (slideInHorizontally { it / 8 } + fadeIn())
-                        .togetherWith(slideOutHorizontally { -it / 10 } + fadeOut())
-                },
-                label = "home-content"
-            ) { contentState ->
-                when {
-                    !contentState.hasAudioPermission -> PermissionState(
-                        onRequestAudioPermission = onRequestAudioPermission
-                    )
-                    contentState.isLoading -> LoadingState()
-                    contentState.selectedTab == LibraryTab.All -> AllSongsTab(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        onNavigateToPlayer = onNavigateToPlayer
-                    )
-                    else -> LibraryGroupsTab(
-                        tab = contentState.selectedTab,
-                        groups = uiState.libraryGroups,
-                        onGroupClick = { group ->
-                            onNavigateToGroupDetail(contentState.selectedTab, group.title)
-                        }
-                    )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { pageIndex ->
+                val tab = uiState.tabOrder[pageIndex]
+                
+                AnimatedContent(
+                    targetState = HomeContentState(
+                        selectedTab = tab,
+                        isLoading = uiState.isLoading,
+                        hasAudioPermission = uiState.hasAudioPermission
+                    ),
+                    transitionSpec = {
+                        (slideInHorizontally { it / 8 } + fadeIn())
+                            .togetherWith(slideOutHorizontally { -it / 10 } + fadeOut())
+                    },
+                    label = "home-content"
+                ) { contentState ->
+                    when {
+                        !contentState.hasAudioPermission -> PermissionState(
+                            onRequestAudioPermission = onRequestAudioPermission
+                        )
+                        contentState.isLoading -> LoadingState()
+                        contentState.selectedTab == LibraryTab.All -> AllSongsTab(
+                            uiState = uiState,
+                            viewModel = viewModel,
+                            onNavigateToPlayer = onNavigateToPlayer
+                        )
+                        else -> LibraryGroupsTab(
+                            tab = contentState.selectedTab,
+                            groups = uiState.libraryGroups,
+                            onGroupClick = { group ->
+                                onNavigateToGroupDetail(contentState.selectedTab, group.title)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -412,18 +475,57 @@ private fun LibrarySummary(
     }
 }
 
-private fun LibraryTab.icon(): ImageVector {
-    return when (this) {
-        LibraryTab.All -> Icons.Rounded.MusicNote
-        LibraryTab.Album -> Icons.Rounded.Album
-        LibraryTab.Genre -> Icons.Rounded.GraphicEq
-        LibraryTab.Folder -> Icons.Rounded.Folder
-        LibraryTab.Artist -> Icons.Rounded.Person
-    }
-}
 
 private data class HomeContentState(
     val selectedTab: LibraryTab,
     val isLoading: Boolean,
     val hasAudioPermission: Boolean
 )
+
+@Composable
+fun TabReorderDialog(
+    tabOrder: List<LibraryTab>,
+    onReorder: (Int, Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Reorder Tabs") },
+        text = {
+            Column {
+                tabOrder.forEachIndexed { index, tab ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(tab.icon(), null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(12.dp))
+                            Text(tab.label)
+                        }
+                        Row {
+                            IconButton(
+                                onClick = { if (index > 0) onReorder(index, index - 1) },
+                                enabled = index > 0
+                            ) {
+                                Icon(Icons.Rounded.KeyboardArrowUp, "Move Up")
+                            }
+                            IconButton(
+                                onClick = { if (index < tabOrder.size - 1) onReorder(index, index + 1) },
+                                enabled = index < tabOrder.size - 1
+                            ) {
+                                Icon(Icons.Rounded.KeyboardArrowDown, "Move Down")
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Done") }
+        }
+    )
+}

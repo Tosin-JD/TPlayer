@@ -21,7 +21,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class PlayerController(private val context: Context) {
+import com.tosin.musicplayer.data.repository.StatsRepository
+
+class PlayerController(
+    private val context: Context,
+    private val statsRepository: StatsRepository
+) {
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val mediaController: MediaController?
         get() = if (controllerFuture?.isDone == true) controllerFuture?.get() else null
@@ -69,11 +74,11 @@ class PlayerController(private val context: Context) {
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 val index = controller.currentMediaItemIndex
-                if (index >= 0 && index < playlist.size) {
-                    _currentSong.value = playlist[index]
+                val song = if (index >= 0 && index < playlist.size) {
+                    playlist[index]
                 } else {
                     mediaItem?.let {
-                        _currentSong.value = Song(
+                        Song(
                             id = it.mediaId.toLongOrNull() ?: 0L,
                             title = it.mediaMetadata.title?.toString() ?: "",
                             artist = it.mediaMetadata.artist?.toString() ?: "",
@@ -84,6 +89,13 @@ class PlayerController(private val context: Context) {
                             albumArt = it.mediaMetadata.artworkUri?.toString(),
                             duration = controller.duration
                         )
+                    }
+                }
+                
+                _currentSong.value = song
+                song?.let {
+                    scope.launch {
+                        statsRepository.recordPlay(it.id, it.duration)
                     }
                 }
             }

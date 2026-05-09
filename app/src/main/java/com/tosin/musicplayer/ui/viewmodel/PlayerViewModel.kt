@@ -18,12 +18,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.tosin.musicplayer.data.repository.StatsRepository
+import com.tosin.musicplayer.data.models.SongStats
 
 class PlayerViewModel(
     private val repository: MusicRepository,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
+    private val statsRepository: StatsRepository
 ) : ViewModel() {
-
+    
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     private val _isLoading = MutableStateFlow(false)
     private val _hasAudioPermission = MutableStateFlow(true)
@@ -38,6 +41,17 @@ class PlayerViewModel(
 
     private val _lyricsVisible = MutableStateFlow(false)
     val lyricsVisible = _lyricsVisible.asStateFlow()
+
+    private val _tabOrder = MutableStateFlow(listOf(
+        LibraryTab.All,
+        LibraryTab.Album,
+        LibraryTab.Artist,
+        LibraryTab.Genre,
+        LibraryTab.Folder
+    ))
+
+    private val _mostPlayed = MutableStateFlow<List<SongStats>>(emptyList())
+    val mostPlayed = _mostPlayed.asStateFlow()
 
     val uiState: StateFlow<PlayerUiState> = combine(
         _songs,
@@ -81,20 +95,35 @@ class PlayerViewModel(
         _songs,
         _isLoading,
         _hasAudioPermission,
-        _selectedLibraryTab
-    ) { songs, isLoading, hasAudioPermission, selectedTab ->
+        _selectedLibraryTab,
+        _tabOrder
+    ) { songs, isLoading, hasAudioPermission, selectedTab, tabOrder ->
         HomeUiState(
             isLoading = isLoading,
             hasAudioPermission = hasAudioPermission,
             selectedTab = selectedTab,
             songs = songs,
-            libraryGroups = buildLibraryGroups(songs, selectedTab)
+            libraryGroups = buildLibraryGroups(songs, selectedTab),
+            tabOrder = tabOrder
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState()
     )
+
+    fun loadStats(startTime: Long = 0L) {
+        viewModelScope.launch {
+            _mostPlayed.value = statsRepository.getMostPlayed(_songs.value, startTime)
+        }
+    }
+
+    fun reorderTabs(fromIndex: Int, toIndex: Int) {
+        val currentOrder = _tabOrder.value.toMutableList()
+        val item = currentOrder.removeAt(fromIndex)
+        currentOrder.add(toIndex, item)
+        _tabOrder.value = currentOrder
+    }
 
     fun onAudioPermissionResult(isGranted: Boolean) {
         _hasAudioPermission.value = isGranted
@@ -231,7 +260,6 @@ class PlayerViewModel(
     }
 }
 
-// Repeat modes requested by UI
 enum class RepeatMode {
     OFF,
     REPEAT_ALL,
