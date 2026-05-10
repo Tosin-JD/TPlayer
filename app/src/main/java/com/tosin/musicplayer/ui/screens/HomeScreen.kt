@@ -224,12 +224,11 @@ fun HomeScreen(
             }
         },
         containerColor = MaterialTheme.colorScheme.surface
-    ) { innerPadding ->
+    ) { _ ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(brush)
-                .padding(innerPadding)
         ) {
             HorizontalPager(
                 state = pagerState,

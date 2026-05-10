@@ -34,11 +34,10 @@ fun SettingsScreen(
                 }
             )
         }
-    ) { innerPadding ->
+    ) { _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
             // ── Appearance ──

@@ -101,12 +101,11 @@ fun PlaylistScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-    ) { paddingValues ->
+    ) { _ ->
         if (playlists.isEmpty()) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -140,8 +139,7 @@ fun PlaylistScreen(
         } else {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                    .fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

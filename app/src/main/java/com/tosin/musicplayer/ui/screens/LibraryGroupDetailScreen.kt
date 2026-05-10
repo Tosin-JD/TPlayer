@@ -52,11 +52,10 @@ fun LibraryGroupDetailScreen(
                 }
             )
         }
-    ) { paddingValues ->
+    ) { _ ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+                .fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

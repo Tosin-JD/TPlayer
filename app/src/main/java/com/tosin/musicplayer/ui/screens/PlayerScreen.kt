@@ -112,7 +112,7 @@ fun PlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(bgColor)
-            .padding(24.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Top bar with back + extra controls

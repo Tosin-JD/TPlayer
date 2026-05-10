@@ -88,11 +88,10 @@ fun LyricsScreen(
                     )
                 )
             }
-        ) { paddingValues ->
+        ) { _ ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally

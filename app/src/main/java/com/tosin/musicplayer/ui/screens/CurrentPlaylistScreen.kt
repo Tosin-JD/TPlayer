@@ -56,12 +56,11 @@ fun CurrentPlaylistScreen(
                 )
             )
         }
-    ) { paddingValues ->
+    ) { _ ->
         LazyColumn(
             state = listState,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+                .fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
