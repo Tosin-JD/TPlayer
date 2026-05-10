@@ -29,6 +29,8 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,7 +85,9 @@ fun HomeScreen(
     onNavigateToPlayer: () -> Unit,
     onRequestAudioPermission: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToGroupDetail: (LibraryTab, String) -> Unit
+    onNavigateToGroupDetail: (LibraryTab, String) -> Unit,
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToPlaylists: () -> Unit = {}
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
     val pagerState = rememberPagerState(pageCount = { uiState.tabOrder.size })
@@ -151,7 +155,21 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = onNavigateToSettings ) {
+                        IconButton(onClick = onNavigateToSearch) {
+                            Icon(
+                                imageVector = Icons.Rounded.Search,
+                                contentDescription = "Search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = onNavigateToPlaylists) {
+                            Icon(
+                                imageVector = Icons.Rounded.QueueMusic,
+                                contentDescription = "Playlists",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = onNavigateToSettings) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
                                 contentDescription = "Settings",

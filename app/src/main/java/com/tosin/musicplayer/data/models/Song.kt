@@ -10,5 +10,14 @@ data class Song(
     val uri: String,
     val albumArt: String?,
     val duration: Long,
-    val lyrics: String? = null
+    val lyrics: String? = null,
+    val trackNumber: Int = 0
+)
+
+data class Playlist(
+    val id: String,
+    val name: String,
+    val songIds: List<Long> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )

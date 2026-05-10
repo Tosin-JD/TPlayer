@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.state
 
-
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 
@@ -14,5 +13,10 @@ data class PlayerUiState(
     val isLoading: Boolean = true,
     val shuffleEnabled: Boolean = false,
     val repeatMode: RepeatMode = RepeatMode.OFF,
-    val lyricsVisible: Boolean = false
+    val lyricsVisible: Boolean = false,
+    val playbackSpeed: Float = 1.0f,
+    val abRepeatA: Long? = null,
+    val abRepeatB: Long? = null,
+    val sleepTimerRemaining: Long? = null,
+    val searchQuery: String = ""
 )

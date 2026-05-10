@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.tosin.musicplayer.ui.components.MiniPlayer
 import com.tosin.musicplayer.ui.screens.*
@@ -24,16 +23,19 @@ import java.nio.charset.StandardCharsets
 @Composable
 fun AppNavGraph(
     viewModel: PlayerViewModel,
-    settingsViewModel: SettingsViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel,
     onRequestAudioPermission: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Routes where bottom bar should be hidden
+    val hideBottomBar = currentRoute in listOf("player", "lyrics", "search")
+
     Scaffold(
         bottomBar = {
-            if (currentRoute != "player" && currentRoute != "lyrics") {
+            if (!hideBottomBar) {
                 Column {
                     MiniPlayer(
                         viewModel = viewModel,
@@ -88,7 +90,13 @@ fun AppNavGraph(
                         val encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8.toString())
                         navController.navigate("groupDetail/${tab.name}/$encodedTitle")
                     },
-                    onRequestAudioPermission = onRequestAudioPermission
+                    onRequestAudioPermission = onRequestAudioPermission,
+                    onNavigateToSearch = {
+                        navController.navigate("search")
+                    },
+                    onNavigateToPlaylists = {
+                        navController.navigate("playlists")
+                    }
                 )
             }
 
@@ -154,6 +162,37 @@ fun AppNavGraph(
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("search") {
+                SearchScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToPlayer = { navController.navigate("player") }
+                )
+            }
+
+            composable("playlists") {
+                PlaylistScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToPlayer = { navController.navigate("player") },
+                    onNavigateToPlaylistDetail = { playlistId ->
+                        navController.navigate("playlistDetail/$playlistId")
+                    }
+                )
+            }
+
+            composable(
+                route = "playlistDetail/{playlistId}"
+            ) { backStackEntry ->
+                val playlistId = backStackEntry.arguments?.getString("playlistId") ?: ""
+                PlaylistDetailScreen(
+                    viewModel = viewModel,
+                    playlistId = playlistId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToPlayer = { navController.navigate("player") }
                 )
             }
         }

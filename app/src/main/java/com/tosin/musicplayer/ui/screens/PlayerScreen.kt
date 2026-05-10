@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens
 
-
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -30,8 +29,9 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-public fun PlayerScreen(
+fun PlayerScreen(
     viewModel: PlayerViewModel,
     onOpenPlaylist: () -> Unit = {},
     onOpenLyrics: () -> Unit = {},
@@ -42,9 +42,12 @@ public fun PlayerScreen(
     val context = LocalContext.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-    
+
     var bgColor by remember { mutableStateOf(surfaceColor) }
     var contentColor by remember { mutableStateOf(onSurfaceColor) }
+
+    var showSpeedDialog by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.currentSong?.albumArt) {
         val data = state.currentSong?.albumArt
@@ -77,6 +80,34 @@ public fun PlayerScreen(
         }
     }
 
+    // Speed dialog
+    if (showSpeedDialog) {
+        SpeedPickerDialog(
+            currentSpeed = state.playbackSpeed,
+            onSpeedSelected = { speed ->
+                viewModel.setPlaybackSpeed(speed)
+                showSpeedDialog = false
+            },
+            onDismiss = { showSpeedDialog = false }
+        )
+    }
+
+    // Sleep timer dialog
+    if (showSleepTimerDialog) {
+        SleepTimerDialog(
+            currentRemaining = state.sleepTimerRemaining,
+            onSetTimer = { minutes ->
+                viewModel.setSleepTimer(minutes)
+                showSleepTimerDialog = false
+            },
+            onCancel = {
+                viewModel.cancelSleepTimer()
+                showSleepTimerDialog = false
+            },
+            onDismiss = { showSleepTimerDialog = false }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,10 +115,11 @@ public fun PlayerScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Requirement 2: Button to take user to Library/HomeScreen
+        // Top bar with back + extra controls
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
                 Icon(
@@ -97,11 +129,48 @@ public fun PlayerScreen(
                     modifier = Modifier.size(32.dp)
                 )
             }
+
+            Row {
+                // Sleep timer indicator
+                if (state.sleepTimerRemaining != null) {
+                    val remaining = state.sleepTimerRemaining!! / 1000
+                    val mins = remaining / 60
+                    val secs = remaining % 60
+                    AssistChip(
+                        onClick = { showSleepTimerDialog = true },
+                        label = {
+                            Text(
+                                "$mins:${secs.toString().padStart(2, '0')}",
+                                color = contentColor
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Rounded.Timer,
+                                contentDescription = "Sleep Timer",
+                                tint = contentColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
+
+                // Speed indicator
+                if (state.playbackSpeed != 1.0f) {
+                    AssistChip(
+                        onClick = { showSpeedDialog = true },
+                        label = {
+                            Text("${state.playbackSpeed}x", color = contentColor)
+                        }
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // 🎨 Album Art (static) - Requirement 1: Removed rotation (already static)
+        // Album Art
         Card(
             modifier = Modifier
                 .size(320.dp)
@@ -119,7 +188,7 @@ public fun PlayerScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        // 🎵 Song Info - Requirement 1: Marquee for long names
+        // Song Info
         Text(
             text = state.currentSong?.title ?: "No Song Playing",
             style = MaterialTheme.typography.headlineMedium,
@@ -134,18 +203,57 @@ public fun PlayerScreen(
             color = contentColor.copy(alpha = 0.7f)
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
 
-        // 📊 Progress
+        // A-B Repeat indicators
+        if (state.abRepeatA != null || state.abRepeatB != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AssistChip(
+                    onClick = { viewModel.clearABRepeat() },
+                    label = {
+                        val a = state.abRepeatA?.let { formatTime(it) } ?: "—"
+                        val b = state.abRepeatB?.let { formatTime(it) } ?: "—"
+                        Text("A-B: $a → $b", color = contentColor)
+                    },
+                    trailingIcon = {
+                        Icon(Icons.Rounded.Close, "Clear A-B", tint = contentColor, modifier = Modifier.size(16.dp))
+                    }
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        // Progress
         ProgressBar(
             progress = state.progress,
             duration = state.currentSong?.duration ?: 0L,
             onSeek = { viewModel.seekTo(it) }
         )
 
-        Spacer(Modifier.height(32.dp))
+        // Time labels
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = formatTime(state.progress),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor.copy(alpha = 0.6f)
+            )
+            Text(
+                text = formatTime(state.currentSong?.duration ?: 0L),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor.copy(alpha = 0.6f)
+            )
+        }
 
-        // ▶️ Controls
+        Spacer(Modifier.height(16.dp))
+
+        // Main Controls
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
@@ -163,6 +271,19 @@ public fun PlayerScreen(
                 )
             }
 
+            // Rewind
+            IconButton(
+                onClick = { viewModel.rewind() },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Replay10,
+                    contentDescription = "Rewind 10s",
+                    modifier = Modifier.size(28.dp),
+                    tint = contentColor
+                )
+            }
+
             PlayPauseButton(
                 isPlaying = state.isPlaying,
                 onClick = {
@@ -170,6 +291,19 @@ public fun PlayerScreen(
                     else viewModel.play()
                 }
             )
+
+            // Fast Forward
+            IconButton(
+                onClick = { viewModel.fastForward() },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Forward10,
+                    contentDescription = "Forward 10s",
+                    modifier = Modifier.size(28.dp),
+                    tint = contentColor
+                )
+            }
 
             IconButton(
                 onClick = { viewModel.next() },
@@ -186,7 +320,7 @@ public fun PlayerScreen(
 
         Spacer(Modifier.weight(1f))
 
-        // Bottom row with shuffle, lyrics, playlist, repeat - Requirement 6
+        // Bottom row: shuffle, lyrics, A-B, speed, timer, playlist, repeat
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier
@@ -206,6 +340,37 @@ public fun PlayerScreen(
                     imageVector = Icons.Rounded.Lyrics,
                     contentDescription = "Lyrics",
                     tint = if (state.lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            // A-B Repeat
+            IconButton(onClick = {
+                when {
+                    state.abRepeatA == null -> viewModel.setABRepeatA()
+                    state.abRepeatB == null -> viewModel.setABRepeatB()
+                    else -> viewModel.clearABRepeat()
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.RepeatOneOn,
+                    contentDescription = "A-B Repeat",
+                    tint = if (state.abRepeatA != null) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            IconButton(onClick = { showSpeedDialog = true }) {
+                Icon(
+                    imageVector = Icons.Rounded.Speed,
+                    contentDescription = "Speed",
+                    tint = if (state.playbackSpeed != 1.0f) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            IconButton(onClick = { showSleepTimerDialog = true }) {
+                Icon(
+                    imageVector = Icons.Rounded.Timer,
+                    contentDescription = "Sleep Timer",
+                    tint = if (state.sleepTimerRemaining != null) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
                 )
             }
 
@@ -232,4 +397,104 @@ public fun PlayerScreen(
             }
         }
     }
+}
+
+@Composable
+private fun SpeedPickerDialog(
+    currentSpeed: Float,
+    onSpeedSelected: (Float) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Playback Speed") },
+        text = {
+            Column {
+                speeds.forEach { speed ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentSpeed == speed,
+                            onClick = { onSpeedSelected(speed) }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "${speed}x",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        if (speed == 1.0f) {
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "(Normal)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+@Composable
+private fun SleepTimerDialog(
+    currentRemaining: Long?,
+    onSetTimer: (Int) -> Unit,
+    onCancel: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val durations = listOf(5, 10, 15, 30, 45, 60, 90, 120)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sleep Timer") },
+        text = {
+            Column {
+                if (currentRemaining != null) {
+                    val mins = currentRemaining / 60000
+                    Text(
+                        text = "Timer active: ${mins}min remaining",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = onCancel) {
+                        Text("Cancel Timer", color = MaterialTheme.colorScheme.error)
+                    }
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                }
+                durations.forEach { minutes ->
+                    TextButton(
+                        onClick = { onSetTimer(minutes) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "$minutes minutes",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+private fun formatTime(ms: Long): String {
+    val totalSeconds = ms / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
 }

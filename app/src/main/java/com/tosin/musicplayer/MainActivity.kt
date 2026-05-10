@@ -13,12 +13,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tosin.musicplayer.data.local.MusicLoader
 import com.tosin.musicplayer.data.repository.MusicRepository
+import com.tosin.musicplayer.data.repository.PlaylistRepository
+import com.tosin.musicplayer.data.repository.PreferencesRepository
 import com.tosin.musicplayer.player.PlayerController
 import com.tosin.musicplayer.ui.navigation.AppNavGraph
 import com.tosin.musicplayer.ui.theme.TPlayerTheme
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
-
 import com.tosin.musicplayer.data.repository.StatsRepository
 
 class MainActivity : ComponentActivity() {
@@ -27,6 +28,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val statsRepository = StatsRepository(this)
+        val playlistRepository = PlaylistRepository(this)
+        val preferencesRepository = PreferencesRepository(this)
 
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -36,7 +39,13 @@ class MainActivity : ComponentActivity() {
 
                 return when {
                     modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
-                        PlayerViewModel(repository, playerController, statsRepository) as T
+                        PlayerViewModel(
+                            repository,
+                            playerController,
+                            statsRepository,
+                            playlistRepository,
+                            preferencesRepository
+                        ) as T
                     }
                     modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
                         SettingsViewModel() as T

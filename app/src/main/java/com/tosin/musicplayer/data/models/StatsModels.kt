@@ -1,7 +1,5 @@
 package com.tosin.musicplayer.data.models
 
-import java.time.LocalDateTime
-
 data class PlayEvent(
     val songId: Long,
     val timestamp: Long, // Epoch millis

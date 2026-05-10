@@ -69,8 +69,8 @@ dependencies {
 
     implementation(libs.androidx.compose.animation)
 
-    // Note: Since you are using Material3, ensure you also have:
-    implementation(libs.androidx.compose.material3)
+    // Lifecycle ViewModel Compose
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
