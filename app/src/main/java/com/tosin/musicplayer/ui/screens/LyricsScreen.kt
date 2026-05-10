@@ -3,6 +3,7 @@ package com.tosin.musicplayer.ui.screens
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,18 +62,21 @@ fun LyricsScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    windowInsets = WindowInsets(0.dp),
                     title = {
-                        Column {
+                        Column(modifier = Modifier.fillMaxWidth().padding(end = 16.dp)) {
                             Text(
                                 text = song?.title ?: "Unknown",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 1,
+                                modifier = Modifier.basicMarquee()
                             )
                             Text(
                                 text = song?.artist ?: "Unknown Artist",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f)
+                                color = Color.White.copy(alpha = 0.7f),
+                                maxLines = 1,
+                                modifier = Modifier.basicMarquee()
                             )
                         }
                     },
@@ -90,16 +94,14 @@ fun LyricsScreen(
                     )
                 )
             }
-        ) { _ ->
-            Column(
+        ) { innerPadding ->
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(innerPadding)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-                
                 Text(
                     text = lyrics,
                     style = MaterialTheme.typography.headlineSmall.copy(
@@ -109,10 +111,10 @@ fun LyricsScreen(
                     ),
                     color = Color.White,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                 )
-                
-                Spacer(modifier = Modifier.height(64.dp))
             }
         }
     }

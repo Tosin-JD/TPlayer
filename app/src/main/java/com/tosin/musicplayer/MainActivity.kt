@@ -20,6 +20,7 @@ import com.tosin.musicplayer.ui.navigation.AppNavGraph
 import com.tosin.musicplayer.ui.theme.TPlayerTheme
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import com.tosin.musicplayer.data.repository.StatsRepository
 
 class MainActivity : ComponentActivity() {
@@ -50,6 +51,9 @@ class MainActivity : ComponentActivity() {
                     modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
                         SettingsViewModel() as T
                     }
+                    modelClass.isAssignableFrom(EqualizerViewModel::class.java) -> {
+                        EqualizerViewModel() as T
+                    }
                     else -> throw IllegalArgumentException("Unknown ViewModel class")
                 }
             }
@@ -57,6 +61,7 @@ class MainActivity : ComponentActivity() {
 
         val playerViewModel = ViewModelProvider(this, factory)[PlayerViewModel::class.java]
         val settingsViewModel = ViewModelProvider(this, factory)[SettingsViewModel::class.java]
+        val equalizerViewModel = ViewModelProvider(this, factory)[EqualizerViewModel::class.java]
 
         val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
@@ -80,6 +85,7 @@ class MainActivity : ComponentActivity() {
                 AppNavGraph(
                     viewModel = playerViewModel,
                     settingsViewModel = settingsViewModel,
+                    equalizerViewModel = equalizerViewModel,
                     onRequestAudioPermission = { permissionLauncher.launch(audioPermission) }
                 )
             }

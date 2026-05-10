@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.*
@@ -47,64 +48,142 @@ fun StatsScreen(
         }
         viewModel.loadStats(startTime)
     }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var sortBy by remember { mutableStateOf(SortBy.PLAY_COUNT) }
+
+    val sortedMostPlayed = remember(mostPlayed, sortBy) {
+        when (sortBy) {
+            SortBy.PLAY_COUNT -> mostPlayed.sortedByDescending { it.playCount }
+            SortBy.DURATION -> mostPlayed.sortedByDescending { it.totalMinutes }
+        }
+    }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                windowInsets = WindowInsets(0.dp),
-                title = { Text("Most Played", fontWeight = FontWeight.Bold) },
-                actions = {
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Rounded.History, contentDescription = "Time Range")
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            StatsRange.entries.forEach { range ->
-                                DropdownMenuItem(
-                                    text = { Text(range.label) },
-                                    onClick = {
-                                        selectedRange = range
-                                        showMenu = false
-                                    }
-                                )
+    topBar = {
+        TopAppBar(
+            title = { Text("Most Played", fontWeight = FontWeight.Bold) },
+            actions = {
+                Box {
+                    IconButton(onClick = { showSortMenu = true }) {
+                        Icon(Icons.Rounded.FilterList, contentDescription = "Sort By")
+                    }
+                    DropdownMenu(
+                        expanded = showSortMenu,
+                        onDismissRequest = { showSortMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("By Plays") },
+                            onClick = {
+                                sortBy = SortBy.PLAY_COUNT
+                                showSortMenu = false
                             }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("By Minutes") },
+                            onClick = {
+                                sortBy = SortBy.DURATION
+                                showSortMenu = false
+                            }
+                        )
+                    }
+                }
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Rounded.History, contentDescription = "Time Range")
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        StatsRange.entries.forEach { range ->
+                            DropdownMenuItem(
+                                text = { Text(range.label) },
+                                onClick = {
+                                    selectedRange = range
+                                    showMenu = false
+                                }
+                            )
                         }
                     }
                 }
-            )
-        }
-    ) { _ ->
-        if (mostPlayed.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Rounded.BarChart, null, Modifier.size(64.dp), MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                    Spacer(Modifier.height(16.dp))
-                    Text("No play data for this period", style = MaterialTheme.typography.bodyLarge)
-                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(mostPlayed) { stat ->
-                    SongItem(
-                        song = stat.song,
-                        isPlaying = false, // We don't necessarily know if it's playing from this screen
-                        onClick = {
-                            viewModel.onSongClick(mostPlayed.map { it.song }, mostPlayed.indexOf(stat))
-                            onNavigateToPlayer()
+        )
+    }
+) { paddingValues ->
+
+    if (mostPlayed.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(top = 12.dp), // extra space below TopAppBar
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    Icons.Rounded.BarChart,
+                    null,
+                    Modifier.size(64.dp),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    "No play data for this period",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 12.dp,
+                bottom = 32.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(sortedMostPlayed) { stat ->
+                SongItem(
+                    song = stat.song,
+                    isPlaying = false,
+                    onClick = {
+                        viewModel.onSongClick(
+                            sortedMostPlayed.map { it.song },
+                            sortedMostPlayed.indexOf(stat)
+                        )
+                        onNavigateToPlayer()
+                    },
+                    trailingContent = {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "${stat.playCount} plays",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "${stat.totalMinutes} min",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    )
-                    // Optional: Add play count and duration badge
-                }
+                    }
+                )
             }
         }
     }
+}
+}
+
+enum class SortBy {
+    PLAY_COUNT,
+    DURATION
 }
 
 private fun getStartOfToday(): Long {

@@ -40,6 +40,9 @@ class PlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(sessionActivity)
             .build()
+
+        // Initialize Equalizer
+        EqualizerManager.init(player.audioSessionId)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -54,6 +57,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        EqualizerManager.release()
         mediaSession?.run {
             player.release()
             release()

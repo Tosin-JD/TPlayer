@@ -3,6 +3,7 @@ package com.tosin.musicplayer.ui.screens
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -46,7 +47,6 @@ fun CurrentPlaylistScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0.dp),
                 title = { Text("Current Playlist") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -124,7 +124,7 @@ private fun PlaylistItem(
         ) {
             // Album art thumbnail
             AsyncImage(
-                model = song.albumArt ?: R.drawable.album_art,
+                model = if (song.albumArt.isNullOrEmpty()) R.drawable.album_art else song.albumArt,
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)
@@ -138,7 +138,9 @@ private fun PlaylistItem(
                 Text(
                     text = song.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (isCurrentlyPlaying) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (isCurrentlyPlaying) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    modifier = Modifier.basicMarquee()
                 )
                 Text(
                     text = song.artist,

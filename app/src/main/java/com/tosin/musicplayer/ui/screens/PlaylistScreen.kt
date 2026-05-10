@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.automirrored.rounded.*
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -80,7 +82,6 @@ fun PlaylistScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0.dp),
                 title = { Text("Playlists", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -103,11 +104,12 @@ fun PlaylistScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-    ) { _ ->
+    ) { paddingValues ->
         if (playlists.isEmpty()) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -118,7 +120,7 @@ fun PlaylistScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                Icons.Rounded.PlaylistAdd,
+                                Icons.AutoMirrored.Rounded.PlaylistAdd,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.size(36.dp)
@@ -141,8 +143,10 @@ fun PlaylistScreen(
         } else {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(top = 12.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(playlists, key = { it.id }) { playlist ->
@@ -197,7 +201,7 @@ private fun PlaylistCard(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Rounded.QueueMusic,
+                        Icons.AutoMirrored.Rounded.QueueMusic,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(28.dp)
@@ -213,7 +217,8 @@ private fun PlaylistCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.basicMarquee()
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(

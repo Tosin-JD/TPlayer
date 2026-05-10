@@ -16,7 +16,8 @@ import com.tosin.musicplayer.data.models.Song
 fun SongItem(
     song: Song,
     isPlaying: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val containerColor by animateColorAsState(
         targetValue = if (isPlaying) {
@@ -38,10 +39,11 @@ fun SongItem(
                 .fillMaxWidth()
                 .clickable { onClick() }
                 .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = song.albumArt ?: com.tosin.musicplayer.R.drawable.album_art,
+                model = if (song.albumArt.isNullOrEmpty()) com.tosin.musicplayer.R.drawable.album_art else song.albumArt,
                 contentDescription = null,
                 modifier = Modifier
                     .size(58.dp)
@@ -67,7 +69,9 @@ fun SongItem(
                 )
             }
 
-            if (isPlaying) {
+            if (trailingContent != null) {
+                trailingContent()
+            } else if (isPlaying) {
                 AssistChip(
                     onClick = onClick,
                     label = { Text("Playing") }

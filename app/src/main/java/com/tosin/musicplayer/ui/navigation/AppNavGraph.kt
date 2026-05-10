@@ -19,28 +19,32 @@ import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 
 @Composable
 fun AppNavGraph(
     viewModel: PlayerViewModel,
     settingsViewModel: SettingsViewModel,
+    equalizerViewModel: EqualizerViewModel,
     onRequestAudioPermission: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Routes where bottom bar should be hidden
-    val hideBottomBar = currentRoute in listOf("player", "lyrics", "search")
+    val showBottomNav = currentRoute in listOf("home", "stats")
+    val showMiniPlayer = currentRoute != "player" && currentRoute != "lyrics"
 
     Scaffold(
         bottomBar = {
-            if (!hideBottomBar) {
-                Column {
+            Column {
+                if (showMiniPlayer) {
                     MiniPlayer(
                         viewModel = viewModel,
                         onClick = { navController.navigate("player") }
                     )
+                }
+                if (showBottomNav) {
                     NavigationBar {
                         NavigationBarItem(
                             icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
@@ -121,9 +125,19 @@ fun AppNavGraph(
                     onOpenLyrics = {
                         navController.navigate("lyrics")
                     },
+                    onOpenEqualizer = {
+                        navController.navigate("equalizer")
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
+                )
+            }
+
+            composable("equalizer") {
+                EqualizerScreen(
+                    viewModel = equalizerViewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 

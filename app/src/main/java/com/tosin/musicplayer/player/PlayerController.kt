@@ -60,6 +60,8 @@ class PlayerController(
             _queue.value = value
         }
 
+    private var currentRepeatMode = RepeatMode.PLAY_ALL_ONCE
+
     // A-B Repeat
     private val _abRepeatA = MutableStateFlow<Long?>(null)
     val abRepeatA = _abRepeatA.asStateFlow()
@@ -92,6 +94,11 @@ class PlayerController(
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO && currentRepeatMode == RepeatMode.PLAY_ONE_ONCE) {
+                    controller.pause()
+                    controller.seekToPrevious()
+                }
+
                 val index = controller.currentMediaItemIndex
                 _currentIndex.value = index
                 val song = if (index >= 0 && index < playlist.size) {
@@ -174,9 +181,13 @@ class PlayerController(
     }
 
     fun setRepeatMode(mode: RepeatMode) {
+        currentRepeatMode = mode
         val controller = mediaController ?: return
         when (mode) {
-            RepeatMode.OFF -> {
+            RepeatMode.PLAY_ALL_ONCE -> {
+                controller.repeatMode = Player.REPEAT_MODE_OFF
+            }
+            RepeatMode.PLAY_ONE_ONCE -> {
                 controller.repeatMode = Player.REPEAT_MODE_OFF
             }
             RepeatMode.REPEAT_ALL -> {
@@ -185,11 +196,7 @@ class PlayerController(
             RepeatMode.REPEAT_ONE -> {
                 controller.repeatMode = Player.REPEAT_MODE_ONE
             }
-            RepeatMode.PLAY_ONE_ONCE -> {
-                controller.repeatMode = Player.REPEAT_MODE_OFF
-                // Note: Implementing "Play One Once" might need extra transition logic
-            }
-            RepeatMode.PLAY_ALL_ONCE -> {
+            RepeatMode.OFF -> {
                 controller.repeatMode = Player.REPEAT_MODE_OFF
             }
         }

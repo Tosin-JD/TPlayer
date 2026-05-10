@@ -35,10 +35,9 @@ fun MiniPlayer(
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         tonalElevation = 8.dp,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
             .height(72.dp)
             .clickable { onClick() }
     ) {
@@ -49,7 +48,7 @@ fun MiniPlayer(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = song.albumArt ?: R.drawable.album_art,
+                model = if (song.albumArt.isNullOrEmpty()) R.drawable.album_art else song.albumArt,
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)

@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.ui.graphics.luminance
 import androidx.palette.graphics.Palette
 import android.graphics.drawable.BitmapDrawable
@@ -35,6 +36,7 @@ fun PlayerScreen(
     viewModel: PlayerViewModel,
     onOpenPlaylist: () -> Unit = {},
     onOpenLyrics: () -> Unit = {},
+    onOpenEqualizer: () -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -50,10 +52,10 @@ fun PlayerScreen(
     var showSleepTimerDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.currentSong?.albumArt) {
-        val data = state.currentSong?.albumArt
+        val data = if (state.currentSong?.albumArt.isNullOrEmpty()) R.drawable.album_art else state.currentSong?.albumArt
         try {
             val request = ImageRequest.Builder(context)
-                .data(data ?: R.drawable.album_art)
+                .data(data)
                 .allowHardware(false)
                 .build()
 
@@ -130,6 +132,23 @@ fun PlayerScreen(
                 )
             }
 
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                Text(
+                    text = state.currentSong?.title ?: "No Song Playing",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = contentColor,
+                    maxLines = 1,
+                    modifier = Modifier.basicMarquee()
+                )
+                Text(
+                    text = state.currentSong?.artist ?: "Unknown Artist",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    modifier = Modifier.basicMarquee()
+                )
+            }
+
             Row {
                 // Sleep timer indicator
                 if (state.sleepTimerRemaining != null) {
@@ -164,6 +183,15 @@ fun PlayerScreen(
                             Text("${state.playbackSpeed}x", color = contentColor)
                         }
                     )
+                    Spacer(Modifier.width(8.dp))
+                }
+
+                IconButton(onClick = onOpenEqualizer) {
+                    Icon(
+                        Icons.Rounded.GraphicEq,
+                        contentDescription = "Equalizer",
+                        tint = contentColor
+                    )
                 }
             }
         }
@@ -179,7 +207,7 @@ fun PlayerScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
         ) {
             AsyncImage(
-                model = state.currentSong?.albumArt ?: R.drawable.album_art,
+                model = if (state.currentSong?.albumArt.isNullOrEmpty()) R.drawable.album_art else state.currentSong?.albumArt,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -188,19 +216,13 @@ fun PlayerScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        // Song Info
-        Text(
-            text = state.currentSong?.title ?: "No Song Playing",
-            style = MaterialTheme.typography.headlineMedium,
-            color = contentColor,
-            maxLines = 1,
-            modifier = Modifier.basicMarquee()
-        )
-
+        // Song Info (Artist only, title in top bar)
         Text(
             text = state.currentSong?.artist ?: "Unknown Artist",
-            style = MaterialTheme.typography.titleMedium,
-            color = contentColor.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.headlineSmall,
+            color = contentColor.copy(alpha = 0.8f),
+            maxLines = 1,
+            modifier = Modifier.basicMarquee()
         )
 
         Spacer(Modifier.height(24.dp))
@@ -376,25 +398,46 @@ fun PlayerScreen(
 
             IconButton(onClick = { onOpenPlaylist() }) {
                 Icon(
-                    imageVector = Icons.Rounded.PlaylistPlay,
+                    imageVector = Icons.AutoMirrored.Rounded.PlaylistPlay,
                     contentDescription = "Playlist",
                     tint = contentColor.copy(alpha = 0.6f)
                 )
             }
 
-            IconButton(onClick = { viewModel.cycleRepeatMode() }) {
-                Icon(
-                    imageVector = when (state.repeatMode) {
-                        RepeatMode.OFF -> Icons.Rounded.Repeat
-                        RepeatMode.REPEAT_ALL -> Icons.Rounded.Repeat
-                        RepeatMode.REPEAT_ONE -> Icons.Rounded.RepeatOne
-                        RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.RepeatOne
-                        RepeatMode.PLAY_ALL_ONCE -> Icons.Rounded.Repeat
-                    },
-                    contentDescription = "Repeat",
-                    tint = if (state.repeatMode == RepeatMode.OFF) contentColor.copy(alpha = 0.6f) else MaterialTheme.colorScheme.primary
-                )
-            }
+                val repeatIcon = when (state.repeatMode) {
+                    RepeatMode.PLAY_ALL_ONCE -> Icons.Rounded.Repeat
+                    RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.RepeatOne
+                    RepeatMode.REPEAT_ALL -> Icons.Rounded.Repeat
+                    RepeatMode.REPEAT_ONE -> Icons.Rounded.RepeatOne
+                    else -> Icons.Rounded.Repeat
+                }
+                val repeatTint = if (state.repeatMode == RepeatMode.REPEAT_ALL || state.repeatMode == RepeatMode.REPEAT_ONE) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    contentColor.copy(alpha = 0.6f)
+                }
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(onClick = { viewModel.cycleRepeatMode() }) {
+                        Icon(
+                            imageVector = repeatIcon,
+                            contentDescription = "Repeat Mode",
+                            tint = repeatTint
+                        )
+                    }
+                    Text(
+                        text = when (state.repeatMode) {
+                            RepeatMode.PLAY_ALL_ONCE -> "All once"
+                            RepeatMode.PLAY_ONE_ONCE -> "One once"
+                            RepeatMode.REPEAT_ALL -> "All repeat"
+                            RepeatMode.REPEAT_ONE -> "One repeat"
+                            else -> ""
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = repeatTint,
+                        maxLines = 1
+                    )
+                }
         }
     }
 }

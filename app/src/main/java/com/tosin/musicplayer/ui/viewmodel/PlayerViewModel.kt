@@ -41,7 +41,7 @@ class PlayerViewModel(
     private val _shuffle = MutableStateFlow(false)
     val shuffleEnabled = _shuffle.asStateFlow()
 
-    private val _repeatMode = MutableStateFlow(RepeatMode.OFF)
+    private val _repeatMode = MutableStateFlow(RepeatMode.PLAY_ALL_ONCE)
     val repeatMode = _repeatMode.asStateFlow()
 
     private val _lyricsVisible = MutableStateFlow(false)
@@ -268,11 +268,11 @@ class PlayerViewModel(
 
     fun cycleRepeatMode() {
         _repeatMode.value = when (_repeatMode.value) {
-            RepeatMode.OFF -> RepeatMode.REPEAT_ALL
+            RepeatMode.PLAY_ALL_ONCE -> RepeatMode.PLAY_ONE_ONCE
+            RepeatMode.PLAY_ONE_ONCE -> RepeatMode.REPEAT_ALL
             RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
-            RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ONE_ONCE
-            RepeatMode.PLAY_ONE_ONCE -> RepeatMode.PLAY_ALL_ONCE
-            RepeatMode.PLAY_ALL_ONCE -> RepeatMode.OFF
+            RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ALL_ONCE
+            else -> RepeatMode.PLAY_ALL_ONCE // Fallback
         }
         playerController.setRepeatMode(_repeatMode.value)
     }
@@ -390,8 +390,8 @@ class PlayerViewModel(
 
 enum class RepeatMode {
     OFF,
-    REPEAT_ALL,
-    REPEAT_ONE,
+    PLAY_ALL_ONCE,
     PLAY_ONE_ONCE,
-    PLAY_ALL_ONCE
+    REPEAT_ALL,
+    REPEAT_ONE
 }

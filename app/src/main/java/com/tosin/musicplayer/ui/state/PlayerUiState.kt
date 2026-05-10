@@ -12,7 +12,7 @@ data class PlayerUiState(
     val duration: Long = 0L,
     val isLoading: Boolean = true,
     val shuffleEnabled: Boolean = false,
-    val repeatMode: RepeatMode = RepeatMode.OFF,
+    val repeatMode: RepeatMode = RepeatMode.PLAY_ALL_ONCE,
     val lyricsVisible: Boolean = false,
     val playbackSpeed: Float = 1.0f,
     val abRepeatA: Long? = null,

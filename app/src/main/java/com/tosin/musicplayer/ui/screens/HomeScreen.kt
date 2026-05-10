@@ -30,7 +30,7 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,6 +65,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.basicMarquee
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -129,7 +130,6 @@ fun HomeScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    windowInsets = WindowInsets(0.dp),
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -166,7 +166,7 @@ fun HomeScreen(
                         }
                         IconButton(onClick = onNavigateToPlaylists) {
                             Icon(
-                                imageVector = Icons.Rounded.QueueMusic,
+                                imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
                                 contentDescription = "Playlists",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -226,10 +226,12 @@ fun HomeScreen(
             }
         },
         containerColor = MaterialTheme.colorScheme.surface
-    ) { _ ->
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
+                .padding(top = 16.dp)
                 .background(brush)
         ) {
             HorizontalPager(
@@ -292,7 +294,7 @@ private fun AllSongsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
@@ -334,7 +336,7 @@ private fun LibraryGroupsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
