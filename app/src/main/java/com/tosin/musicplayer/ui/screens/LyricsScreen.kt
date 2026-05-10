@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -60,6 +61,7 @@ fun LyricsScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
+                    windowInsets = WindowInsets(0.dp),
                     title = {
                         Column {
                             Text(

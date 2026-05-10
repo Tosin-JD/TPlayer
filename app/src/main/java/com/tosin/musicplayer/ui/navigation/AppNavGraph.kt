@@ -55,12 +55,6 @@ fun AppNavGraph(
                             }
                         )
                         NavigationBarItem(
-                            icon = { Icon(Icons.Rounded.MusicVideo, contentDescription = "Player") },
-                            label = { Text("Player") },
-                            selected = currentRoute == "player",
-                            onClick = { navController.navigate("player") }
-                        )
-                        NavigationBarItem(
                             icon = { Icon(Icons.Rounded.BarChart, contentDescription = "Stats") },
                             label = { Text("Stats") },
                             selected = currentRoute == "stats",

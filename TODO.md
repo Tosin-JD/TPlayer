@@ -14,3 +14,16 @@
 - [ ] **System Audio Effects (Equalizer)**: Implement the actual Equalizer view and connect it to `PlaybackService` audio sessions.
 - [ ] **Crossfade / Gapless Settings Verification**: Ensure the settings configured in `SettingsScreen` (Crossfade duration, Gapless playback) seamlessly update the ExoPlayer configuration in real-time.
 - [ ] **Shared Element Transitions**: Implement shared element transitions when expanding the `MiniPlayer` into the full `PlayerScreen` for a premium feel.
+
+
+Now remove the padding on the top screen. In between the Top App Bar and the status bar, there is a paddin in all the pages, remove the padding.
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/CurrentPlaylistScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/HomeScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/LibraryGroupDetailScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/LyricsScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/PlayerScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/PlaylistDetailScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/PlaylistScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/SearchScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/SettingsScreen.kt
+/home/oluwatosin/Documents/code/opensource/TPlayer/app/src/main/java/com/tosin/musicplayer/ui/screens/StatsScreen.kt

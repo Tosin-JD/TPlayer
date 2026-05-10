@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -79,6 +80,7 @@ fun PlaylistScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 title = { Text("Playlists", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

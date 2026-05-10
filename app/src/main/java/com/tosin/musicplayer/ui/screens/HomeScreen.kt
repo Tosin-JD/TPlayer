@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -128,6 +129,7 @@ fun HomeScreen(
         topBar = {
             Column {
                 TopAppBar(
+                    windowInsets = WindowInsets(0.dp),
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(

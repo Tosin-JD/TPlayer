@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,6 +46,7 @@ fun CurrentPlaylistScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 title = { Text("Current Playlist") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
