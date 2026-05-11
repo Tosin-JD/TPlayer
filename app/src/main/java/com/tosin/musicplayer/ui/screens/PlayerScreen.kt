@@ -29,6 +29,9 @@ import android.graphics.drawable.BitmapDrawable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import com.tosin.musicplayer.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,7 +117,9 @@ fun PlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(bgColor)
-            .padding(horizontal = 24.dp),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Top bar with back + extra controls
@@ -132,7 +137,7 @@ fun PlayerScreen(
                 )
             }
 
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+            Column(modifier = Modifier.weight(1f).padding(horizontal = AppSpacing.small)) {
                 Text(
                     text = state.currentSong?.title ?: "No Song Playing",
                     style = MaterialTheme.typography.titleMedium,
@@ -172,7 +177,7 @@ fun PlayerScreen(
                             )
                         }
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(AppSpacing.small))
                 }
 
                 // Speed indicator
@@ -183,7 +188,7 @@ fun PlayerScreen(
                             Text("${state.playbackSpeed}x", color = contentColor)
                         }
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(AppSpacing.small))
                 }
 
                 IconButton(onClick = onOpenEqualizer) {
@@ -196,7 +201,7 @@ fun PlayerScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(AppSpacing.large))
 
         // Album Art
         Card(
@@ -214,7 +219,7 @@ fun PlayerScreen(
             )
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
         // Song Info (Artist only, title in top bar)
         Text(
@@ -225,7 +230,7 @@ fun PlayerScreen(
             modifier = Modifier.basicMarquee()
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(AppSpacing.large))
 
         // A-B Repeat indicators
         if (state.abRepeatA != null || state.abRepeatB != null) {
@@ -246,7 +251,7 @@ fun PlayerScreen(
                     }
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(AppSpacing.small))
         }
 
         // Progress
@@ -273,7 +278,7 @@ fun PlayerScreen(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(AppSpacing.large))
 
         // Main Controls
         Row(
@@ -347,7 +352,7 @@ fun PlayerScreen(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .padding(bottom = AppSpacing.large)
         ) {
             IconButton(onClick = { viewModel.toggleShuffle() }) {
                 Icon(
@@ -459,20 +464,20 @@ private fun SpeedPickerDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = AppSpacing.xSmall),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = currentSpeed == speed,
                             onClick = { onSpeedSelected(speed) }
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(AppSpacing.small))
                         Text(
                             text = "${speed}x",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         if (speed == 1.0f) {
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(AppSpacing.small))
                             Text(
                                 text = "(Normal)",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -510,11 +515,11 @@ private fun SleepTimerDialog(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(AppSpacing.small))
                     TextButton(onClick = onCancel) {
                         Text("Cancel Timer", color = MaterialTheme.colorScheme.error)
                     }
-                    HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(Modifier.padding(vertical = AppSpacing.small))
                 }
                 durations.forEach { minutes ->
                     TextButton(

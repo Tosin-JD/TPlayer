@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,8 @@ import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.R
+import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.standardScreenPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,21 +53,22 @@ fun CurrentPlaylistScreen(
                 title = { Text("Current Playlist") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
                 )
             )
         }
-    ) { _ ->
+    ) { paddingValues ->
         LazyColumn(
             state = listState,
             modifier = Modifier
-                .fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = standardScreenPadding(top = AppSpacing.small),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
         ) {
             itemsIndexed(queue) { index, song ->
                 PlaylistItem(
@@ -119,7 +123,7 @@ private fun PlaylistItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Album art thumbnail
@@ -132,7 +136,7 @@ private fun PlaylistItem(
                 contentScale = ContentScale.Crop
             )
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(AppSpacing.large))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(

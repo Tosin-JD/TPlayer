@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.sin
@@ -58,7 +60,7 @@ fun EqualizerScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = AppSpacing.large),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Master Toggle
@@ -69,7 +71,7 @@ fun EqualizerScreen(
                 onClick = { viewModel.setEnabled(!uiState.enabled) }
             ) {
                 Row(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier.padding(AppSpacing.cardPadding),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -92,12 +94,12 @@ fun EqualizerScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
             // Real-time Visualizer (Dummy animated)
             AnimatedVisualizer(uiState.enabled)
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
             // Presets
             Text(
@@ -106,9 +108,9 @@ fun EqualizerScreen(
                 modifier = Modifier.align(Alignment.Start),
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(AppSpacing.small))
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 itemsIndexed(uiState.presets) { index, preset ->
@@ -121,7 +123,7 @@ fun EqualizerScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
             // Bands
             Text(
@@ -130,7 +132,7 @@ fun EqualizerScreen(
                 modifier = Modifier.align(Alignment.Start),
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(AppSpacing.large))
             
             Row(
                 modifier = Modifier
@@ -161,7 +163,7 @@ fun EqualizerScreen(
                                     .width(180.dp)
                             )
                         }
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(AppSpacing.small))
                         Text(
                             text = if (band.frequency < 1000) "${band.frequency}Hz" else "${band.frequency / 1000}kHz",
                             style = MaterialTheme.typography.labelSmall,
@@ -177,7 +179,7 @@ fun EqualizerScreen(
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
             // Enhancements
             Text(
@@ -186,7 +188,7 @@ fun EqualizerScreen(
                 modifier = Modifier.align(Alignment.Start),
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(AppSpacing.large))
 
             EnhancementSlider(
                 label = "Bass Boost",
@@ -215,7 +217,7 @@ fun EqualizerScreen(
                 icon = Icons.AutoMirrored.Rounded.VolumeUp
             )
             
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(AppSpacing.sectionSpacing))
         }
     }
 }
@@ -229,10 +231,10 @@ fun EnhancementSlider(
     enabled: Boolean,
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.small)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, modifier = Modifier.size(20.dp), tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(AppSpacing.small))
             Text(label, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.weight(1f))
             Text("${(value / valueRange.endInclusive * 100).toInt()}%", style = MaterialTheme.typography.labelMedium)

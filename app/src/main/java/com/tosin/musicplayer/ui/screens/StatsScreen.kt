@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.SongItem
+import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import java.util.*
 
@@ -117,7 +119,7 @@ fun StatsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(top = 12.dp), // extra space below TopAppBar
+                .padding(horizontal = AppSpacing.xLarge),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -141,13 +143,8 @@ fun StatsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 12.dp,
-                bottom = 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = standardScreenPadding(),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
         ) {
             items(sortedMostPlayed) { stat ->
                 SongItem(

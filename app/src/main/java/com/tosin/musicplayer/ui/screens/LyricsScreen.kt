@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.R
+import com.tosin.musicplayer.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +65,7 @@ fun LyricsScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Column(modifier = Modifier.fillMaxWidth().padding(end = 16.dp)) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(end = AppSpacing.large)) {
                             Text(
                                 text = song?.title ?: "Unknown",
                                 style = MaterialTheme.typography.titleMedium,
@@ -83,7 +85,7 @@ fun LyricsScreen(
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(
-                                imageVector = Icons.Rounded.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.White
                             )
@@ -99,7 +101,7 @@ fun LyricsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

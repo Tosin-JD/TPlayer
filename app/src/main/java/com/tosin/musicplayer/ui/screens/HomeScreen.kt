@@ -79,6 +79,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
+import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.standardScreenPadding
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -193,7 +195,7 @@ fun HomeScreen(
 
                 PrimaryScrollableTabRow(
                     selectedTabIndex = pagerState.currentPage,
-                    edgePadding = 16.dp
+                    edgePadding = AppSpacing.large
                 ) {
                     uiState.tabOrder.forEachIndexed { index, tab ->
                         Tab(
@@ -231,7 +233,6 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(top = 16.dp)
                 .background(brush)
         ) {
             HorizontalPager(
@@ -294,8 +295,8 @@ private fun AllSongsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = standardScreenPadding(),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
     ) {
         item {
             LibrarySummary(
@@ -336,8 +337,8 @@ private fun LibraryGroupsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = standardScreenPadding(),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
     ) {
         item {
             LibrarySummary(
@@ -356,8 +357,8 @@ private fun LibraryGroupsTab(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        .padding(horizontal = AppSpacing.cardPadding, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
@@ -441,7 +442,7 @@ private fun EmptyLibraryState(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(horizontal = AppSpacing.xLarge, vertical = AppSpacing.xLarge),
         contentAlignment = Alignment.Center
     ) {
         Column(

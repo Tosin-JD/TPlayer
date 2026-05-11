@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.R
+import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 
 @Composable
@@ -38,13 +39,13 @@ fun MiniPlayer(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .height(80.dp)
             .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
@@ -56,7 +57,7 @@ fun MiniPlayer(
                 contentScale = ContentScale.Crop
             )
 
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(AppSpacing.medium))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(

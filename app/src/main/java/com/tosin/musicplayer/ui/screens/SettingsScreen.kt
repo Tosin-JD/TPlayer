@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,7 +28,6 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             LargeTopAppBar(
-                windowInsets = WindowInsets(0.dp),
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -36,10 +36,11 @@ fun SettingsScreen(
                 }
             )
         }
-    ) { _ ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
             // ── Appearance ──
@@ -73,7 +74,7 @@ fun SettingsScreen(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
 
             // ── Playback ──
             SettingsSectionHeader("Playback")
@@ -149,7 +150,7 @@ fun SettingsScreen(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
 
             // ── Notifications ──
             SettingsSectionHeader("Notifications")
@@ -168,7 +169,7 @@ fun SettingsScreen(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
 
             // ── About ──
             SettingsSectionHeader("About")
@@ -189,7 +190,7 @@ fun SettingsScreen(
                 }
             )
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(AppSpacing.xLarge))
         }
     }
 }
@@ -201,6 +202,6 @@ private fun SettingsSectionHeader(title: String) {
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
     )
 }

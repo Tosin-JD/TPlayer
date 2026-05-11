@@ -11,6 +11,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.theme.AppSpacing
 
 @Composable
 fun SongItem(
@@ -38,8 +39,8 @@ fun SongItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             AsyncImage(
