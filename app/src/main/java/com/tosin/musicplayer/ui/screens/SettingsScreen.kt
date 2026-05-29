@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape // Added for edge-to-edge look
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -91,14 +89,13 @@ fun SettingsScreen(
             Spacer(Modifier.weight(1f))
 
             // Reset All Settings card (Edge-to-Edge)
-            Card(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { showResetDialog = true },
-                shape = RectangleShape, // Spans clean across the screen
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.errorContainer,
+                tonalElevation = 1.dp
             ) {
                 Row(
                     modifier = Modifier
@@ -159,19 +156,19 @@ private fun SettingsCategoryCard(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = AppSpacing.large)
             .clickable(onClick = onClick),
-        shape = RectangleShape, // Spans clean across the screen
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppSpacing.large), // Kept internal padding so text doesn't touch the screen glass
+                .padding(AppSpacing.large),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

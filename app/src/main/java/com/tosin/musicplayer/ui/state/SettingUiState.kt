@@ -11,6 +11,7 @@ data class SettingsUiState(
     val playbackSpeed: Float = 1.0f,
     val sleepTimerMinutes: Int = 0,
     val autoResumeEnabled: Boolean = true,
+    val pauseOnZeroVolume: Boolean = true,
     val accentColorIndex: Int = 0,
     val isScanning: Boolean = false,
     val tabOrder: List<String> = listOf("All", "Album", "Artist", "Genre", "Folder"),

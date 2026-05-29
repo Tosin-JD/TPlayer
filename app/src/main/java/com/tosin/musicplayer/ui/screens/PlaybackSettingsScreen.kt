@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -112,6 +113,20 @@ fun PlaybackSettingsScreen(
                     Switch(
                         checked = uiState.autoResumeEnabled,
                         onCheckedChange = { viewModel.toggleAutoResume(it) }
+                    )
+                }
+            )
+
+            ListItem(
+                headlineContent = { Text("Pause on 0 Volume") },
+                supportingContent = { Text("Pause playback when device volume is muted or zero") },
+                leadingContent = {
+                    Icon(Icons.AutoMirrored.Rounded.VolumeOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.pauseOnZeroVolume,
+                        onCheckedChange = { viewModel.togglePauseOnZeroVolume(it) }
                     )
                 }
             )

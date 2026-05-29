@@ -381,6 +381,10 @@ class PlayerViewModel(
         }
     }
 
+    fun setPauseOnZeroVolumeEnabled(enabled: Boolean) {
+        playerController.setPauseOnZeroVolumeEnabled(enabled)
+    }
+
     override fun onCleared() {
         super.onCleared()
         saveQueueState()

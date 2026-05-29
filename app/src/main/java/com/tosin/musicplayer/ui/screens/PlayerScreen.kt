@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.palette.graphics.Palette
@@ -91,6 +92,11 @@ fun PlayerScreen(
     val context = LocalContext.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenWidthDp < 360
+    val bottomIconSize = if (isSmallScreen) 44.dp else 32.dp
+    val bottomButtonSize = if (isSmallScreen) 60.dp else 48.dp
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
     var contentColor by remember { mutableStateOf(onSurfaceColor) }
@@ -484,37 +490,37 @@ fun PlayerScreen(
         ) {
             IconButton(
                 onClick = { viewModel.toggleShuffle() },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(
                     imageVector = if (state.shuffleEnabled) Icons.Rounded.ShuffleOn else Icons.Rounded.Shuffle,
                     contentDescription = "Shuffle",
                     tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(bottomIconSize)
                 )
             }
 
             IconButton(
                 onClick = { onOpenLyrics() },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Lyrics,
                     contentDescription = "Lyrics",
                     tint = if (state.lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(bottomIconSize)
                 )
             }
 
             IconButton(
                 onClick = { onOpenPlaylist() },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.PlaylistPlay,
                     contentDescription = "Playlist",
                     tint = contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(bottomIconSize)
                 )
             }
 
@@ -541,25 +547,25 @@ fun PlayerScreen(
 
             IconButton(
                 onClick = { viewModel.cycleRepeatMode() },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(
                     imageVector = repeatIcon,
                     contentDescription = repeatAccessibility,
                     tint = repeatTint,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(bottomIconSize)
                 )
             }
 
             IconButton(
                 onClick = { showMoreOptionsSheet = true },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.MoreVert,
                     contentDescription = "More Options",
                     tint = contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(bottomIconSize)
                 )
             }
         }

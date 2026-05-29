@@ -11,6 +11,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.tosin.musicplayer.data.local.MusicLoader
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PlaylistRepository
@@ -81,6 +83,11 @@ class MainActivity : ComponentActivity() {
         playerViewModel.onAudioPermissionResult(hasAudioPermission)
 
         setContent {
+            val settingsUiState by settingsViewModel.uiState.collectAsState()
+            androidx.compose.runtime.LaunchedEffect(settingsUiState.pauseOnZeroVolume) {
+                playerViewModel.setPauseOnZeroVolumeEnabled(settingsUiState.pauseOnZeroVolume)
+            }
+
             TPlayerTheme {
                 AppNavGraph(
                     viewModel = playerViewModel,

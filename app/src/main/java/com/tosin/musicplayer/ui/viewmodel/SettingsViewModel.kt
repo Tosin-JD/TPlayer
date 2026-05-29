@@ -23,13 +23,25 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+    init {
+        loadSavedSettings()
+    }
+
     // ── Appearance ──
-    fun toggleDarkMode(enabled: Boolean) = _uiState.update { it.copy(isDarkMode = enabled) }
-    fun toggleDynamicColor(enabled: Boolean) = _uiState.update { it.copy(useDynamicColor = enabled) }
-    fun setAccentColor(index: Int) = _uiState.update { it.copy(accentColorIndex = index) }
+    fun toggleDarkMode(enabled: Boolean) {
+        updateSettings { it.copy(isDarkMode = enabled) }
+    }
+
+    fun toggleDynamicColor(enabled: Boolean) {
+        updateSettings { it.copy(useDynamicColor = enabled) }
+    }
+
+    fun setAccentColor(index: Int) {
+        updateSettings { it.copy(accentColorIndex = index) }
+    }
 
     fun reorderTab(fromIndex: Int, toIndex: Int) {
-        _uiState.update { state ->
+        updateSettings { state ->
             val tabs = state.tabOrder.toMutableList()
             if (fromIndex in tabs.indices && toIndex in tabs.indices) {
                 val item = tabs.removeAt(fromIndex)
@@ -40,7 +52,7 @@ class SettingsViewModel(
     }
 
     fun toggleTabVisibility(tab: String) {
-        _uiState.update { state ->
+        updateSettings { state ->
             val visible = state.visibleTabs.toMutableList()
             if (tab in visible) {
                 // Don't allow hiding all tabs
@@ -53,7 +65,9 @@ class SettingsViewModel(
     }
 
     // ── General ──
-    fun toggleNotifications(enabled: Boolean) = _uiState.update { it.copy(showNotifications = enabled) }
+    fun toggleNotifications(enabled: Boolean) {
+        updateSettings { it.copy(showNotifications = enabled) }
+    }
 
     fun scanForChanges() {
         viewModelScope.launch {
@@ -72,12 +86,33 @@ class SettingsViewModel(
     }
 
     // ── Playback ──
-    fun toggleGaplessPlayback(enabled: Boolean) = _uiState.update { it.copy(gaplessPlayback = enabled) }
-    fun toggleCrossfade(enabled: Boolean) = _uiState.update { it.copy(crossfadeEnabled = enabled) }
-    fun setCrossfadeDuration(seconds: Int) = _uiState.update { it.copy(crossfadeDuration = seconds) }
-    fun setPlaybackSpeed(speed: Float) = _uiState.update { it.copy(playbackSpeed = speed) }
-    fun setSleepTimerMinutes(minutes: Int) = _uiState.update { it.copy(sleepTimerMinutes = minutes) }
-    fun toggleAutoResume(enabled: Boolean) = _uiState.update { it.copy(autoResumeEnabled = enabled) }
+    fun toggleGaplessPlayback(enabled: Boolean) {
+        updateSettings { it.copy(gaplessPlayback = enabled) }
+    }
+
+    fun toggleCrossfade(enabled: Boolean) {
+        updateSettings { it.copy(crossfadeEnabled = enabled) }
+    }
+
+    fun setCrossfadeDuration(seconds: Int) {
+        updateSettings { it.copy(crossfadeDuration = seconds) }
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        updateSettings { it.copy(playbackSpeed = speed) }
+    }
+
+    fun setSleepTimerMinutes(minutes: Int) {
+        updateSettings { it.copy(sleepTimerMinutes = minutes) }
+    }
+
+    fun toggleAutoResume(enabled: Boolean) {
+        updateSettings { it.copy(autoResumeEnabled = enabled) }
+    }
+
+    fun togglePauseOnZeroVolume(enabled: Boolean) {
+        updateSettings { it.copy(pauseOnZeroVolume = enabled) }
+    }
 
     // ── Reset Helpers ──
     fun resetGeneralSettings() {
@@ -118,7 +153,8 @@ class SettingsViewModel(
                 crossfadeDuration = 3,
                 playbackSpeed = 1.0f,
                 sleepTimerMinutes = 0,
-                autoResumeEnabled = true
+                autoResumeEnabled = true,
+                pauseOnZeroVolume = true
             )
         }
         viewModelScope.launch {
@@ -129,6 +165,7 @@ class SettingsViewModel(
             current.remove("playbackSpeed")
             current.remove("sleepTimerMinutes")
             current.remove("autoResumeEnabled")
+            current.remove("pauseOnZeroVolume")
             preferencesRepository.saveSettings(current)
         }
     }
@@ -139,4 +176,87 @@ class SettingsViewModel(
             preferencesRepository.saveSettings(emptyMap())
         }
     }
+
+    private fun loadSavedSettings() {
+        viewModelScope.launch {
+            val saved = preferencesRepository.loadSettings()
+            _uiState.update { current ->
+                current.copy(
+                    isDarkMode = saved.boolean("isDarkMode", current.isDarkMode),
+                    showNotifications = saved.boolean("showNotifications", current.showNotifications),
+                    useDynamicColor = saved.boolean("useDynamicColor", current.useDynamicColor),
+                    lastScanDate = saved.string("lastScanDate", current.lastScanDate),
+                    gaplessPlayback = saved.boolean("gaplessPlayback", current.gaplessPlayback),
+                    crossfadeEnabled = saved.boolean("crossfadeEnabled", current.crossfadeEnabled),
+                    crossfadeDuration = saved.int("crossfadeDuration", current.crossfadeDuration),
+                    playbackSpeed = saved.float("playbackSpeed", current.playbackSpeed),
+                    sleepTimerMinutes = saved.int("sleepTimerMinutes", current.sleepTimerMinutes),
+                    autoResumeEnabled = saved.boolean("autoResumeEnabled", current.autoResumeEnabled),
+                    pauseOnZeroVolume = saved.boolean("pauseOnZeroVolume", current.pauseOnZeroVolume),
+                    accentColorIndex = saved.int("accentColorIndex", current.accentColorIndex),
+                    tabOrder = saved.stringList("tabOrder", current.tabOrder),
+                    visibleTabs = saved.stringList("visibleTabs", current.visibleTabs)
+                )
+            }
+        }
+    }
+
+    private fun updateSettings(transform: (SettingsUiState) -> SettingsUiState) {
+        _uiState.update { current ->
+            val updated = transform(current)
+            persistSettings(updated)
+            updated
+        }
+    }
+
+    private fun persistSettings(state: SettingsUiState) {
+        viewModelScope.launch {
+            preferencesRepository.saveSettings(state.toMap())
+        }
+    }
+
+    private fun Map<String, Any>.boolean(key: String, default: Boolean): Boolean =
+        (this[key] as? Boolean) ?: default
+
+    private fun Map<String, Any>.int(key: String, default: Int): Int =
+        when (val value = this[key]) {
+            is Int -> value
+            is Long -> value.toInt()
+            is Double -> value.toInt()
+            is Float -> value.toInt()
+            else -> default
+        }
+
+    private fun Map<String, Any>.float(key: String, default: Float): Float =
+        when (val value = this[key]) {
+            is Float -> value
+            is Double -> value.toFloat()
+            is Int -> value.toFloat()
+            is Long -> value.toFloat()
+            else -> default
+        }
+
+    private fun Map<String, Any>.string(key: String, default: String): String =
+        (this[key] as? String) ?: default
+
+    private fun Map<String, Any>.stringList(key: String, default: List<String>): List<String> =
+        (this[key] as? List<*>)?.mapNotNull { it as? String } ?: default
+
+    private fun SettingsUiState.toMap(): Map<String, Any> = mapOf(
+        "isDarkMode" to isDarkMode,
+        "showNotifications" to showNotifications,
+        "useDynamicColor" to useDynamicColor,
+        "lastScanDate" to lastScanDate,
+        "gaplessPlayback" to gaplessPlayback,
+        "crossfadeEnabled" to crossfadeEnabled,
+        "crossfadeDuration" to crossfadeDuration,
+        "playbackSpeed" to playbackSpeed,
+        "sleepTimerMinutes" to sleepTimerMinutes,
+        "autoResumeEnabled" to autoResumeEnabled,
+        "pauseOnZeroVolume" to pauseOnZeroVolume,
+        "accentColorIndex" to accentColorIndex,
+        "isScanning" to isScanning,
+        "tabOrder" to tabOrder,
+        "visibleTabs" to visibleTabs
+    )
 }

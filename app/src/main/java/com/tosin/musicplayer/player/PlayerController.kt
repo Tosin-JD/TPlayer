@@ -61,6 +61,9 @@ class PlayerController(
         }
 
     private var currentRepeatMode = RepeatMode.PLAY_ALL_ONCE
+    
+    private var pauseOnZeroVolumeEnabled = true
+        private var wasPlayingBeforeZeroVolume = false
 
     // A-B Repeat
     private val _abRepeatA = MutableStateFlow<Long?>(null)
@@ -139,6 +142,22 @@ class PlayerController(
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
                 _playbackSpeed.value = playbackParameters.speed
             }
+
+            override fun onDeviceVolumeChanged(volume: Int, muted: Boolean) {
+                if (pauseOnZeroVolumeEnabled) {
+                    if (volume == 0 || muted) {
+                        if (controller.isPlaying) {
+                            wasPlayingBeforeZeroVolume = true
+                            pause()
+                        }
+                    } else if (volume > 0 && !muted) {
+                        if (wasPlayingBeforeZeroVolume) {
+                            play()
+                            wasPlayingBeforeZeroVolume = false
+                        }
+                    }
+                }
+            }
         })
     }
 
@@ -199,6 +218,13 @@ class PlayerController(
             RepeatMode.OFF -> {
                 controller.repeatMode = Player.REPEAT_MODE_OFF
             }
+        }
+    }
+
+    fun setPauseOnZeroVolumeEnabled(enabled: Boolean) {
+        pauseOnZeroVolumeEnabled = enabled
+        if (!enabled) {
+            wasPlayingBeforeZeroVolume = false
         }
     }
 
@@ -308,6 +334,7 @@ class PlayerController(
 }
 
 fun Song.toMediaItem(): MediaItem {
+    val artworkUri = albumArtOrDefault()
     return MediaItem.Builder()
         .setMediaId(id.toString())
         .setUri(Uri.parse(uri))
@@ -316,8 +343,15 @@ fun Song.toMediaItem(): MediaItem {
                 .setTitle(title)
                 .setArtist(artist)
                 .setAlbumTitle(album)
-                .setArtworkUri(albumArt?.let { Uri.parse(it) })
+                .setArtworkUri(artworkUri)
                 .build()
         )
         .build()
+}
+
+private fun Song.albumArtOrDefault(): Uri {
+    return Uri.parse(
+        albumArt?.takeIf { it.isNotBlank() }
+            ?: "android.resource://com.tosin.musicplayer/drawable/album_art"
+    )
 }

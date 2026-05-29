@@ -33,7 +33,10 @@ class PreferencesRepository(private val context: Context) {
             val obj = JSONObject(prefsFile.readText())
             val map = mutableMapOf<String, Any>()
             obj.keys().forEach { key ->
-                map[key] = obj.get(key)
+                map[key] = when (val value = obj.get(key)) {
+                    is JSONArray -> List(value.length()) { index -> value.get(index) }
+                    else -> value
+                }
             }
             map
         } catch (e: Exception) {

@@ -81,7 +81,7 @@ fun SearchScreen(
                                     Box {
                                         if (query.isEmpty()) {
                                             Text(
-                                                "Search songs, artists, albums...",
+                                                "Search...",
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                             )
