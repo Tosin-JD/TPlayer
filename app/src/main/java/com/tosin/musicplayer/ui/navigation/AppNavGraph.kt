@@ -169,6 +169,38 @@ fun AppNavGraph(
             composable("settings") {
                 SettingsScreen(
                     viewModel = settingsViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToGeneral = { navController.navigate("settings/general") },
+                    onNavigateToAppearance = { navController.navigate("settings/appearance") },
+                    onNavigateToPlayback = { navController.navigate("settings/playback") },
+                    onNavigateToAbout = { navController.navigate("settings/about") }
+                )
+            }
+
+            composable("settings/general") {
+                GeneralSettingsScreen(
+                    viewModel = settingsViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("settings/appearance") {
+                AppearanceSettingsScreen(
+                    viewModel = settingsViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("settings/playback") {
+                PlaybackSettingsScreen(
+                    viewModel = settingsViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("settings/about") {
+                AboutSettingsScreen(
+                    viewModel = settingsViewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

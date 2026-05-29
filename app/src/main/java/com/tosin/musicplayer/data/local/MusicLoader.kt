@@ -67,7 +67,13 @@ class MusicLoader(
                     .appendPath(id.toString())
                     .build()
 
-                val albumArtUri = "content://media/external/audio/albumart/$albumId"
+                val albumArtUri = Uri.parse("content://media/external/audio/albumart/$albumId")
+                // Check if album art actually exists for this album
+                val hasAlbumArt = try {
+                    contentResolver.openAssetFileDescriptor(albumArtUri, "r")?.use { true } ?: false
+                } catch (e: Exception) {
+                    false
+                }
 
                 songs.add(
                     Song(
@@ -78,9 +84,9 @@ class MusicLoader(
                         genre = loadGenreForSong(id),
                         folder = extractFolderName(folder),
                         uri = contentUri.toString(),
-                        albumArt = albumArtUri,
+                        albumArt = if (hasAlbumArt) albumArtUri.toString() else null,
                         duration = duration,
-                        lyrics = null // Note: Standard Android APIs don't support embedded lyrics extraction.
+                        lyrics = null
                     )
                 )
             }

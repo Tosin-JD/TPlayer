@@ -1,17 +1,19 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
@@ -21,9 +23,13 @@ import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToGeneral: () -> Unit,
+    onNavigateToAppearance: () -> Unit,
+    onNavigateToPlayback: () -> Unit,
+    onNavigateToAbout: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    var showResetDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -41,167 +47,150 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
-            // ── Appearance ──
-            SettingsSectionHeader("Appearance")
+            Spacer(Modifier.height(AppSpacing.small))
 
-            ListItem(
-                headlineContent = { Text("Dark Mode") },
-                supportingContent = { Text("Adjust the app theme for low light") },
-                leadingContent = {
-                    Icon(Icons.Rounded.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.isDarkMode,
-                        onCheckedChange = { viewModel.toggleDarkMode(it) }
-                    )
-                }
+            SettingsCategoryCard(
+                icon = Icons.Rounded.Settings,
+                title = "General",
+                subtitle = "Notifications, library scanning",
+                onClick = onNavigateToGeneral
             )
 
-            ListItem(
-                headlineContent = { Text("Dynamic Color") },
-                supportingContent = { Text("Use colors from your wallpaper (Android 12+)") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.useDynamicColor,
-                        onCheckedChange = { viewModel.toggleDynamicColor(it) }
-                    )
-                }
+            SettingsCategoryCard(
+                icon = Icons.Rounded.Palette,
+                title = "Appearance",
+                subtitle = "Theme, colors, tab layout",
+                onClick = onNavigateToAppearance
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
-
-            // ── Playback ──
-            SettingsSectionHeader("Playback")
-
-            ListItem(
-                headlineContent = { Text("Gapless Playback") },
-                supportingContent = { Text("Seamless transitions between tracks") },
-                leadingContent = {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.gaplessPlayback,
-                        onCheckedChange = { viewModel.toggleGaplessPlayback(it) }
-                    )
-                }
+            SettingsCategoryCard(
+                icon = Icons.Rounded.PlayCircle,
+                title = "Playback",
+                subtitle = "Crossfade, gapless, speed, auto-resume",
+                onClick = onNavigateToPlayback
             )
 
-            ListItem(
-                headlineContent = { Text("Crossfade") },
-                supportingContent = { Text("Smooth fade between tracks") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.crossfadeEnabled,
-                        onCheckedChange = { viewModel.toggleCrossfade(it) }
-                    )
-                }
+            SettingsCategoryCard(
+                icon = Icons.Rounded.Info,
+                title = "About",
+                subtitle = "Version, library info",
+                onClick = onNavigateToAbout
             )
 
-            if (uiState.crossfadeEnabled) {
-                ListItem(
-                    headlineContent = { Text("Crossfade Duration") },
-                    supportingContent = { Text("${uiState.crossfadeDuration} seconds") },
-                    leadingContent = {
-                        Icon(Icons.Rounded.Timelapse, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                    },
-                    trailingContent = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = {
-                                if (uiState.crossfadeDuration > 1) viewModel.setCrossfadeDuration(uiState.crossfadeDuration - 1)
-                            }) {
-                                Icon(Icons.Rounded.Remove, contentDescription = "Decrease")
-                            }
-                            Text(
-                                "${uiState.crossfadeDuration}s",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            IconButton(onClick = {
-                                if (uiState.crossfadeDuration < 12) viewModel.setCrossfadeDuration(uiState.crossfadeDuration + 1)
-                            }) {
-                                Icon(Icons.Rounded.Add, contentDescription = "Increase")
-                            }
-                        }
-                    },
-                    modifier = Modifier.animateContentSize()
+            Spacer(Modifier.weight(1f))
+
+            // Reset All Settings card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
+                    .clickable { showResetDialog = true },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
                 )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(AppSpacing.large),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Rounded.RestartAlt,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(Modifier.width(AppSpacing.small))
+                    Text(
+                        "Reset All Settings",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
             }
-
-            ListItem(
-                headlineContent = { Text("Auto-Resume") },
-                supportingContent = { Text("Remember playback position for each track") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.autoResumeEnabled,
-                        onCheckedChange = { viewModel.toggleAutoResume(it) }
-                    )
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
-
-            // ── Notifications ──
-            SettingsSectionHeader("Notifications")
-
-            ListItem(
-                headlineContent = { Text("Media Notifications") },
-                supportingContent = { Text("Show playback controls in notification") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.showNotifications,
-                        onCheckedChange = { viewModel.toggleNotifications(it) }
-                    )
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
-
-            // ── About ──
-            SettingsSectionHeader("About")
-
-            ListItem(
-                headlineContent = { Text("TPlayer") },
-                supportingContent = { Text("Version 1.0 • Alpha") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-            )
-
-            ListItem(
-                headlineContent = { Text("Last Library Scan") },
-                supportingContent = { Text(uiState.lastScanDate) },
-                leadingContent = {
-                    Icon(Icons.Rounded.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-            )
 
             Spacer(Modifier.height(AppSpacing.xLarge))
         }
     }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            icon = { Icon(Icons.Rounded.Warning, contentDescription = null) },
+            title = { Text("Reset All Settings?") },
+            text = { Text("This will reset all settings across General, Appearance, and Playback to their default values. This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.resetAllSettings()
+                        showResetDialog = false
+                    }
+                ) {
+                    Text("Reset", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-private fun SettingsSectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
-    )
+private fun SettingsCategoryCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = AppSpacing.large)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AppSpacing.large),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(AppSpacing.medium))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowForward,
+                contentDescription = "Open $title settings",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
 }
