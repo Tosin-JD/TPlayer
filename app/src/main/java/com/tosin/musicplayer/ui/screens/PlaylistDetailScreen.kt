@@ -112,6 +112,11 @@ fun PlaylistDetailScreen(
                         onClick = {
                             viewModel.onSongClick(songs, index)
                             onNavigateToPlayer()
+                        },
+                        trailingContent = {
+                            IconButton(onClick = { viewModel.removeSongFromPlaylist(playlistId, song.id) }) {
+                                Icon(Icons.Rounded.RemoveCircleOutline, contentDescription = "Remove from playlist", tint = MaterialTheme.colorScheme.error)
+                            }
                         }
                     )
                 }

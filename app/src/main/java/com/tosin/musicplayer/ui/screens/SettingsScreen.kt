@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape // Added for edge-to-edge look
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,7 +47,11 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                // Only respect top and bottom scaffold bars to prevent horizontal squeeze
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                )
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
@@ -82,12 +87,12 @@ fun SettingsScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // Reset All Settings card
+            // Reset All Settings card (Edge-to-Edge)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
                     .clickable { showResetDialog = true },
+                shape = RectangleShape, // Spans clean across the screen
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer
                 )
@@ -95,7 +100,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(AppSpacing.large),
+                        .padding(vertical = AppSpacing.medium, horizontal = AppSpacing.large),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -154,8 +159,8 @@ private fun SettingsCategoryCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppSpacing.large)
             .clickable(onClick = onClick),
+        shape = RectangleShape, // Spans clean across the screen
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
@@ -163,7 +168,7 @@ private fun SettingsCategoryCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppSpacing.large),
+                .padding(AppSpacing.large), // Kept internal padding so text doesn't touch the screen glass
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

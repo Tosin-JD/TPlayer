@@ -24,11 +24,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -41,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -62,6 +65,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.ui.components.SongItem
 import com.tosin.musicplayer.ui.state.HomeUiState
 import com.tosin.musicplayer.ui.state.LibraryGroup
@@ -71,10 +75,13 @@ import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
 
+import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: PlayerViewModel,
+    settingsViewModel: SettingsViewModel,
     onNavigateToPlayer: () -> Unit,
     onRequestAudioPermission: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -83,7 +90,24 @@ fun HomeScreen(
     onNavigateToPlaylists: () -> Unit = {}
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
-    val pagerState = rememberPagerState(pageCount = { uiState.tabOrder.size })
+    val settingsState by settingsViewModel.uiState.collectAsState()
+    
+    val activeTabs = remember(settingsState.tabOrder, settingsState.visibleTabs) {
+        settingsState.tabOrder
+            .filter { it in settingsState.visibleTabs }
+            .mapNotNull { name -> 
+                try {
+                    LibraryTab.valueOf(name)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+    }
+
+    // Fallback if activeTabs is somehow empty
+    val safeActiveTabs = if (activeTabs.isEmpty()) listOf(LibraryTab.All) else activeTabs
+
+    val pagerState = rememberPagerState(pageCount = { safeActiveTabs.size })
     val coroutineScope = rememberCoroutineScope()
     
     val colorScheme = MaterialTheme.colorScheme
@@ -102,18 +126,20 @@ fun HomeScreen(
     }
 
     // Sync pager with selected tab
-    LaunchedEffect(uiState.selectedTab) {
-        val index = uiState.tabOrder.indexOf(uiState.selectedTab)
+    LaunchedEffect(uiState.selectedTab, safeActiveTabs) {
+        val index = safeActiveTabs.indexOf(uiState.selectedTab)
         if (index != -1 && index != pagerState.currentPage) {
             pagerState.animateScrollToPage(index)
         }
     }
 
     // Sync selected tab with pager
-    LaunchedEffect(pagerState.currentPage) {
-        val tab = uiState.tabOrder[pagerState.currentPage]
-        if (tab != uiState.selectedTab) {
-            viewModel.selectLibraryTab(tab)
+    LaunchedEffect(pagerState.currentPage, safeActiveTabs) {
+        if (pagerState.currentPage < safeActiveTabs.size) {
+            val tab = safeActiveTabs[pagerState.currentPage]
+            if (tab != uiState.selectedTab) {
+                viewModel.selectLibraryTab(tab)
+            }
         }
     }
 
@@ -172,22 +198,12 @@ fun HomeScreen(
                         }
                     }
                 )
-                
-                var showReorderDialog by remember { mutableStateOf(false) }
-
-                if (showReorderDialog) {
-                    TabReorderDialog(
-                        tabOrder = uiState.tabOrder,
-                        onReorder = { from, to -> viewModel.reorderTabs(from, to) },
-                        onDismiss = { showReorderDialog = false }
-                    )
-                }
 
                 PrimaryScrollableTabRow(
-                    selectedTabIndex = pagerState.currentPage,
+                    selectedTabIndex = if (pagerState.currentPage < safeActiveTabs.size) pagerState.currentPage else 0,
                     edgePadding = AppSpacing.large
                 ) {
-                    uiState.tabOrder.forEachIndexed { index, tab ->
+                    safeActiveTabs.forEachIndexed { index, tab ->
                         Tab(
                             selected = uiState.selectedTab == tab,
                             onClick = { 
@@ -195,16 +211,6 @@ fun HomeScreen(
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            modifier = Modifier.combinedClickable(
-                                onClick = { 
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                },
-                                onLongClick = {
-                                    showReorderDialog = true
-                                }
-                            ),
                             text = { Text(tab.label) },
                             icon = {
                                 Icon(
@@ -230,7 +236,8 @@ fun HomeScreen(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize()
             ) { pageIndex ->
-                val tab = uiState.tabOrder[pageIndex]
+                if (pageIndex >= safeActiveTabs.size) return@HorizontalPager
+                val tab = safeActiveTabs[pageIndex]
                 
                 AnimatedContent(
                     targetState = HomeContentState(
@@ -275,6 +282,9 @@ private fun AllSongsTab(
     onNavigateToPlayer: () -> Unit
 ) {
     val playerState by viewModel.uiState.collectAsState()
+    var songToAdd by remember { mutableStateOf<com.tosin.musicplayer.data.models.Song?>(null) }
+    val playlists by viewModel.playlists.collectAsState()
+    var showCreatePlaylistDialog by remember { mutableStateOf(false) }
 
     if (uiState.songs.isEmpty()) {
         EmptyLibraryState(
@@ -282,6 +292,74 @@ private fun AllSongsTab(
             message = "Add music to this device and it will appear here in alphabetical order."
         )
         return
+    }
+
+    if (songToAdd != null) {
+        AlertDialog(
+            onDismissRequest = { songToAdd = null },
+            title = { Text("Add to Playlist") },
+            text = {
+                if (playlists.isEmpty()) {
+                    Text("No playlists available. Create one first.")
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(playlists) { playlist ->
+                            TextButton(
+                                onClick = {
+                                    viewModel.addSongToPlaylist(playlist.id, songToAdd!!.id)
+                                    songToAdd = null
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(playlist.name, modifier = Modifier.fillMaxWidth())
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    songToAdd = null
+                    showCreatePlaylistDialog = true
+                }) {
+                    Text("Create New Playlist")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { songToAdd = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showCreatePlaylistDialog) {
+        var playlistName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showCreatePlaylistDialog = false },
+            title = { Text("New Playlist") },
+            text = {
+                OutlinedTextField(
+                    value = playlistName,
+                    onValueChange = { playlistName = it },
+                    label = { Text("Playlist Name") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (playlistName.isNotBlank()) {
+                            viewModel.createPlaylist(playlistName)
+                            showCreatePlaylistDialog = false
+                        }
+                    }
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreatePlaylistDialog = false }) { Text("Cancel") }
+            }
+        )
     }
 
     LazyColumn(
@@ -306,6 +384,11 @@ private fun AllSongsTab(
                 onClick = {
                     viewModel.onSongClick(uiState.songs, index)
                     onNavigateToPlayer()
+                },
+                trailingContent = {
+                    IconButton(onClick = { songToAdd = song }) {
+                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = "Add to playlist", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             )
         }

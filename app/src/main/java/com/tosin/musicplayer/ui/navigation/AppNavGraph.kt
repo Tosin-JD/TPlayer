@@ -81,6 +81,7 @@ fun AppNavGraph(
             composable("home") {
                 HomeScreen(
                     viewModel = viewModel,
+                    settingsViewModel = settingsViewModel,
                     onNavigateToPlayer = {
                         navController.navigate("player")
                     },
