@@ -25,8 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.tosin.musicplayer.R
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -157,7 +157,7 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = standardScreenPadding(top = AppSpacing.small),
+                contentPadding = standardScreenPadding(top = 0.dp),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
             ) {
                 item {
@@ -204,7 +204,7 @@ private fun SearchResultItem(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
         ) {
             AsyncImage(
-                model = song.albumArt ?: R.drawable.album_art,
+                model = song.albumArt.orDefaultAlbumArt(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(52.dp)

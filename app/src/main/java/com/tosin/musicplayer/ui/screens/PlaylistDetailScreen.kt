@@ -102,7 +102,7 @@ fun PlaylistDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = standardScreenPadding(),
+                contentPadding = standardScreenPadding(top = 0.dp),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
             ) {
                 itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->

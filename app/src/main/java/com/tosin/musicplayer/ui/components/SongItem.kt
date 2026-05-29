@@ -11,6 +11,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 
 @Composable
@@ -44,7 +45,7 @@ fun SongItem(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = if (song.albumArt.isNullOrEmpty()) com.tosin.musicplayer.R.drawable.album_art else song.albumArt,
+                model = song.albumArt.orDefaultAlbumArt(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(58.dp)

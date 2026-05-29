@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.R
 import com.tosin.musicplayer.ui.theme.AppSpacing
@@ -41,7 +42,7 @@ fun LyricsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Album Art (Blured/Dimmed)
         AsyncImage(
-            model = song?.albumArt ?: R.drawable.album_art,
+            model = song?.albumArt.orDefaultAlbumArt(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

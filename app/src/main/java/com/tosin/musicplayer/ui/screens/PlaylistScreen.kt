@@ -149,7 +149,7 @@ fun PlaylistScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = standardScreenPadding(),
+                contentPadding = standardScreenPadding(top = 0.dp),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
             ) {
                 items(playlists, key = { it.id }) { playlist ->

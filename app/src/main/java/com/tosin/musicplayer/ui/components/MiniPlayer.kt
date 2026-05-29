@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.R
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 
@@ -49,7 +50,7 @@ fun MiniPlayer(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = if (song.albumArt.isNullOrEmpty()) R.drawable.album_art else song.albumArt,
+                model = song.albumArt.orDefaultAlbumArt(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)

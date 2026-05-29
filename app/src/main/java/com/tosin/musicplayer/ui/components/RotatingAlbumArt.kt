@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 
 @Composable
 fun RotatingAlbumArt(
@@ -36,7 +37,7 @@ fun RotatingAlbumArt(
     )
 
     AsyncImage(
-        model = image,
+        model = image.orDefaultAlbumArt(),
         contentDescription = null,
         modifier = Modifier
             .size(300.dp)

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.R
 import com.tosin.musicplayer.ui.theme.AppSpacing
@@ -67,7 +68,7 @@ fun CurrentPlaylistScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = standardScreenPadding(top = AppSpacing.small),
+            contentPadding = standardScreenPadding(top = 0.dp),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
         ) {
             itemsIndexed(queue) { index, song ->
@@ -128,7 +129,7 @@ private fun PlaylistItem(
         ) {
             // Album art thumbnail
             AsyncImage(
-                model = if (song.albumArt.isNullOrEmpty()) R.drawable.album_art else song.albumArt,
+                model = song.albumArt.orDefaultAlbumArt(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)

@@ -18,6 +18,7 @@ import com.tosin.musicplayer.ui.components.ProgressBar
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.R
 import com.tosin.musicplayer.ui.viewmodel.RepeatMode
+import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -55,7 +56,7 @@ fun PlayerScreen(
     var showSleepTimerDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.currentSong?.albumArt) {
-        val data = if (state.currentSong?.albumArt.isNullOrEmpty()) R.drawable.album_art else state.currentSong?.albumArt
+        val data = state.currentSong?.albumArt.orDefaultAlbumArt()
         try {
             val request = ImageRequest.Builder(context)
                 .data(data)
@@ -119,7 +120,7 @@ fun PlayerScreen(
             .background(bgColor)
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
+            .padding(horizontal = AppSpacing.large),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Top bar with back + extra controls
@@ -212,7 +213,7 @@ fun PlayerScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
         ) {
             AsyncImage(
-                model = if (state.currentSong?.albumArt.isNullOrEmpty()) R.drawable.album_art else state.currentSong?.albumArt,
+                model = state.currentSong?.albumArt.orDefaultAlbumArt(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
