@@ -63,8 +63,10 @@ fun LyricsScreen(
 
         Scaffold(
             containerColor = Color.Transparent,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 TopAppBar(
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = {
                         Column(modifier = Modifier.fillMaxWidth().padding(end = AppSpacing.large)) {
                             Text(

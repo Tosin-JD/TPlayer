@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -246,95 +245,94 @@ fun PlayerScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(bgColor)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = AppSpacing.small),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top bar with back + extra controls
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(bgColor)
+                .navigationBarsPadding()
+                .padding(horizontal = AppSpacing.small),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = "Back to Library",
-                    tint = contentColor,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f).padding(horizontal = AppSpacing.small)) {
-                Text(
-                    text = state.currentSong?.title ?: "No Song Playing",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = contentColor,
-                    maxLines = 1,
-                    modifier = Modifier.basicMarquee()
-                )
-                Text(
-                    text = state.currentSong?.artist ?: "Unknown Artist",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = contentColor.copy(alpha = 0.7f),
-                    maxLines = 1,
-                    modifier = Modifier.basicMarquee()
-                )
-            }
-
-            Row {
-                // Sleep timer indicator
-                if (state.sleepTimerRemaining != null) {
-                    val remaining = state.sleepTimerRemaining!! / 1000
-                    val mins = remaining / 60
-                    val secs = remaining % 60
-                    AssistChip(
-                        onClick = { showSleepTimerDialog = true },
-                        label = {
-                            Text(
-                                "$mins:${secs.toString().padStart(2, '0')}",
-                                color = contentColor
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Rounded.Timer,
-                                contentDescription = "Sleep Timer",
-                                tint = contentColor,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    )
-                    Spacer(Modifier.width(AppSpacing.small))
-                }
-
-                // Speed indicator
-                if (state.playbackSpeed != 1.0f) {
-                    AssistChip(
-                        onClick = { showSpeedDialog = true },
-                        label = {
-                            Text("${state.playbackSpeed}x", color = contentColor)
-                        }
-                    )
-                    Spacer(Modifier.width(AppSpacing.small))
-                }
-
-                IconButton(onClick = onOpenEqualizer) {
+            // Top bar with back + extra controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
                     Icon(
-                        Icons.Rounded.GraphicEq,
-                        contentDescription = "Equalizer",
-                        tint = contentColor
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Back to Library",
+                        tint = contentColor,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
-            }
-        }
 
-        Spacer(Modifier.height(AppSpacing.large))
+                Column(modifier = Modifier.weight(1f).padding(horizontal = AppSpacing.small)) {
+                    Text(
+                        text = state.currentSong?.title ?: "No Song Playing",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = contentColor,
+                        maxLines = 1,
+                        modifier = Modifier.basicMarquee()
+                    )
+                    Text(
+                        text = state.currentSong?.artist ?: "Unknown Artist",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        modifier = Modifier.basicMarquee()
+                    )
+                }
+
+                Row {
+                    // Sleep timer indicator
+                    if (state.sleepTimerRemaining != null) {
+                        val remaining = state.sleepTimerRemaining!! / 1000
+                        val mins = remaining / 60
+                        val secs = remaining % 60
+                        AssistChip(
+                            onClick = { showSleepTimerDialog = true },
+                            label = {
+                                Text(
+                                    "$mins:${secs.toString().padStart(2, '0')}",
+                                    color = contentColor
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Rounded.Timer,
+                                    contentDescription = "Sleep Timer",
+                                    tint = contentColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
+                        Spacer(Modifier.width(AppSpacing.small))
+                    }
+
+                    // Speed indicator
+                    if (state.playbackSpeed != 1.0f) {
+                        AssistChip(
+                            onClick = { showSpeedDialog = true },
+                            label = {
+                                Text("${state.playbackSpeed}x", color = contentColor)
+                            }
+                        )
+                        Spacer(Modifier.width(AppSpacing.small))
+                    }
+
+                    IconButton(onClick = onOpenEqualizer) {
+                        Icon(
+                            Icons.Rounded.GraphicEq,
+                            contentDescription = "Equalizer",
+                            tint = contentColor
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(AppSpacing.large))
 
         // Album Art
         Card(

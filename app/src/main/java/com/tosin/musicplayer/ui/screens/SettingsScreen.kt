@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -31,7 +30,7 @@ fun SettingsScreen(
     var showResetDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-//        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
@@ -89,13 +88,14 @@ fun SettingsScreen(
             Spacer(Modifier.weight(1f))
 
             // Reset All Settings card (Edge-to-Edge)
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showResetDialog = true },
+            Card(
+                onClick = { showResetDialog = true },
+                modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.errorContainer,
-                tonalElevation = 1.dp
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -156,14 +156,16 @@ private fun SettingsCategoryCard(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    Surface(
+    Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppSpacing.large)
-            .clickable(onClick = onClick),
+            .padding(horizontal = AppSpacing.large),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier

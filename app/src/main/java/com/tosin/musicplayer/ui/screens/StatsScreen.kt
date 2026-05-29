@@ -61,58 +61,60 @@ fun StatsScreen(
     }
 
     Scaffold(
-    topBar = {
-        TopAppBar(
-            title = { Text("Most Played", fontWeight = FontWeight.Bold) },
-            actions = {
-                Box {
-                    IconButton(onClick = { showSortMenu = true }) {
-                        Icon(Icons.Rounded.FilterList, contentDescription = "Sort By")
-                    }
-                    DropdownMenu(
-                        expanded = showSortMenu,
-                        onDismissRequest = { showSortMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("By Plays") },
-                            onClick = {
-                                sortBy = SortBy.PLAY_COUNT
-                                showSortMenu = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("By Minutes") },
-                            onClick = {
-                                sortBy = SortBy.DURATION
-                                showSortMenu = false
-                            }
-                        )
-                    }
-                }
-                Box {
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Rounded.History, contentDescription = "Time Range")
-                    }
-
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        StatsRange.entries.forEach { range ->
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            TopAppBar(
+                title = { Text("Most Played", fontWeight = FontWeight.Bold) },
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                actions = {
+                    Box {
+                        IconButton(onClick = { showSortMenu = true }) {
+                            Icon(Icons.Rounded.FilterList, contentDescription = "Sort By")
+                        }
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
                             DropdownMenuItem(
-                                text = { Text(range.label) },
+                                text = { Text("By Plays") },
                                 onClick = {
-                                    selectedRange = range
-                                    showMenu = false
+                                    sortBy = SortBy.PLAY_COUNT
+                                    showSortMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("By Minutes") },
+                                onClick = {
+                                    sortBy = SortBy.DURATION
+                                    showSortMenu = false
                                 }
                             )
                         }
                     }
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Rounded.History, contentDescription = "Time Range")
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            StatsRange.entries.forEach { range ->
+                                DropdownMenuItem(
+                                    text = { Text(range.label) },
+                                    onClick = {
+                                        selectedRange = range
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        )
-    }
-) { paddingValues ->
+            )
+        }
+    ) { paddingValues ->
 
     if (mostPlayed.isEmpty()) {
         Box(
