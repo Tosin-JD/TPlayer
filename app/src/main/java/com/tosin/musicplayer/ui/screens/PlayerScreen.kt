@@ -3,6 +3,7 @@ package com.tosin.musicplayer.ui.screens
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
@@ -43,9 +45,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,6 +64,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.palette.graphics.Palette
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -149,6 +154,89 @@ fun PlayerScreen(
                 showSleepTimerDialog = false
             },
             onDismiss = { showSleepTimerDialog = false }
+        )
+    }
+
+    var showMoreOptionsSheet by remember { mutableStateOf(false) }
+    var showABRepeatDialog by remember { mutableStateOf(false) }
+
+    if (showMoreOptionsSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showMoreOptionsSheet = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = AppSpacing.xLarge)
+            ) {
+                Text(
+                    text = "More Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
+                )
+                
+                // Speed
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text("Playback Speed") },
+                    supportingContent = { Text("${state.playbackSpeed}x") },
+                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Rounded.Speed, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable {
+                        showMoreOptionsSheet = false
+                        showSpeedDialog = true
+                    }
+                )
+
+                // Sleep Timer
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text("Sleep Timer") },
+                    supportingContent = { 
+                        if (state.sleepTimerRemaining != null) {
+                            Text("${state.sleepTimerRemaining!! / 60000} mins remaining")
+                        } else {
+                            Text("Off")
+                        }
+                    },
+                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable {
+                        showMoreOptionsSheet = false
+                        showSleepTimerDialog = true
+                    }
+                )
+
+                // A-B Repeat
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text("A-B Repeat") },
+                    supportingContent = {
+                        if (state.abRepeatA != null || state.abRepeatB != null) {
+                            val a = state.abRepeatA?.let { formatTime(it) } ?: "—"
+                            val b = state.abRepeatB?.let { formatTime(it) } ?: "—"
+                            Text("Active: $a to $b")
+                        } else {
+                            Text("Off")
+                        }
+                    },
+                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Rounded.RepeatOneOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable {
+                        showMoreOptionsSheet = false
+                        showABRepeatDialog = true
+                    }
+                )
+            }
+        }
+    }
+
+    if (showABRepeatDialog) {
+        ABRepeatDialog(
+            currentA = state.abRepeatA,
+            currentB = state.abRepeatB,
+            currentProgress = state.progress,
+            duration = state.currentSong?.duration ?: 0L,
+            onSetA = { viewModel.setABRepeatA() },
+            onSetB = { viewModel.setABRepeatB() },
+            onClear = { viewModel.clearABRepeat() },
+            onDismiss = { showABRepeatDialog = false }
         )
     }
 
@@ -386,7 +474,7 @@ fun PlayerScreen(
 
         Spacer(Modifier.weight(1f))
 
-        // Bottom row: shuffle, lyrics, A-B, speed, timer, playlist, repeat
+        // Bottom row: shuffle, lyrics, playlist, repeat, ellipsis
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier
@@ -418,49 +506,6 @@ fun PlayerScreen(
                 )
             }
 
-            // A-B Repeat
-            IconButton(
-                onClick = {
-                    when {
-                        state.abRepeatA == null -> viewModel.setABRepeatA()
-                        state.abRepeatB == null -> viewModel.setABRepeatB()
-                        else -> viewModel.clearABRepeat()
-                    }
-                },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.RepeatOneOn,
-                    contentDescription = "A-B Repeat",
-                    tint = if (state.abRepeatA != null) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            IconButton(
-                onClick = { showSpeedDialog = true },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Speed,
-                    contentDescription = "Speed",
-                    tint = if (state.playbackSpeed != 1.0f) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            IconButton(
-                onClick = { showSleepTimerDialog = true },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Timer,
-                    contentDescription = "Sleep Timer",
-                    tint = if (state.sleepTimerRemaining != null) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
             IconButton(
                 onClick = { onOpenPlaylist() },
                 modifier = Modifier.size(48.dp)
@@ -486,29 +531,35 @@ fun PlayerScreen(
                 contentColor.copy(alpha = 0.6f)
             }
             
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(
-                    onClick = { viewModel.cycleRepeatMode() },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = repeatIcon,
-                        contentDescription = "Repeat Mode",
-                        tint = repeatTint,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Text(
-                    text = when (state.repeatMode) {
-                        RepeatMode.PLAY_ALL_ONCE -> "All once"
-                        RepeatMode.PLAY_ONE_ONCE -> "One once"
-                        RepeatMode.REPEAT_ALL -> "All repeat"
-                        RepeatMode.REPEAT_ONE -> "One repeat"
-                        else -> ""
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = repeatTint,
-                    maxLines = 1
+            val repeatAccessibility = when (state.repeatMode) {
+                RepeatMode.PLAY_ALL_ONCE -> "Repeat Mode: All once"
+                RepeatMode.PLAY_ONE_ONCE -> "Repeat Mode: One once"
+                RepeatMode.REPEAT_ALL -> "Repeat Mode: All repeat"
+                RepeatMode.REPEAT_ONE -> "Repeat Mode: One repeat"
+                else -> "Repeat Mode"
+            }
+
+            IconButton(
+                onClick = { viewModel.cycleRepeatMode() },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = repeatIcon,
+                    contentDescription = repeatAccessibility,
+                    tint = repeatTint,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            IconButton(
+                onClick = { showMoreOptionsSheet = true },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.MoreVert,
+                    contentDescription = "More Options",
+                    tint = contentColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(32.dp)
                 )
             }
         }
@@ -613,4 +664,73 @@ private fun formatTime(ms: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+@Composable
+private fun ABRepeatDialog(
+    currentA: Long?,
+    currentB: Long?,
+    currentProgress: Long,
+    duration: Long,
+    onSetA: () -> Unit,
+    onSetB: () -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("A-B Repeat") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
+                Text(
+                    text = "Current Position: ${formatTime(currentProgress)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Start Point (A)", style = MaterialTheme.typography.labelLarge)
+                        Text(currentA?.let { formatTime(it) } ?: "Not Set", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    FilledTonalButton(onClick = onSetA) {
+                        Text("Set A")
+                    }
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("End Point (B)", style = MaterialTheme.typography.labelLarge)
+                        Text(currentB?.let { formatTime(it) } ?: "Not Set", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    FilledTonalButton(onClick = onSetB, enabled = currentA != null) {
+                        Text("Set B")
+                    }
+                }
+                
+                if (currentA != null || currentB != null) {
+                    TextButton(
+                        onClick = {
+                            onClear()
+                            onDismiss()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Clear A-B Repeat", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Done") }
+        }
+    )
 }

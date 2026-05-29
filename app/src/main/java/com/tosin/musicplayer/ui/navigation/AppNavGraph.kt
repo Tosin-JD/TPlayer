@@ -2,6 +2,7 @@ package com.tosin.musicplayer.ui.navigation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Home
@@ -37,7 +38,9 @@ fun AppNavGraph(
 
     Scaffold(
         bottomBar = {
-            Column {
+            Column(
+                modifier = if (!showBottomNav) Modifier.navigationBarsPadding() else Modifier
+            ) {
                 if (showMiniPlayer) {
                     MiniPlayer(
                         viewModel = viewModel,
