@@ -2,7 +2,6 @@ package com.tosin.musicplayer.ui.screens
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -44,10 +43,6 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            if (uiState.isScanning) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
-
             // ── Appearance ──
             SettingsSectionHeader("Appearance")
 
@@ -76,33 +71,6 @@ fun SettingsScreen(
                         checked = uiState.useDynamicColor,
                         onCheckedChange = { viewModel.toggleDynamicColor(it) }
                     )
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
-
-            // ── General ──
-            SettingsSectionHeader("General")
-
-            ListItem(
-                headlineContent = { Text("Scan for Changes") },
-                supportingContent = { Text("Scan the device for new or removed songs in background") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                modifier = Modifier.clickable(enabled = !uiState.isScanning) {
-                    viewModel.scanForChanges()
-                }
-            )
-
-            ListItem(
-                headlineContent = { Text("Full Scan") },
-                supportingContent = { Text("Clear cached library and completely rescan all songs") },
-                leadingContent = {
-                    Icon(Icons.Rounded.FindInPage, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                modifier = Modifier.clickable(enabled = !uiState.isScanning) {
-                    viewModel.fullScan()
                 }
             )
 

@@ -12,5 +12,7 @@ data class SettingsUiState(
     val sleepTimerMinutes: Int = 0,
     val autoResumeEnabled: Boolean = true,
     val accentColorIndex: Int = 0,
-    val isScanning: Boolean = false
+    val isScanning: Boolean = false,
+    val tabOrder: List<String> = listOf("All", "Album", "Artist", "Genre", "Folder"),
+    val visibleTabs: List<String> = listOf("All", "Album", "Artist", "Genre", "Folder")
 )

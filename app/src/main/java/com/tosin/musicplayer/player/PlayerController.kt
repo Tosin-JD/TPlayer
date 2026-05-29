@@ -216,25 +216,12 @@ class PlayerController(
         abRepeatJob?.cancel()
     }
 
-    fun setABRepeatAAt(positionMs: Long) {
-        _abRepeatA.value = positionMs
-        _abRepeatB.value = null
-        abRepeatJob?.cancel()
-    }
-
     fun setABRepeatB() {
         val a = _abRepeatA.value ?: return
         val b = mediaController?.currentPosition ?: return
         if (b <= a) return
         _abRepeatB.value = b
         startABRepeatLoop(a, b)
-    }
-
-    fun setABRepeatBAt(positionMs: Long) {
-        val a = _abRepeatA.value ?: return
-        if (positionMs <= a) return
-        _abRepeatB.value = positionMs
-        startABRepeatLoop(a, positionMs)
     }
 
     fun clearABRepeat() {
