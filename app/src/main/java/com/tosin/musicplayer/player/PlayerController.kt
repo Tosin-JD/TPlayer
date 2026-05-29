@@ -178,6 +178,21 @@ class PlayerController(
         mediaController?.pause()
     }
 
+    fun stop() {
+        mediaController?.run {
+            stop()
+            clearMediaItems()
+        }
+        _isPlaying.value = false
+        _progress.value = 0L
+        _currentSong.value = null
+        _queue.value = emptyList()
+        _currentIndex.value = 0
+        sleepTimerJob?.cancel()
+        _sleepTimerRemaining.value = null
+        clearABRepeat()
+    }
+
     fun seekToMediaItem(index: Int) {
         mediaController?.seekTo(index, 0)
         mediaController?.play()

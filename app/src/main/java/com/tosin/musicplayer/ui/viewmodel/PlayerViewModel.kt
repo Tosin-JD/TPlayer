@@ -251,6 +251,8 @@ class PlayerViewModel(
 
     fun pause() = playerController.pause()
 
+    fun stop() = playerController.stop()
+
     fun next() = playerController.next()
 
     fun previous() = playerController.previous()

@@ -1,5 +1,10 @@
 package com.tosin.musicplayer.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -41,10 +46,19 @@ fun AppNavGraph(
             Column(
                 modifier = if (!showBottomNav) Modifier.navigationBarsPadding() else Modifier
             ) {
-                if (showMiniPlayer) {
+                AnimatedVisibility(
+                    visible = showMiniPlayer,
+                    enter = slideInVertically { fullHeight -> fullHeight } + fadeIn(),
+                    exit = slideOutVertically { fullHeight -> fullHeight } + fadeOut()
+                ) {
                     MiniPlayer(
                         viewModel = viewModel,
-                        onClick = { navController.navigate("player") }
+                        onExpand = {
+                            navController.navigate("player")
+                        },
+                        onStop = {
+                            viewModel.stop()
+                        }
                     )
                 }
                 if (showBottomNav) {
@@ -120,7 +134,21 @@ fun AppNavGraph(
                 )
             }
 
-            composable("player") {
+            composable(
+                route = "player",
+                enterTransition = {
+                    slideInVertically { fullHeight -> fullHeight } + fadeIn()
+                },
+                exitTransition = {
+                    slideOutVertically { fullHeight -> fullHeight } + fadeOut()
+                },
+                popEnterTransition = {
+                    slideInVertically { fullHeight -> fullHeight } + fadeIn()
+                },
+                popExitTransition = {
+                    slideOutVertically { fullHeight -> fullHeight } + fadeOut()
+                }
+            ) {
                 PlayerScreen(
                     viewModel = viewModel,
                     onOpenPlaylist = {

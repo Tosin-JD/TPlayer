@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.rounded.Close
@@ -61,8 +62,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.palette.graphics.Palette
@@ -96,6 +99,7 @@ fun PlayerScreen(
     val isSmallScreen = configuration.screenWidthDp < 360
     val bottomIconSize = if (isSmallScreen) 44.dp else 32.dp
     val bottomButtonSize = if (isSmallScreen) 60.dp else 48.dp
+    val swipeThresholdPx = with(LocalDensity.current) { 96.dp.toPx() }
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
     var contentColor by remember { mutableStateOf(onSurfaceColor) }
@@ -250,7 +254,23 @@ fun PlayerScreen(
                 .fillMaxSize()
                 .background(bgColor)
                 .navigationBarsPadding()
-                .padding(horizontal = AppSpacing.small),
+                .padding(horizontal = AppSpacing.small)
+                .pointerInput(onNavigateBack) {
+                    var dragDistance = 0f
+                    detectVerticalDragGestures(
+                        onVerticalDrag = { change, dragAmount ->
+                            dragDistance += dragAmount
+                            change.consume()
+                        },
+                        onDragEnd = {
+                            if (dragDistance > swipeThresholdPx) {
+                                onNavigateBack()
+                            }
+                            dragDistance = 0f
+                        },
+                        onDragCancel = { dragDistance = 0f }
+                    )
+                },
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top bar with back + extra controls
