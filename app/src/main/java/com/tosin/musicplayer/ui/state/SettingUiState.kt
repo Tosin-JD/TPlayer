@@ -11,5 +11,6 @@ data class SettingsUiState(
     val playbackSpeed: Float = 1.0f,
     val sleepTimerMinutes: Int = 0,
     val autoResumeEnabled: Boolean = true,
-    val accentColorIndex: Int = 0
+    val accentColorIndex: Int = 0,
+    val isScanning: Boolean = false
 )

@@ -156,6 +156,8 @@ class PlayerViewModel(
         _selectedLibraryTab.value = tab
     }
 
+    private var hasRestoredQueue = false
+
     private fun loadSongs() {
         songsJob?.cancel()
         songsJob = viewModelScope.launch {
@@ -168,9 +170,17 @@ class PlayerViewModel(
                 .collect { songs ->
                     _songs.value = songs
                     _isLoading.value = false
-                    // Restore queue state
-                    restoreQueueState(songs)
+                    // Restore queue state only once when songs are available
+                    if (!hasRestoredQueue && songs.isNotEmpty()) {
+                        restoreQueueState(songs)
+                        hasRestoredQueue = true
+                    }
                 }
+        }
+        
+        // Scan for changes in the background thread when the app starts
+        viewModelScope.launch {
+            repository.scanForChanges()
         }
     }
 
@@ -320,6 +330,8 @@ class PlayerViewModel(
     // --- A-B Repeat ---
     fun setABRepeatA() = playerController.setABRepeatA()
     fun setABRepeatB() = playerController.setABRepeatB()
+    fun setAbRepeatAAt(positionMs: Long) = playerController.setABRepeatAAt(positionMs)
+    fun setAbRepeatBAt(positionMs: Long) = playerController.setABRepeatBAt(positionMs)
     fun clearABRepeat() = playerController.clearABRepeat()
 
     // --- Sleep Timer ---

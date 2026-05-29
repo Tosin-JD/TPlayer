@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val musicLoader = MusicLoader(contentResolver)
-                val repository = MusicRepository(musicLoader)
+                val repository = MusicRepository(this@MainActivity, musicLoader, preferencesRepository)
                 val playerController = PlayerController(this@MainActivity, statsRepository)
 
                 return when {
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
                         ) as T
                     }
                     modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
-                        SettingsViewModel() as T
+                        SettingsViewModel(repository, preferencesRepository) as T
                     }
                     modelClass.isAssignableFrom(EqualizerViewModel::class.java) -> {
                         EqualizerViewModel() as T

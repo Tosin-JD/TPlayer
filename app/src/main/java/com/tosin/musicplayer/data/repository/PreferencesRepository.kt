@@ -3,6 +3,9 @@ package com.tosin.musicplayer.data.repository
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -14,22 +17,16 @@ class PreferencesRepository(private val context: Context) {
     private val prefsFile = File(context.filesDir, "tplayer_prefs.json")
     private val queueFile = File(context.filesDir, "queue_state.json")
 
-    // --- Settings ---
-    suspend fun saveSettings(settings: Map<String, Any>) = withContext(Dispatchers.IO) {
-        try {
-            val obj = JSONObject()
-            settings.forEach { (key, value) ->
-                obj.put(key, value)
-            }
-            prefsFile.writeText(obj.toString())
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    private val _settingsFlow = MutableStateFlow<Map<String, Any>>(emptyMap())
+    val settingsFlow: StateFlow<Map<String, Any>> = _settingsFlow.asStateFlow()
+
+    init {
+        _settingsFlow.value = loadSettingsSync()
     }
 
-    suspend fun loadSettings(): Map<String, Any> = withContext(Dispatchers.IO) {
-        if (!prefsFile.exists()) return@withContext emptyMap()
-        try {
+    private fun loadSettingsSync(): Map<String, Any> {
+        if (!prefsFile.exists()) return emptyMap()
+        return try {
             val obj = JSONObject(prefsFile.readText())
             val map = mutableMapOf<String, Any>()
             obj.keys().forEach { key ->
@@ -39,6 +36,24 @@ class PreferencesRepository(private val context: Context) {
         } catch (e: Exception) {
             emptyMap()
         }
+    }
+
+    // --- Settings ---
+    suspend fun saveSettings(settings: Map<String, Any>) = withContext(Dispatchers.IO) {
+        try {
+            val obj = JSONObject()
+            settings.forEach { (key, value) ->
+                obj.put(key, value)
+            }
+            prefsFile.writeText(obj.toString())
+            _settingsFlow.value = settings
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadSettings(): Map<String, Any> = withContext(Dispatchers.IO) {
+        loadSettingsSync()
     }
 
     // --- Queue Persistence ---
