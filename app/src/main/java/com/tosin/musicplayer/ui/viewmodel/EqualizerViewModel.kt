@@ -1,10 +1,7 @@
 package com.tosin.musicplayer.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.tosin.musicplayer.player.EqualizerManager
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 class EqualizerViewModel : ViewModel() {
     val uiState = EqualizerManager.uiState
@@ -17,8 +14,8 @@ class EqualizerViewModel : ViewModel() {
         EqualizerManager.setBandLevel(bandId, level)
     }
 
-    fun setPreset(presetIndex: Int) {
-        EqualizerManager.setPreset(presetIndex)
+    fun setPreset(presetId: String) {
+        EqualizerManager.setPreset(presetId)
     }
 
     fun setBassBoost(strength: Int) {
