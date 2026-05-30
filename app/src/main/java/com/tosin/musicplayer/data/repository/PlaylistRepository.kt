@@ -58,6 +58,18 @@ class PlaylistRepository(private val context: Context) {
         _playlists.value = current
     }
 
+    suspend fun addSongsToPlaylist(playlistId: String, songIds: List<Long>) = withContext(Dispatchers.IO) {
+        if (songIds.isEmpty()) return@withContext
+        val current = loadPlaylistsSync().map {
+            if (it.id == playlistId) {
+                val merged = (it.songIds + songIds).distinct()
+                it.copy(songIds = merged, updatedAt = System.currentTimeMillis())
+            } else it
+        }
+        savePlaylists(current)
+        _playlists.value = current
+    }
+
     suspend fun removeSongFromPlaylist(playlistId: String, songId: Long) = withContext(Dispatchers.IO) {
         val current = loadPlaylistsSync().map {
             if (it.id == playlistId) {

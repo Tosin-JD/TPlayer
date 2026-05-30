@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.ShuffleOn
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -92,6 +93,7 @@ fun PlayerScreen(
     viewModel: PlayerViewModel,
     onOpenPlaylist: () -> Unit = {},
     onOpenLyrics: () -> Unit = {},
+    onOpenVisualizer: () -> Unit = {},
     onOpenEqualizer: () -> Unit = {},
     onOpenSongEditor: (Long) -> Unit = {},
     onNavigateBack: () -> Unit = {}
@@ -466,9 +468,17 @@ fun PlayerScreen(
                         Spacer(Modifier.width(AppSpacing.small))
                     }
 
-                    IconButton(onClick = onOpenEqualizer) {
+                    IconButton(onClick = onOpenVisualizer) {
                         Icon(
                             Icons.Rounded.GraphicEq,
+                            contentDescription = "Visualizer",
+                            tint = contentColor
+                        )
+                    }
+
+                    IconButton(onClick = onOpenEqualizer) {
+                        Icon(
+                            Icons.Rounded.Tune,
                             contentDescription = "Equalizer",
                             tint = contentColor
                         )
@@ -650,6 +660,18 @@ fun PlayerScreen(
                     imageVector = Icons.Rounded.Lyrics,
                     contentDescription = "Lyrics",
                     tint = if (state.lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(bottomIconSize)
+                )
+            }
+
+            IconButton(
+                onClick = { onOpenVisualizer() },
+                modifier = Modifier.size(bottomButtonSize)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.GraphicEq,
+                    contentDescription = "Visualizer",
+                    tint = contentColor.copy(alpha = 0.6f),
                     modifier = Modifier.size(bottomIconSize)
                 )
             }

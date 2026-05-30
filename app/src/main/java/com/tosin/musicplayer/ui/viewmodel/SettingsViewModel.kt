@@ -6,6 +6,7 @@ import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
 import com.tosin.musicplayer.ui.state.FolderEntry
 import com.tosin.musicplayer.ui.state.SettingsUiState
+import com.tosin.musicplayer.ui.state.StorageScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +38,39 @@ class SettingsViewModel(
 
     fun toggleDynamicColor(enabled: Boolean) {
         updateSettings { it.copy(useDynamicColor = enabled) }
+    }
+
+    fun setThemePreset(themePreset: String) {
+        updateSettings { it.copy(themePreset = themePreset) }
+    }
+
+    fun toggleRememberLastPlay(enabled: Boolean) {
+        updateSettings { it.copy(rememberLastPlay = enabled) }
+    }
+
+    fun setStorageScopeForTab(tab: String, scope: StorageScope) {
+        updateSettings { state ->
+            when (tab) {
+                "All" -> state.copy(storageScopeAll = scope.name)
+                "Album" -> state.copy(storageScopeAlbum = scope.name)
+                "Artist" -> state.copy(storageScopeArtist = scope.name)
+                "Genre" -> state.copy(storageScopeGenre = scope.name)
+                "Folder" -> state.copy(storageScopeFolder = scope.name)
+                else -> state
+            }
+        }
+    }
+
+    fun getStorageScopeForTab(tab: String): StorageScope {
+        val raw = when (tab) {
+            "All" -> uiState.value.storageScopeAll
+            "Album" -> uiState.value.storageScopeAlbum
+            "Artist" -> uiState.value.storageScopeArtist
+            "Genre" -> uiState.value.storageScopeGenre
+            "Folder" -> uiState.value.storageScopeFolder
+            else -> uiState.value.storageScopeAll
+        }
+        return StorageScope.entries.firstOrNull { it.name == raw } ?: StorageScope.Both
     }
 
     fun setAccentColor(index: Int) {
@@ -146,6 +180,13 @@ class SettingsViewModel(
             it.copy(
                 isDarkMode = true,
                 useDynamicColor = true,
+                themePreset = "Amoled",
+                rememberLastPlay = true,
+                storageScopeAll = "Both",
+                storageScopeAlbum = "Both",
+                storageScopeArtist = "Both",
+                storageScopeGenre = "Both",
+                storageScopeFolder = "Both",
                 accentColorIndex = 0,
                 tabOrder = listOf("All", "Album", "Artist", "Genre", "Folder"),
                 visibleTabs = listOf("All", "Album", "Artist", "Genre", "Folder")
@@ -155,6 +196,13 @@ class SettingsViewModel(
             val current = preferencesRepository.loadSettings().toMutableMap()
             current.remove("isDarkMode")
             current.remove("useDynamicColor")
+            current.remove("themePreset")
+            current.remove("rememberLastPlay")
+            current.remove("storageScopeAll")
+            current.remove("storageScopeAlbum")
+            current.remove("storageScopeArtist")
+            current.remove("storageScopeGenre")
+            current.remove("storageScopeFolder")
             current.remove("accentColorIndex")
             current.remove("tabOrder")
             current.remove("visibleTabs")
@@ -206,7 +254,14 @@ class SettingsViewModel(
                     isDarkMode = saved.boolean("isDarkMode", current.isDarkMode),
                     showNotifications = saved.boolean("showNotifications", current.showNotifications),
                     useDynamicColor = saved.boolean("useDynamicColor", current.useDynamicColor),
+                    themePreset = saved.string("themePreset", current.themePreset),
                     lastScanDate = saved.string("lastScanDate", current.lastScanDate),
+                    rememberLastPlay = saved.boolean("rememberLastPlay", current.rememberLastPlay),
+                    storageScopeAll = saved.string("storageScopeAll", current.storageScopeAll),
+                    storageScopeAlbum = saved.string("storageScopeAlbum", current.storageScopeAlbum),
+                    storageScopeArtist = saved.string("storageScopeArtist", current.storageScopeArtist),
+                    storageScopeGenre = saved.string("storageScopeGenre", current.storageScopeGenre),
+                    storageScopeFolder = saved.string("storageScopeFolder", current.storageScopeFolder),
                     gaplessPlayback = saved.boolean("gaplessPlayback", current.gaplessPlayback),
                     crossfadeEnabled = saved.boolean("crossfadeEnabled", current.crossfadeEnabled),
                     crossfadeDuration = saved.int("crossfadeDuration", current.crossfadeDuration),
@@ -284,7 +339,14 @@ class SettingsViewModel(
         "isDarkMode" to isDarkMode,
         "showNotifications" to showNotifications,
         "useDynamicColor" to useDynamicColor,
+        "themePreset" to themePreset,
         "lastScanDate" to lastScanDate,
+        "rememberLastPlay" to rememberLastPlay,
+        "storageScopeAll" to storageScopeAll,
+        "storageScopeAlbum" to storageScopeAlbum,
+        "storageScopeArtist" to storageScopeArtist,
+        "storageScopeGenre" to storageScopeGenre,
+        "storageScopeFolder" to storageScopeFolder,
         "gaplessPlayback" to gaplessPlayback,
         "crossfadeEnabled" to crossfadeEnabled,
         "crossfadeDuration" to crossfadeDuration,

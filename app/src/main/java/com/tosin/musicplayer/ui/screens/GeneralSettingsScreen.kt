@@ -13,7 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.io.File
+import com.tosin.musicplayer.ui.components.StorageScopeSelector
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,6 +109,35 @@ fun GeneralSettingsScreen(
                 supportingContent = { Text(uiState.lastScanDate) },
                 leadingContent = {
                     Icon(Icons.Rounded.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            )
+
+            SettingsSubHeader("Storage Source")
+
+            ListItem(
+                headlineContent = { Text("Default Library Storage") },
+                supportingContent = { Text("Choose which device the library should read from by default") },
+                leadingContent = {
+                    Icon(Icons.Rounded.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            )
+            StorageScopeSelector(
+                selected = StorageScope.entries.firstOrNull { it.name == uiState.storageScopeAll } ?: StorageScope.Both,
+                onSelected = { viewModel.setStorageScopeForTab("All", it) },
+                modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small)
+            )
+
+            ListItem(
+                headlineContent = { Text("Remember Last Play") },
+                supportingContent = { Text("Resume the last song and playback position when the app opens again") },
+                leadingContent = {
+                    Icon(Icons.Rounded.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.rememberLastPlay,
+                        onCheckedChange = { viewModel.toggleRememberLastPlay(it) }
+                    )
                 }
             )
 

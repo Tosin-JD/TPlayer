@@ -13,6 +13,8 @@ import com.tosin.musicplayer.ui.state.HomeUiState
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.PlayerUiState
+import com.tosin.musicplayer.ui.state.StorageScope
+import com.tosin.musicplayer.ui.state.matchesStorageScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +40,7 @@ class PlayerViewModel(
     private val _hasAudioPermission = MutableStateFlow(true)
     private val _selectedLibraryTab = MutableStateFlow(LibraryTab.All)
     private var songsJob: Job? = null
+    private var hasRestoredQueueState = false
 
     private val _shuffle = MutableStateFlow(false)
     val shuffleEnabled = _shuffle.asStateFlow()
@@ -150,6 +153,7 @@ class PlayerViewModel(
             songsJob?.cancel()
             _songs.value = emptyList()
             _isLoading.value = false
+            hasRestoredQueueState = false
         }
     }
 
@@ -170,8 +174,10 @@ class PlayerViewModel(
                     _songs.value = songs
                     _isLoading.value = false
                     // Restore queue state
-                    restoreQueueState(songs)
-                    enforceCurrentPlaybackStillVisible(songs)
+                    if (!hasRestoredQueueState) {
+                        restoreQueueState(songs)
+                        hasRestoredQueueState = true
+                    }
                 }
         }
     }
@@ -183,20 +189,27 @@ class PlayerViewModel(
     }
 
     private suspend fun restoreQueueState(songs: List<Song>) {
+        val settings = preferencesRepository.loadSettings()
+        val rememberLastPlay = settings.boolean("rememberLastPlay", true)
+        if (!rememberLastPlay) return
         val queueState = preferencesRepository.loadQueueState() ?: return
         if (queueState.songIds.isEmpty()) return
         val songMap = songs.associateBy { it.id }
         val queueSongs = queueState.songIds.mapNotNull { songMap[it] }
         if (queueSongs.isNotEmpty()) {
-            playerController.setPlaylist(queueSongs, queueState.currentIndex.coerceIn(0, queueSongs.size - 1))
+            playerController.setPlaylist(
+                queueSongs,
+                queueState.currentIndex.coerceIn(0, queueSongs.size - 1),
+                queueState.positionMs
+            )
+            if (queueState.wasPlaying) {
+                playerController.play()
+            }
         }
     }
 
-    private fun enforceCurrentPlaybackStillVisible(songs: List<Song>) {
-        val currentSong = playerController.currentSong.value ?: return
-        if (songs.none { it.id == currentSong.id }) {
-            playerController.stop()
-        }
+    private fun Map<String, Any>.boolean(key: String, default: Boolean): Boolean {
+        return (this[key] as? Boolean) ?: default
     }
 
     fun saveQueueState() {
@@ -206,7 +219,8 @@ class PlayerViewModel(
                 preferencesRepository.saveQueueState(
                     songIds = queue.map { it.id },
                     currentIndex = playerController.currentIndex.value,
-                    positionMs = playerController.getCurrentPosition()
+                    positionMs = playerController.getCurrentPosition(),
+                    wasPlaying = playerController.isPlaying.value
                 )
             }
         }
@@ -231,7 +245,8 @@ class PlayerViewModel(
                     title = title,
                     subtitle = groupSubtitle(selectedTab, groupedItems),
                     songCount = groupedItems.size,
-                    artwork = groupedItems.firstOrNull { it.albumArt != null }?.albumArt
+                    artwork = groupedItems.firstOrNull { it.albumArt != null }?.albumArt,
+                    songs = groupedItems
                 )
             }
             .sortedBy { it.title.lowercase() }
@@ -312,6 +327,17 @@ class PlayerViewModel(
         }
     }
 
+    fun getSongsForTab(tab: LibraryTab, storageScope: StorageScope): List<Song> {
+        val songs = _songs.value.filter { it.matchesStorageScope(storageScope) }
+        return when (tab) {
+            LibraryTab.All -> songs
+            LibraryTab.Album -> songs
+            LibraryTab.Artist -> songs
+            LibraryTab.Genre -> songs
+            LibraryTab.Folder -> songs
+        }
+    }
+
     // --- Search & Filter ---
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
@@ -379,6 +405,12 @@ class PlayerViewModel(
         }
     }
 
+    fun addSongsToPlaylist(playlistId: String, songIds: List<Long>) {
+        viewModelScope.launch {
+            playlistRepository.addSongsToPlaylist(playlistId, songIds)
+        }
+    }
+
     fun removeSongFromPlaylist(playlistId: String, songId: Long) {
         viewModelScope.launch {
             playlistRepository.removeSongFromPlaylist(playlistId, songId)
@@ -402,6 +434,18 @@ class PlayerViewModel(
             playerController.setPlaylist(songs, startIndex)
             playerController.play()
         }
+    }
+
+    fun addSongsToQueue(songs: List<Song>) {
+        playerController.addSongsToQueue(songs)
+    }
+
+    fun playNextSongs(songs: List<Song>) {
+        playerController.playNextSongs(songs)
+    }
+
+    fun reorderCurrentQueue(fromIndex: Int, toIndex: Int) {
+        playerController.reorderQueue(fromIndex, toIndex)
     }
 
     fun setPauseOnZeroVolumeEnabled(enabled: Boolean) {

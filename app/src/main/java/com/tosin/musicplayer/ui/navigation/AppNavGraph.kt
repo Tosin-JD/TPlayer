@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.MusicVideo
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,16 +38,23 @@ fun AppNavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomNav = currentRoute in listOf("home", "stats")
     val showMiniPlayer = currentRoute != "player" &&
         currentRoute != "lyrics" &&
+        currentRoute != "visualizer" &&
         currentRoute?.startsWith("songEditor") != true &&
         currentRoute?.startsWith("lyricsEditor") != true
 
     Scaffold(
+        floatingActionButton = {
+            if (currentRoute == "home") {
+                FloatingActionButton(onClick = { navController.navigate("stats") }) {
+                    Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
+                }
+            }
+        },
         bottomBar = {
             Column(
-                modifier = if (!showBottomNav) Modifier.navigationBarsPadding() else Modifier
+                modifier = Modifier.navigationBarsPadding()
             ) {
                 AnimatedVisibility(
                     visible = showMiniPlayer,
@@ -65,28 +70,6 @@ fun AppNavGraph(
                             viewModel.stop()
                         }
                     )
-                }
-                if (showBottomNav) {
-                    NavigationBar {
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-                            label = { Text("Home") },
-                            selected = currentRoute == "home",
-                            onClick = { 
-                                if (currentRoute != "home") {
-                                    navController.navigate("home") {
-                                        popUpTo("home") { inclusive = true }
-                                    }
-                                }
-                            }
-                        )
-                        NavigationBarItem(
-                            icon = { Icon(Icons.Rounded.BarChart, contentDescription = "Stats") },
-                            label = { Text("Stats") },
-                            selected = currentRoute == "stats",
-                            onClick = { navController.navigate("stats") }
-                        )
-                    }
                 }
             }
         }
@@ -161,6 +144,9 @@ fun AppNavGraph(
                     },
                     onOpenLyrics = {
                         navController.navigate("lyrics")
+                    },
+                    onOpenVisualizer = {
+                        navController.navigate("visualizer")
                     },
                     onOpenEqualizer = {
                         navController.navigate("equalizer")
@@ -244,6 +230,7 @@ fun AppNavGraph(
                 LyricsScreen(
                     viewModel = viewModel,
                     onNavigateBack = { navController.popBackStack() },
+                    onOpenVisualizer = { navController.navigate("visualizer") },
                     onOpenLyricsEditor = { songId ->
                         navController.navigate("lyricsEditor/$songId")
                     }
@@ -253,7 +240,21 @@ fun AppNavGraph(
             composable("stats") {
                 StatsScreen(
                     viewModel = viewModel,
-                    onNavigateToPlayer = { navController.navigate("player") }
+                    onNavigateToHome = {
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    },
+                    onNavigateToPlayer = {
+                        navController.navigate("player")
+                    }
+                )
+            }
+
+            composable("visualizer") {
+                VisualizerScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 

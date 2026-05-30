@@ -12,7 +12,13 @@ data class Song(
     val albumArt: String?,
     val duration: Long,
     val lyrics: String? = null,
-    val trackNumber: Int = 0
+    val trackNumber: Int = 0,
+    val year: Int? = null,
+    val dateAddedMs: Long? = null,
+    val fileSizeBytes: Long? = null,
+    val rating: Int? = null,
+    val playCount: Int = 0,
+    val lastPlayedMs: Long? = null
 )
 
 data class Playlist(

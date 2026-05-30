@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -35,19 +34,22 @@ import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -59,6 +61,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -66,10 +69,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.data.models.Playlist
+import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.components.SongItem
+import com.tosin.musicplayer.ui.components.SongActionsSheet
+import com.tosin.musicplayer.ui.components.StorageScopeSelector
 import com.tosin.musicplayer.ui.state.HomeUiState
 import com.tosin.musicplayer.ui.state.LibraryGroup
+import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab
+import com.tosin.musicplayer.ui.state.StorageScope
+import com.tosin.musicplayer.ui.state.matchesStorageScope
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -109,6 +118,7 @@ fun HomeScreen(
 
     val pagerState = rememberPagerState(pageCount = { safeActiveTabs.size })
     val coroutineScope = rememberCoroutineScope()
+    val sortState = remember { mutableStateMapOf<LibraryTab, LibrarySortOption>() }
     
     val colorScheme = MaterialTheme.colorScheme
     val brush = remember(
@@ -199,25 +209,21 @@ fun HomeScreen(
                     }
                 )
 
-                PrimaryScrollableTabRow(
-                    selectedTabIndex = if (pagerState.currentPage < safeActiveTabs.size) pagerState.currentPage else 0,
-                    edgePadding = AppSpacing.large
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
                     safeActiveTabs.forEachIndexed { index, tab ->
-                        Tab(
+                        FilterChip(
                             selected = uiState.selectedTab == tab,
-                            onClick = { 
+                            onClick = {
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            text = { Text(tab.label) },
-                            icon = {
-                                Icon(
-                                    imageVector = tab.icon(),
-                                    contentDescription = tab.label
-                                )
-                            }
+                            label = { Text(tab.label) }
                         )
                     }
                 }
@@ -259,11 +265,18 @@ fun HomeScreen(
                         contentState.selectedTab == LibraryTab.All -> AllSongsTab(
                             uiState = uiState,
                             viewModel = viewModel,
-                            onNavigateToPlayer = onNavigateToPlayer
+                            settingsViewModel = settingsViewModel,
+                            tab = contentState.selectedTab,
+                            onNavigateToPlayer = onNavigateToPlayer,
+                            sortBy = sortState[LibraryTab.All] ?: LibrarySortOption.TitleAz,
+                            onSortChange = { sortState[LibraryTab.All] = it }
                         )
                         else -> LibraryGroupsTab(
                             tab = contentState.selectedTab,
                             groups = uiState.libraryGroups,
+                            settingsViewModel = settingsViewModel,
+                            sortBy = sortState[contentState.selectedTab] ?: LibrarySortOption.TitleAz,
+                            onSortChange = { sortState[contentState.selectedTab] = it },
                             onGroupClick = { group ->
                                 onNavigateToGroupDetail(contentState.selectedTab, group.title)
                             }
@@ -279,56 +292,31 @@ fun HomeScreen(
 private fun AllSongsTab(
     uiState: HomeUiState,
     viewModel: PlayerViewModel,
-    onNavigateToPlayer: () -> Unit
+    settingsViewModel: SettingsViewModel,
+    tab: LibraryTab,
+    onNavigateToPlayer: () -> Unit,
+    sortBy: LibrarySortOption,
+    onSortChange: (LibrarySortOption) -> Unit
 ) {
     val playerState by viewModel.uiState.collectAsState()
-    var songToAdd by remember { mutableStateOf<com.tosin.musicplayer.data.models.Song?>(null) }
     val playlists by viewModel.playlists.collectAsState()
     var showCreatePlaylistDialog by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    val storageScope = remember(settingsViewModel.uiState.collectAsState().value) {
+        settingsViewModel.getStorageScopeForTab(tab.label)
+    }
+    val visibleSongs = remember(uiState.songs, sortBy, storageScope) {
+        sortSongs(uiState.songs.filter { it.matchesStorageScope(storageScope) }, sortBy)
+    }
+    var actionSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    var showActions by remember { mutableStateOf(false) }
 
-    if (uiState.songs.isEmpty()) {
+    if (visibleSongs.isEmpty()) {
         EmptyLibraryState(
             title = "No songs found",
             message = "Add music to this device and it will appear here in alphabetical order."
         )
         return
-    }
-
-    if (songToAdd != null) {
-        AlertDialog(
-            onDismissRequest = { songToAdd = null },
-            title = { Text("Add to Playlist") },
-            text = {
-                if (playlists.isEmpty()) {
-                    Text("No playlists available. Create one first.")
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        items(playlists) { playlist ->
-                            TextButton(
-                                onClick = {
-                                    viewModel.addSongToPlaylist(playlist.id, songToAdd!!.id)
-                                    songToAdd = null
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(playlist.name, modifier = Modifier.fillMaxWidth())
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    songToAdd = null
-                    showCreatePlaylistDialog = true
-                }) {
-                    Text("Create New Playlist")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { songToAdd = null }) { Text("Cancel") }
-            }
-        )
     }
 
     if (showCreatePlaylistDialog) {
@@ -362,6 +350,18 @@ private fun AllSongsTab(
         )
     }
 
+    if (showActions) {
+        SongActionsSheet(
+            songs = actionSongs,
+            initialSelectedIds = actionSongs.map { it.id }.toSet(),
+            playlists = playlists,
+            onDismiss = { showActions = false },
+            onAddToQueue = { viewModel.addSongsToQueue(it) },
+            onPlayNext = { viewModel.playNextSongs(it) },
+            onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = standardScreenPadding(top = 0.dp, bottom = 0.dp),
@@ -370,24 +370,49 @@ private fun AllSongsTab(
         item {
             LibrarySummary(
                 title = "All songs",
-                subtitle = "${uiState.songs.size} songs • arranged alphabetically"
+                subtitle = "${visibleSongs.size} songs",
+                onSortClick = { showSortMenu = true },
+                sortLabel = sortBy.label
             )
+            StorageScopeSelector(
+                selected = storageScope,
+                onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
+                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small)
+            )
+            DropdownMenu(
+                expanded = showSortMenu,
+                onDismissRequest = { showSortMenu = false }
+            ) {
+                LibrarySortOption.entries.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = {
+                            onSortChange(option)
+                            showSortMenu = false
+                        }
+                    )
+                }
+            }
         }
 
         itemsIndexed(
-            items = uiState.songs,
+            items = visibleSongs,
             key = { _, song -> song.id }
         ) { index, song ->
             SongItem(
                 song = song,
                 isPlaying = playerState.currentSong?.id == song.id,
                 onClick = {
-                    viewModel.onSongClick(uiState.songs, index)
+                    viewModel.onSongClick(visibleSongs, index)
                     onNavigateToPlayer()
                 },
+                onLongClick = {
+                    actionSongs = visibleSongs
+                    showActions = true
+                },
                 trailingContent = {
-                    IconButton(onClick = { songToAdd = song }) {
-                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = "Add to playlist", tint = MaterialTheme.colorScheme.primary)
+                    IconButton(onClick = { actionSongs = listOf(song); showActions = true }) {
+                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = "Actions", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             )
@@ -399,8 +424,19 @@ private fun AllSongsTab(
 private fun LibraryGroupsTab(
     tab: LibraryTab,
     groups: List<LibraryGroup>,
+    settingsViewModel: SettingsViewModel,
+    sortBy: LibrarySortOption,
+    onSortChange: (LibrarySortOption) -> Unit,
     onGroupClick: (LibraryGroup) -> Unit
 ) {
+    val storageScope = remember(settingsViewModel.uiState.collectAsState().value) {
+        settingsViewModel.getStorageScopeForTab(tab.label)
+    }
+    val sortedGroups = remember(groups, sortBy) {
+        sortLibraryGroups(filterGroupsForStorage(groups, storageScope), sortBy)
+    }
+    var showSortMenu by remember { mutableStateOf(false) }
+
     if (groups.isEmpty()) {
         EmptyLibraryState(
             title = "Nothing in ${tab.label.lowercase()} yet",
@@ -417,11 +453,32 @@ private fun LibraryGroupsTab(
         item {
             LibrarySummary(
                 title = tab.label,
-                subtitle = "${groups.size} ${if (groups.size == 1) "section" else "sections"}"
+                subtitle = "${sortedGroups.size} ${if (sortedGroups.size == 1) "section" else "sections"}",
+                onSortClick = { showSortMenu = true },
+                sortLabel = sortBy.label
             )
+            StorageScopeSelector(
+                selected = storageScope,
+                onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
+                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small)
+            )
+            DropdownMenu(
+                expanded = showSortMenu,
+                onDismissRequest = { showSortMenu = false }
+            ) {
+                LibrarySortOption.entries.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = {
+                            onSortChange(option)
+                            showSortMenu = false
+                        }
+                    )
+                }
+            }
         }
 
-        items(groups, key = { it.id }) { group ->
+        items(sortedGroups, key = { it.id }) { group ->
             Surface(
                 onClick = { onGroupClick(group) },
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -555,19 +612,33 @@ private fun EmptyLibraryState(
 @Composable
 private fun LibrarySummary(
     title: String,
-    subtitle: String
+    subtitle: String,
+    onSortClick: () -> Unit,
+    sortLabel: String
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        FilledTonalIconButton(onClick = onSortClick) {
+            Icon(
+                imageVector = Icons.Rounded.Sort,
+                contentDescription = "Sort by $sortLabel"
+            )
+        }
     }
 }
 
@@ -577,6 +648,60 @@ private data class HomeContentState(
     val isLoading: Boolean,
     val hasAudioPermission: Boolean
 )
+
+private fun sortSongs(
+    songs: List<com.tosin.musicplayer.data.models.Song>,
+    sortBy: LibrarySortOption
+): List<com.tosin.musicplayer.data.models.Song> {
+    return when (sortBy) {
+        LibrarySortOption.TitleAz -> songs.sortedBy { it.title.trim().lowercase() }
+        LibrarySortOption.ArtistAz -> songs.sortedBy { it.artist.trim().lowercase() }
+        LibrarySortOption.AlbumAz -> songs.sortedBy { it.album.trim().lowercase() }
+        LibrarySortOption.Genre -> songs.sortedBy { it.genre.orEmpty().trim().lowercase() }
+        LibrarySortOption.ReleaseYear -> songs.sortedByDescending { it.year ?: 0 }
+        LibrarySortOption.Duration -> songs.sortedByDescending { it.duration }
+        LibrarySortOption.TrackNumber -> songs.sortedBy { it.trackNumber }
+        LibrarySortOption.PopularityPlays -> songs.sortedByDescending { it.playCount }
+        LibrarySortOption.DateAdded -> songs.sortedByDescending { it.dateAddedMs ?: 0L }
+        LibrarySortOption.Rating -> songs.sortedByDescending { it.rating ?: 0 }
+        LibrarySortOption.RecentlyPlayed -> songs.sortedByDescending { it.lastPlayedMs ?: 0L }
+        LibrarySortOption.FileSize -> songs.sortedByDescending { it.fileSizeBytes ?: 0L }
+    }
+}
+
+private fun sortLibraryGroups(
+    groups: List<LibraryGroup>,
+    sortBy: LibrarySortOption
+): List<LibraryGroup> {
+    return when (sortBy) {
+        LibrarySortOption.TitleAz -> groups.sortedBy { it.title.trim().lowercase() }
+        LibrarySortOption.ArtistAz -> groups.sortedBy { it.songs.firstOrNull()?.artist.orEmpty().trim().lowercase() }
+        LibrarySortOption.AlbumAz -> groups.sortedBy { it.songs.firstOrNull()?.album.orEmpty().trim().lowercase() }
+        LibrarySortOption.Genre -> groups.sortedBy { it.title.trim().lowercase() }
+        LibrarySortOption.ReleaseYear -> groups.sortedByDescending { it.songs.maxOfOrNull { song -> song.year ?: 0 } ?: 0 }
+        LibrarySortOption.Duration -> groups.sortedByDescending { it.songs.sumOf { song -> song.duration } }
+        LibrarySortOption.TrackNumber -> groups.sortedBy { it.songs.minOfOrNull { song -> song.trackNumber } ?: Int.MAX_VALUE }
+        LibrarySortOption.PopularityPlays -> groups.sortedByDescending { it.songs.sumOf { song -> song.playCount } }
+        LibrarySortOption.DateAdded -> groups.sortedByDescending { it.songs.maxOfOrNull { song -> song.dateAddedMs ?: 0L } ?: 0L }
+        LibrarySortOption.Rating -> groups.sortedByDescending {
+            val ratings = it.songs.mapNotNull { song -> song.rating }
+            if (ratings.isEmpty()) 0.0 else ratings.average()
+        }
+        LibrarySortOption.RecentlyPlayed -> groups.sortedByDescending { it.songs.maxOfOrNull { song -> song.lastPlayedMs ?: 0L } ?: 0L }
+        LibrarySortOption.FileSize -> groups.sortedByDescending { it.songs.sumOf { song -> song.fileSizeBytes ?: 0L } }
+    }
+}
+
+private fun filterGroupsForStorage(
+    groups: List<LibraryGroup>,
+    storageScope: StorageScope
+): List<LibraryGroup> {
+    return groups.mapNotNull { group ->
+        val filteredSongs = group.songs.filter { it.matchesStorageScope(storageScope) }
+        if (filteredSongs.isEmpty()) null
+        else group.copy(songs = filteredSongs, songCount = filteredSongs.size)
+    }
+}
 
 @Composable
 fun TabReorderDialog(

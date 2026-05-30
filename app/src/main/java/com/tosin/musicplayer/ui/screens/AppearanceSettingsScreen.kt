@@ -1,6 +1,8 @@
 package com.tosin.musicplayer.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,10 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.theme.AppThemePreset
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppearanceSettingsScreen(
     viewModel: SettingsViewModel,
@@ -74,6 +77,36 @@ fun AppearanceSettingsScreen(
                     )
                 }
             )
+
+            Text(
+                text = "Theme Preset",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small)
+            )
+
+            Text(
+                text = "Choose a visual mood. AMOLED is pure black, while the others create stronger personalities for the app.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = AppSpacing.large)
+            )
+
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+            ) {
+                AppThemePreset.entries.forEach { preset ->
+                    FilterChip(
+                        selected = uiState.themePreset.equals(preset.label, ignoreCase = true),
+                        onClick = { viewModel.setThemePreset(preset.label) },
+                        label = { Text(preset.label) }
+                    )
+                }
+            }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
 

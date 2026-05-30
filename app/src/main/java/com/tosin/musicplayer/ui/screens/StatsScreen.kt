@@ -5,15 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.SongItem
@@ -34,6 +33,7 @@ enum class StatsRange(val label: String) {
 @Composable
 fun StatsScreen(
     viewModel: PlayerViewModel,
+    onNavigateToHome: () -> Unit,
     onNavigateToPlayer: () -> Unit
 ) {
     val mostPlayed by viewModel.mostPlayed.collectAsState()
@@ -66,6 +66,11 @@ fun StatsScreen(
             TopAppBar(
                 title = { Text("Most Played", fontWeight = FontWeight.Bold) },
                 windowInsets = WindowInsets(0, 0, 0, 0),
+                navigationIcon = {
+                    IconButton(onClick = onNavigateToHome) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back to Home")
+                    }
+                },
                 actions = {
                     Box {
                         IconButton(onClick = { showSortMenu = true }) {

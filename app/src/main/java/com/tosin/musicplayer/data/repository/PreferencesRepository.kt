@@ -1,6 +1,7 @@
 package com.tosin.musicplayer.data.repository
 
 import android.content.Context
+import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.data.models.SongMetadataOverride
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,6 +16,7 @@ class PreferencesRepository(private val context: Context) {
     private val prefsFile = File(context.filesDir, "tplayer_prefs.json")
     private val queueFile = File(context.filesDir, "queue_state.json")
     private val metadataFile = File(context.filesDir, "song_metadata_overrides.json")
+    private val songsCacheFile = File(context.filesDir, "song_cache.json")
 
     // --- Settings ---
     suspend fun saveSettings(settings: Map<String, Any>) = withContext(Dispatchers.IO) {
@@ -50,13 +52,15 @@ class PreferencesRepository(private val context: Context) {
     suspend fun saveQueueState(
         songIds: List<Long>,
         currentIndex: Int,
-        positionMs: Long
+        positionMs: Long,
+        wasPlaying: Boolean
     ) = withContext(Dispatchers.IO) {
         try {
             val obj = JSONObject()
             obj.put("songIds", JSONArray(songIds))
             obj.put("currentIndex", currentIndex)
             obj.put("positionMs", positionMs)
+            obj.put("wasPlaying", wasPlaying)
             queueFile.writeText(obj.toString())
         } catch (e: Exception) {
             e.printStackTrace()
@@ -72,7 +76,8 @@ class PreferencesRepository(private val context: Context) {
             QueueState(
                 songIds = songIds,
                 currentIndex = obj.getInt("currentIndex"),
-                positionMs = obj.getLong("positionMs")
+                positionMs = obj.getLong("positionMs"),
+                wasPlaying = obj.optBoolean("wasPlaying", true)
             )
         } catch (e: Exception) {
             null
@@ -173,6 +178,28 @@ class PreferencesRepository(private val context: Context) {
         metadataFile.writeText(obj.toString())
     }
 
+    suspend fun saveSongCache(songs: List<Song>) = withContext(Dispatchers.IO) {
+        try {
+            val jsonArray = JSONArray()
+            songs.forEach { song ->
+                jsonArray.put(song.toJson())
+            }
+            songsCacheFile.writeText(jsonArray.toString())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadSongCache(): List<Song> = withContext(Dispatchers.IO) {
+        if (!songsCacheFile.exists()) return@withContext emptyList()
+        runCatching {
+            val jsonArray = JSONArray(songsCacheFile.readText())
+            List(jsonArray.length()) { index ->
+                jsonArray.getJSONObject(index).toSong()
+            }
+        }.getOrDefault(emptyList())
+    }
+
     private fun loadResumePositions(): Map<Long, Long> {
         val positionsFile = File(context.filesDir, "resume_positions.json")
         if (!positionsFile.exists()) return emptyMap()
@@ -187,10 +214,62 @@ class PreferencesRepository(private val context: Context) {
             emptyMap()
         }
     }
+
+    private fun Song.toJson(): JSONObject = JSONObject().apply {
+        put("id", id)
+        put("title", title)
+        put("artist", artist)
+        put("album", album)
+        put("genre", genre)
+        put("folder", folder)
+        put("folderPath", folderPath)
+        put("uri", uri)
+        put("albumArt", albumArt)
+        put("duration", duration)
+        put("lyrics", lyrics)
+        put("trackNumber", trackNumber)
+        put("year", year)
+        put("dateAddedMs", dateAddedMs)
+        put("fileSizeBytes", fileSizeBytes)
+        put("rating", rating)
+        put("playCount", playCount)
+        put("lastPlayedMs", lastPlayedMs)
+    }
+
+    private fun JSONObject.toSong(): Song = Song(
+        id = getLong("id"),
+        title = optString("title"),
+        artist = optString("artist"),
+        album = optString("album"),
+        genre = optString("genre").takeIf { it.isNotBlank() },
+        folder = optString("folder").takeIf { it.isNotBlank() },
+        folderPath = optString("folderPath").takeIf { it.isNotBlank() },
+        uri = optString("uri"),
+        albumArt = optString("albumArt").takeIf { it.isNotBlank() },
+        duration = getLong("duration"),
+        lyrics = optString("lyrics").takeIf { it.isNotBlank() },
+        trackNumber = optInt("trackNumber", 0),
+        year = optIntOrNull("year"),
+        dateAddedMs = optLongOrNull("dateAddedMs"),
+        fileSizeBytes = optLongOrNull("fileSizeBytes"),
+        rating = optIntOrNull("rating"),
+        playCount = optInt("playCount", 0),
+        lastPlayedMs = optLongOrNull("lastPlayedMs")
+    )
+
+    private fun JSONObject.optLongOrNull(key: String): Long? =
+        if (has(key) && !isNull(key)) getLong(key) else null
+
+    private fun JSONObject.optIntOrNull(key: String): Int? =
+        if (has(key) && !isNull(key)) getInt(key) else null
+
+    private fun JSONObject.optBoolean(key: String, default: Boolean): Boolean =
+        if (has(key) && !isNull(key)) getBoolean(key) else default
 }
 
 data class QueueState(
     val songIds: List<Long>,
     val currentIndex: Int,
-    val positionMs: Long
+    val positionMs: Long,
+    val wasPlaying: Boolean
 )

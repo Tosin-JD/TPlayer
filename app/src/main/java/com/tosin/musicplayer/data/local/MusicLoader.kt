@@ -1,7 +1,6 @@
 package com.tosin.musicplayer.data.local
 
 import android.content.ContentResolver
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -13,6 +12,13 @@ import kotlinx.coroutines.withContext
 class MusicLoader(
     private val contentResolver: ContentResolver
 ) {
+
+    private companion object {
+        const val COLUMN_DATE_ADDED = "date_added"
+        const val COLUMN_SIZE = "_size"
+        const val COLUMN_YEAR = "year"
+        const val COLUMN_TRACK = "track"
+    }
 
     suspend fun loadSongs(): List<Song> = withContext(Dispatchers.IO) {
         val songs = mutableListOf<Song>()
@@ -30,6 +36,10 @@ class MusicLoader(
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.ALBUM_ID,
+            COLUMN_DATE_ADDED,
+            COLUMN_SIZE,
+            COLUMN_YEAR,
+            COLUMN_TRACK,
             folderColumnName
         )
 
@@ -51,6 +61,10 @@ class MusicLoader(
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val dateAddedColumn = cursor.getColumnIndex(COLUMN_DATE_ADDED)
+            val sizeColumn = cursor.getColumnIndex(COLUMN_SIZE)
+            val yearColumn = cursor.getColumnIndex(COLUMN_YEAR)
+            val trackColumn = cursor.getColumnIndex(COLUMN_TRACK)
             val folderColumn = cursor.getColumnIndex(folderColumnName)
 
             while (cursor.moveToNext()) {
@@ -61,6 +75,19 @@ class MusicLoader(
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val folder = if (folderColumn >= 0) cursor.getString(folderColumn) else null
+                val dateAddedSeconds = if (dateAddedColumn >= 0 && !cursor.isNull(dateAddedColumn)) {
+                    cursor.getLong(dateAddedColumn)
+                } else null
+                val sizeBytes = if (sizeColumn >= 0 && !cursor.isNull(sizeColumn)) {
+                    cursor.getLong(sizeColumn)
+                } else null
+                val year = if (yearColumn >= 0 && !cursor.isNull(yearColumn)) {
+                    cursor.getInt(yearColumn).takeIf { it > 0 }
+                } else null
+                val trackNumber = if (trackColumn >= 0 && !cursor.isNull(trackColumn)) {
+                    cursor.getInt(trackColumn).takeIf { it > 0 } ?: 0
+                } else 0
+                val rating = null
 
                 val contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                     .buildUpon()
@@ -87,7 +114,12 @@ class MusicLoader(
                         uri = contentUri.toString(),
                         albumArt = if (hasAlbumArt) albumArtUri.toString() else null,
                         duration = duration,
-                        lyrics = null
+                        lyrics = null,
+                        trackNumber = trackNumber,
+                        year = year,
+                        dateAddedMs = dateAddedSeconds?.times(1000L),
+                        fileSizeBytes = sizeBytes,
+                        rating = rating
                     )
                 )
             }

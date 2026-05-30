@@ -164,12 +164,55 @@ class PlayerController(
     }
 
     fun setPlaylist(songs: List<Song>, startIndex: Int = 0) {
+        setPlaylist(songs, startIndex, 0L)
+    }
+
+    fun setPlaylist(songs: List<Song>, startIndex: Int = 0, startPositionMs: Long = 0L) {
         playlist = songs
         val controller = mediaController ?: return
         val mediaItems = songs.map { it.toMediaItem() }
         controller.setMediaItems(mediaItems)
         controller.prepare()
-        controller.seekTo(startIndex, 0)
+        controller.seekTo(startIndex, startPositionMs.coerceAtLeast(0L))
+    }
+
+    fun addSongsToQueue(songs: List<Song>) {
+        if (songs.isEmpty()) return
+        val controller = mediaController ?: return
+        val currentIndex = controller.currentMediaItemIndex.takeIf { it >= 0 } ?: playlist.lastIndex.coerceAtLeast(0)
+        val updated = playlist.toMutableList().apply { addAll(songs) }
+        playlist = updated
+        controller.setMediaItems(updated.map { it.toMediaItem() }, currentIndex.coerceAtMost(updated.lastIndex), controller.currentPosition)
+        controller.prepare()
+    }
+
+    fun playNextSongs(songs: List<Song>) {
+        if (songs.isEmpty()) return
+        val controller = mediaController ?: return
+        val currentIndex = controller.currentMediaItemIndex.takeIf { it >= 0 } ?: -1
+        val insertIndex = if (currentIndex >= 0) currentIndex + 1 else 0
+        val updated = playlist.toMutableList().apply {
+            addAll(insertIndex.coerceAtMost(size), songs)
+        }
+        playlist = updated
+        val seekIndex = currentIndex.coerceAtLeast(0).coerceAtMost(updated.lastIndex)
+        controller.setMediaItems(updated.map { it.toMediaItem() }, seekIndex, controller.currentPosition)
+        controller.prepare()
+    }
+
+    fun reorderQueue(fromIndex: Int, toIndex: Int) {
+        if (fromIndex == toIndex) return
+        if (fromIndex !in playlist.indices || toIndex !in playlist.indices) return
+        val controller = mediaController ?: return
+        val reordered = playlist.toMutableList().apply {
+            val item = removeAt(fromIndex)
+            add(toIndex, item)
+        }
+        playlist = reordered
+        val currentId = _currentSong.value?.id
+        val currentIndex = reordered.indexOfFirst { it.id == currentId }.takeIf { it >= 0 } ?: controller.currentMediaItemIndex.coerceAtLeast(0)
+        controller.setMediaItems(reordered.map { it.toMediaItem() }, currentIndex.coerceAtMost(reordered.lastIndex), controller.currentPosition)
+        controller.prepare()
     }
 
     fun play() {

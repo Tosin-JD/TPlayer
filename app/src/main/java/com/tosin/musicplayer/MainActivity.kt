@@ -18,6 +18,7 @@ import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PlaylistRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
 import com.tosin.musicplayer.player.PlayerController
+import com.tosin.musicplayer.ui.theme.AppThemePreset
 import com.tosin.musicplayer.ui.navigation.AppNavGraph
 import com.tosin.musicplayer.ui.theme.TPlayerTheme
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -37,8 +38,8 @@ class MainActivity : ComponentActivity() {
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val musicLoader = MusicLoader(contentResolver)
-                val repository = MusicRepository(musicLoader, preferencesRepository)
                 val playerController = PlayerController(this@MainActivity, statsRepository)
+                val repository = MusicRepository(musicLoader, preferencesRepository, statsRepository)
 
                 return when {
                     modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
@@ -92,7 +93,11 @@ class MainActivity : ComponentActivity() {
                 playerViewModel.refreshLibrary()
             }
 
-            TPlayerTheme {
+            TPlayerTheme(
+                darkTheme = settingsUiState.isDarkMode,
+                dynamicColor = settingsUiState.useDynamicColor,
+                themePreset = AppThemePreset.fromStored(settingsUiState.themePreset)
+            ) {
                 AppNavGraph(
                     viewModel = playerViewModel,
                     settingsViewModel = settingsViewModel,

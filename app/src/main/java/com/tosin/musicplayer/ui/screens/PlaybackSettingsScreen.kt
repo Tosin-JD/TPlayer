@@ -120,6 +120,20 @@ fun PlaybackSettingsScreen(
             )
 
             ListItem(
+                headlineContent = { Text("Remember Last Play") },
+                supportingContent = { Text("Resume the last song and its exact position when the app opens") },
+                leadingContent = {
+                    Icon(Icons.Rounded.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.rememberLastPlay,
+                        onCheckedChange = { viewModel.toggleRememberLastPlay(it) }
+                    )
+                }
+            )
+
+            ListItem(
                 headlineContent = { Text("Pause on 0 Volume") },
                 supportingContent = { Text("Pause playback when device volume is muted or zero") },
                 leadingContent = {

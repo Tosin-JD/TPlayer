@@ -21,12 +21,28 @@ enum class LibraryTab(val label: String) {
     }
 }
 
+enum class LibrarySortOption(val label: String) {
+    TitleAz("Title (A-Z)"),
+    ArtistAz("Artist (A-Z)"),
+    AlbumAz("Album (A-Z)"),
+    Genre("Genre"),
+    ReleaseYear("Release Year"),
+    Duration("Duration"),
+    TrackNumber("Track Number"),
+    PopularityPlays("Popularity / Plays"),
+    DateAdded("Date Added"),
+    Rating("Rating"),
+    RecentlyPlayed("Recently Played"),
+    FileSize("File Size")
+}
+
 data class LibraryGroup(
     val id: String,
     val title: String,
     val subtitle: String,
     val songCount: Int,
-    val artwork: String?
+    val artwork: String?,
+    val songs: List<Song> = emptyList()
 )
 
 data class HomeUiState(

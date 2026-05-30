@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FormatSize
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.ViewAgenda
@@ -77,6 +78,7 @@ import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 fun LyricsScreen(
     viewModel: PlayerViewModel,
     onNavigateBack: () -> Unit,
+    onOpenVisualizer: () -> Unit = {},
     onOpenLyricsEditor: (Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -177,6 +179,13 @@ fun LyricsScreen(
                             Icon(
                                 imageVector = Icons.Rounded.FormatSize,
                                 contentDescription = "Lyrics appearance",
+                                tint = Color.White
+                            )
+                        }
+                        IconButton(onClick = onOpenVisualizer) {
+                            Icon(
+                                imageVector = Icons.Rounded.GraphicEq,
+                                contentDescription = "Open visualizer",
                                 tint = Color.White
                             )
                         }

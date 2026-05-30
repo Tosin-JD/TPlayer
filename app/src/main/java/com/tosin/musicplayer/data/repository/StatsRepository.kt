@@ -39,6 +39,17 @@ class StatsRepository(private val context: Context) {
             .sortedByDescending { it.playCount }
     }
 
+    suspend fun loadPlaybackMetrics(): Map<Long, PlaybackMetrics> = withContext(Dispatchers.IO) {
+        loadEvents()
+            .groupBy { it.songId }
+            .mapValues { (_, songEvents) ->
+                PlaybackMetrics(
+                    playCount = songEvents.size,
+                    lastPlayedMs = songEvents.maxOfOrNull { it.timestamp }
+                )
+            }
+    }
+
     private fun loadEvents(): List<PlayEvent> {
         if (!statsFile.exists()) return emptyList()
         return try {
@@ -73,3 +84,8 @@ class StatsRepository(private val context: Context) {
         }
     }
 }
+
+data class PlaybackMetrics(
+    val playCount: Int,
+    val lastPlayedMs: Long?
+)

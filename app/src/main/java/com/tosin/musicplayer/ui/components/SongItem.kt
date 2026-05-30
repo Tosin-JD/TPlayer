@@ -1,7 +1,7 @@
 package com.tosin.musicplayer.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +19,7 @@ fun SongItem(
     song: Song,
     isPlaying: Boolean,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
     val containerColor by animateColorAsState(
@@ -39,7 +40,10 @@ fun SongItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onClick() }
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = { onLongClick?.invoke() }
+                )
                 .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
