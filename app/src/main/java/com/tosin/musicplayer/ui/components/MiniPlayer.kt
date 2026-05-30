@@ -68,7 +68,7 @@ fun MiniPlayer(
         Card(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small),
+                .padding(horizontal = AppSpacing.medium),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
@@ -78,7 +78,7 @@ fun MiniPlayer(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small),
+                    .padding(horizontal = AppSpacing.medium),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(

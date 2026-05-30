@@ -10,11 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.StorageScopeSelector
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.state.StorageScope
+import com.tosin.musicplayer.ui.state.hasRemovableStorage
 import com.tosin.musicplayer.ui.viewmodel.SettingsEvent
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -32,6 +34,14 @@ fun GeneralSettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val availableStorageScopes = remember(context) {
+        if (context.hasRemovableStorage()) {
+            StorageScope.entries
+        } else {
+            listOf(StorageScope.Internal, StorageScope.Both)
+        }
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     var showResetDialog by remember { mutableStateOf(false) }
     var showFolderPicker by remember { mutableStateOf(false) }
@@ -193,7 +203,8 @@ fun GeneralSettingsScreen(
             StorageScopeSelector(
                 selected = StorageScope.entries.firstOrNull { it.name == uiState.storageScopeAll } ?: StorageScope.Both,
                 onSelected = { viewModel.setStorageScopeForTab("All", it) },
-                modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small)
+                modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
+                availableScopes = availableStorageScopes
             )
 
             ListItem(

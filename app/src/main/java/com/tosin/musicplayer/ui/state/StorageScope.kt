@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.state
 
+import android.content.Context
 import com.tosin.musicplayer.data.models.Song
 
 enum class StorageScope(val label: String) {
@@ -10,12 +11,18 @@ enum class StorageScope(val label: String) {
 
 fun Song.isInternalStorage(): Boolean {
     val path = folderPath?.lowercase().orEmpty()
-    return path.contains("/storage/emulated/0") || path.contains("/storage/self/primary")
+    return path.isBlank() ||
+        !path.contains("/storage/") ||
+        path.contains("/storage/emulated/0") ||
+        path.contains("/storage/self/primary")
 }
 
 fun Song.isSdCardStorage(): Boolean {
     val path = folderPath?.lowercase().orEmpty()
-    return path.contains("/storage/") && !isInternalStorage() && !path.contains("/emulated/0")
+    return path.contains("/storage/") &&
+        !path.contains("/storage/emulated/0") &&
+        !path.contains("/storage/self/primary") &&
+        !path.isBlank()
 }
 
 fun Song.matchesStorageScope(scope: StorageScope): Boolean {
@@ -26,3 +33,7 @@ fun Song.matchesStorageScope(scope: StorageScope): Boolean {
     }
 }
 
+fun Context.hasRemovableStorage(): Boolean {
+    val storageManager = getSystemService(android.os.storage.StorageManager::class.java) ?: return false
+    return storageManager.storageVolumes.any { it.isRemovable }
+}

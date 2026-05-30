@@ -67,6 +67,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -85,7 +86,7 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
-
+import com.tosin.musicplayer.ui.state.hasRemovableStorage
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
@@ -102,6 +103,14 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
     val settingsState by settingsViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val availableStorageScopes = remember(context) {
+        if (context.hasRemovableStorage()) {
+            StorageScope.entries
+        } else {
+            listOf(StorageScope.Internal, StorageScope.Both)
+        }
+    }
     
     val activeTabs = remember(settingsState.tabOrder, settingsState.visibleTabs) {
         settingsState.tabOrder
@@ -273,7 +282,8 @@ fun HomeScreen(
                             tab = contentState.selectedTab,
                             onNavigateToPlayer = onNavigateToPlayer,
                             sortBy = sortState[LibraryTab.All] ?: LibrarySortOption.TitleAz,
-                            onSortChange = { sortState[LibraryTab.All] = it }
+                            onSortChange = { sortState[LibraryTab.All] = it },
+                            availableStorageScopes = availableStorageScopes
                         )
                         else -> LibraryGroupsTab(
                             tab = contentState.selectedTab,
@@ -283,7 +293,8 @@ fun HomeScreen(
                             onSortChange = { sortState[contentState.selectedTab] = it },
                             onGroupClick = { group ->
                                 onNavigateToGroupDetail(contentState.selectedTab, group.title)
-                            }
+                            },
+                            availableStorageScopes = availableStorageScopes
                         )
                     }
                 }
@@ -300,7 +311,8 @@ private fun AllSongsTab(
     tab: LibraryTab,
     onNavigateToPlayer: () -> Unit,
     sortBy: LibrarySortOption,
-    onSortChange: (LibrarySortOption) -> Unit
+    onSortChange: (LibrarySortOption) -> Unit,
+    availableStorageScopes: List<StorageScope>
 ) {
     val playerState by viewModel.uiState.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
@@ -381,7 +393,8 @@ private fun AllSongsTab(
             StorageScopeSelector(
                 selected = storageScope,
                 onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small)
+                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
+                availableScopes = availableStorageScopes
             )
             DropdownMenu(
                 expanded = showSortMenu,
@@ -431,7 +444,8 @@ private fun LibraryGroupsTab(
     settingsViewModel: SettingsViewModel,
     sortBy: LibrarySortOption,
     onSortChange: (LibrarySortOption) -> Unit,
-    onGroupClick: (LibraryGroup) -> Unit
+    onGroupClick: (LibraryGroup) -> Unit,
+    availableStorageScopes: List<StorageScope>
 ) {
     val storageScope = remember(settingsViewModel.uiState.collectAsState().value) {
         settingsViewModel.getStorageScopeForTab(tab.label)
@@ -464,7 +478,8 @@ private fun LibraryGroupsTab(
             StorageScopeSelector(
                 selected = storageScope,
                 onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small)
+                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
+                availableScopes = availableStorageScopes
             )
             DropdownMenu(
                 expanded = showSortMenu,

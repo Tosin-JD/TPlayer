@@ -14,10 +14,11 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 fun StorageScopeSelector(
     selected: StorageScope,
     onSelected: (StorageScope) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    availableScopes: List<StorageScope> = StorageScope.entries
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)) {
-        StorageScope.entries.forEach { scope ->
+        availableScopes.forEach { scope ->
             FilterChip(
                 selected = selected == scope,
                 onClick = { onSelected(scope) },

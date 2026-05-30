@@ -5,16 +5,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.tosin.musicplayer.ui.components.MiniPlayer
@@ -43,8 +46,13 @@ fun AppNavGraph(
     Scaffold(
         floatingActionButton = {
             if (currentRoute == "home") {
-                FloatingActionButton(onClick = { navController.navigate("stats") }) {
-                    Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FloatingActionButton(onClick = { navController.navigate("stats") }) {
+                        Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
+                    }
+                    FloatingActionButton(onClick = { navController.navigate("search") }) {
+                        Icon(Icons.Rounded.Search, contentDescription = "Open Search")
+                    }
                 }
             }
         },

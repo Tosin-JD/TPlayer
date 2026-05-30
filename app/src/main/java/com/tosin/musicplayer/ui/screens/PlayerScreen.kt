@@ -10,6 +10,8 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.material.icons.Icons
@@ -61,11 +64,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -76,6 +81,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.palette.graphics.Palette
 import androidx.core.view.WindowCompat
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -119,6 +127,9 @@ fun PlayerScreen(
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showSystemBars by remember { mutableStateOf(false) }
+    var hideBarsJob by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     DisposableEffect(Unit) {
         val activity = context as? Activity
@@ -129,6 +140,29 @@ fun PlayerScreen(
             androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         onDispose {
             controller?.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    LaunchedEffect(bgColor) {
+        val activity = context as? Activity
+        val window = activity?.window ?: return@LaunchedEffect
+        window.statusBarColor = bgColor.toArgb()
+        window.navigationBarColor = bgColor.toArgb()
+    }
+
+    LaunchedEffect(showSystemBars) {
+        val activity = context as? Activity
+        val window = activity?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        if (showSystemBars) {
+            controller?.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            hideBarsJob?.cancel()
+            hideBarsJob = coroutineScope.launch {
+                delay(5000)
+                showSystemBars = false
+            }
+        } else {
+            controller?.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
         }
     }
 
@@ -380,10 +414,22 @@ fun PlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .padding(horizontal = AppSpacing.small)
+                .padding(
+                    start = AppSpacing.small,
+                    end = AppSpacing.small,
+                    top = 0.dp,
+                    bottom = if (showSystemBars) {
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                    } else {
+                        0.dp
+                    }
+                )
                 .pointerInput(onNavigateBack) {
                     var dragDistance = 0f
                     detectVerticalDragGestures(
+                        onDragStart = {
+                            showSystemBars = true
+                        },
                         onVerticalDrag = { change, dragAmount ->
                             dragDistance += dragAmount
                             change.consume()
