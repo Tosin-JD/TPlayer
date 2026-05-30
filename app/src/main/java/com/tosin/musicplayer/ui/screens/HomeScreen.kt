@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -212,6 +214,7 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
@@ -223,7 +226,8 @@ fun HomeScreen(
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            label = { Text(tab.label) }
+                            label = { Text(tab.label) },
+                            trailingIcon = { Icon(tab.icon(), contentDescription = null, modifier = Modifier.size(18.dp)) }
                         )
                     }
                 }

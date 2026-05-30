@@ -38,11 +38,7 @@ fun AppNavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showMiniPlayer = currentRoute != "player" &&
-        currentRoute != "lyrics" &&
-        currentRoute != "visualizer" &&
-        currentRoute?.startsWith("songEditor") != true &&
-        currentRoute?.startsWith("lyricsEditor") != true
+    val showMiniPlayer = currentRoute != "player"
 
     Scaffold(
         floatingActionButton = {

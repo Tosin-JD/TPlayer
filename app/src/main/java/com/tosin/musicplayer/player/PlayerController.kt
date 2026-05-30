@@ -88,6 +88,44 @@ class PlayerController(
 
     private fun setupController() {
         val controller = mediaController ?: return
+        
+        _isPlaying.value = controller.isPlaying
+        if (controller.isPlaying) {
+            startProgressUpdate()
+        }
+        
+        val index = controller.currentMediaItemIndex
+        _currentIndex.value = index
+        val item = controller.currentMediaItem
+        if (item != null) {
+            val song = if (index >= 0 && index < playlist.size) {
+                playlist[index]
+            } else {
+                Song(
+                    id = item.mediaId.toLongOrNull() ?: 0L,
+                    title = item.mediaMetadata.title?.toString() ?: "",
+                    artist = item.mediaMetadata.artist?.toString() ?: "",
+                    album = item.mediaMetadata.albumTitle?.toString() ?: "Unknown album",
+                    genre = null,
+                    folder = null,
+                    uri = item.localConfiguration?.uri?.toString() ?: "",
+                    albumArt = item.mediaMetadata.artworkUri?.toString(),
+                    duration = controller.duration.coerceAtLeast(0)
+                )
+            }
+            _currentSong.value = song
+        }
+        
+        _progress.value = controller.currentPosition.coerceAtLeast(0)
+        _playbackSpeed.value = controller.playbackParameters.speed
+
+        if (playlist.isNotEmpty() && controller.mediaItemCount == 0) {
+            val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
+            controller.setMediaItems(playlist.map { it.toMediaItem() })
+            controller.prepare()
+            controller.seekTo(startIndex, _progress.value)
+        }
+        
         controller.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 _isPlaying.value = isPlaying
@@ -130,7 +168,7 @@ class PlayerController(
 
                 song?.let {
                     scope.launch {
-                        statsRepository.recordPlay(it.id, it.duration)
+                        statsRepository.recordPlay(it.id, it.duration.coerceAtLeast(0L))
                     }
                 }
             }
@@ -169,6 +207,11 @@ class PlayerController(
 
     fun setPlaylist(songs: List<Song>, startIndex: Int = 0, startPositionMs: Long = 0L) {
         playlist = songs
+        if (songs.isNotEmpty() && startIndex in songs.indices) {
+            _currentSong.value = songs[startIndex]
+            _currentIndex.value = startIndex
+            _progress.value = startPositionMs
+        }
         val controller = mediaController ?: return
         val mediaItems = songs.map { it.toMediaItem() }
         controller.setMediaItems(mediaItems)
@@ -226,13 +269,9 @@ class PlayerController(
     fun stop() {
         mediaController?.run {
             stop()
-            clearMediaItems()
         }
         _isPlaying.value = false
         _progress.value = 0L
-        _currentSong.value = null
-        _queue.value = emptyList()
-        _currentIndex.value = 0
         sleepTimerJob?.cancel()
         _sleepTimerRemaining.value = null
         clearABRepeat()

@@ -30,10 +30,13 @@ class StatsRepository(private val context: Context) {
         events.groupBy { it.songId }
             .mapNotNull { (id, songEvents) ->
                 val song = songMap[id] ?: return@mapNotNull null
+                val totalDurationMs = songEvents.fold(0L) { acc, event ->
+                    acc.saturatingAdd(event.durationMs.coerceAtLeast(0L))
+                }
                 SongStats(
                     song = song,
                     playCount = songEvents.size,
-                    totalMinutes = songEvents.sumOf { it.durationMs } / 60000
+                    totalMinutes = (totalDurationMs / 60000L).coerceAtLeast(0L)
                 )
             }
             .sortedByDescending { it.playCount }
@@ -81,6 +84,15 @@ class StatsRepository(private val context: Context) {
             statsFile.writeText(jsonArray.toString())
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun Long.saturatingAdd(other: Long): Long {
+        val result = this + other
+        return when {
+            other > 0 && result < this -> Long.MAX_VALUE
+            other < 0 && result > this -> Long.MIN_VALUE
+            else -> result
         }
     }
 }

@@ -190,6 +190,16 @@ class PreferencesRepository(private val context: Context) {
         }
     }
 
+    suspend fun clearSongCache() = withContext(Dispatchers.IO) {
+        try {
+            if (songsCacheFile.exists()) {
+                songsCacheFile.delete()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     suspend fun loadSongCache(): List<Song> = withContext(Dispatchers.IO) {
         if (!songsCacheFile.exists()) return@withContext emptyList()
         runCatching {

@@ -1,6 +1,7 @@
 package com.tosin.musicplayer.data.repository
 
 import com.tosin.musicplayer.data.local.MusicLoader
+import com.tosin.musicplayer.data.local.ScanProgress
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.data.models.SongMetadataOverride
 import kotlinx.coroutines.Dispatchers
@@ -30,24 +31,25 @@ class MusicRepository(
         }
     }
 
-    suspend fun loadAllSongs(): List<Song> {
+    suspend fun loadAllSongs(onProgress: suspend (ScanProgress) -> Unit = {}): List<Song> {
         val cachedSongs = loadPreparedSongsFromCache()
         if (cachedSongs.isNotEmpty()) return cachedSongs
-        return refreshLibraryFromDevice()
+        return refreshLibraryFromDevice(onProgress)
     }
 
     /**
      * Scan for changes in the music library (new/removed songs).
      */
-    suspend fun scanForChanges() {
-        refreshLibraryFromDevice()
+    suspend fun scanForChanges(onProgress: suspend (ScanProgress) -> Unit = {}) {
+        refreshLibraryFromDevice(onProgress)
     }
 
     /**
      * Perform a full re-scan of the music library.
      */
-    suspend fun fullScan() {
-        refreshLibraryFromDevice()
+    suspend fun fullScan(onProgress: suspend (ScanProgress) -> Unit = {}) {
+        preferencesRepository.clearSongCache()
+        refreshLibraryFromDevice(onProgress)
     }
 
     private suspend fun loadPreparedSongsFromCache(): List<Song> {
@@ -59,8 +61,8 @@ class MusicRepository(
         }
     }
 
-    private suspend fun refreshLibraryFromDevice(): List<Song> {
-        val songs = prepareSongs(musicLoader.loadSongs())
+    private suspend fun refreshLibraryFromDevice(onProgress: suspend (ScanProgress) -> Unit = {}): List<Song> {
+        val songs = prepareSongs(musicLoader.loadSongs(onProgress))
         preferencesRepository.saveSongCache(songs)
         return songs
     }

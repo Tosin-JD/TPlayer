@@ -2,17 +2,24 @@ package com.tosin.musicplayer.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tosin.musicplayer.data.local.ScanProgress
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
 import com.tosin.musicplayer.ui.state.FolderEntry
 import com.tosin.musicplayer.ui.state.SettingsUiState
 import com.tosin.musicplayer.ui.state.StorageScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * ViewModel for the Settings screen and all sub-settings screens.
@@ -25,6 +32,8 @@ class SettingsViewModel(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    private val _events = MutableSharedFlow<SettingsEvent>(extraBufferCapacity = 1)
+    val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
     init {
         loadSavedSettings()
@@ -107,20 +116,62 @@ class SettingsViewModel(
     }
 
     fun scanForChanges() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isScanning = true) }
-            musicRepository.scanForChanges()
-            loadAvailableFolders()
-            _uiState.update { it.copy(isScanning = false) }
-        }
+        startScan(isFullScan = false)
     }
 
     fun fullScan() {
+        startScan(isFullScan = true)
+    }
+
+    private fun startScan(isFullScan: Boolean) {
+        if (_uiState.value.isScanning) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isScanning = true) }
-            musicRepository.fullScan()
-            loadAvailableFolders()
-            _uiState.update { it.copy(isScanning = false) }
+            try {
+                _uiState.update {
+                    it.copy(
+                        isScanning = true,
+                        scanProgress = 0,
+                        scanTotal = 0,
+                        scanFolderCount = 0,
+                        scanCurrentFolder = null,
+                        scanLabel = if (isFullScan) "Full scan" else "Scan library"
+                    )
+                }
+
+                val scanner: suspend (ScanProgress) -> Unit = { progress ->
+                    _uiState.update {
+                        it.copy(
+                            scanProgress = progress.scannedItems,
+                            scanTotal = progress.totalItems,
+                            scanFolderCount = progress.scannedFolders,
+                            scanCurrentFolder = progress.currentFolder
+                        )
+                    }
+                }
+
+                if (isFullScan) {
+                    musicRepository.fullScan(scanner)
+                } else {
+                    musicRepository.scanForChanges(scanner)
+                }
+
+                loadAvailableFolders()
+                updateSettings { current ->
+                    current.copy(lastScanDate = formatNow())
+                }
+                _events.emit(
+                    SettingsEvent.ScanFinished(
+                        isFullScan = isFullScan
+                    )
+                )
+            } finally {
+                _uiState.update {
+                    it.copy(
+                        isScanning = false,
+                        scanCurrentFolder = null
+                    )
+                }
+            }
         }
     }
 
@@ -355,9 +406,17 @@ class SettingsViewModel(
         "autoResumeEnabled" to autoResumeEnabled,
         "pauseOnZeroVolume" to pauseOnZeroVolume,
         "accentColorIndex" to accentColorIndex,
-        "isScanning" to isScanning,
         "tabOrder" to tabOrder,
         "visibleTabs" to visibleTabs,
         "excludedFolders" to excludedFolders
     )
+
+    private fun formatNow(): String {
+        val formatter = SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault())
+        return formatter.format(Date())
+    }
+}
+
+sealed class SettingsEvent {
+    data class ScanFinished(val isFullScan: Boolean) : SettingsEvent()
 }

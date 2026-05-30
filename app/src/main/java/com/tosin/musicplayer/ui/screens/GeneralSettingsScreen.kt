@@ -12,11 +12,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.io.File
 import com.tosin.musicplayer.ui.components.StorageScopeSelector
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.state.StorageScope
+import com.tosin.musicplayer.ui.viewmodel.SettingsEvent
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
+import java.io.File
+
+private enum class ScanAction {
+    CHANGES,
+    FULL
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,10 +32,31 @@ fun GeneralSettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showResetDialog by remember { mutableStateOf(false) }
     var showFolderPicker by remember { mutableStateOf(false) }
+    var showScanDialog by remember { mutableStateOf(false) }
+    var pendingScanAction by remember { mutableStateOf(ScanAction.CHANGES) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is SettingsEvent.ScanFinished -> {
+                    showScanDialog = false
+                    snackbarHostState.showSnackbar(
+                        if (event.isFullScan) {
+                            "Full scan finished"
+                        } else {
+                            "Library scan finished"
+                        }
+                    )
+                }
+            }
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
@@ -46,8 +74,47 @@ fun GeneralSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
         ) {
+            if (uiState.isScanning) {
+                val progressFraction = if (uiState.scanTotal > 0) {
+                    uiState.scanProgress.toFloat() / uiState.scanTotal.toFloat()
+                } else {
+                    0f
+                }
+                LinearProgressIndicator(
+                    progress = { progressFraction },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = uiState.scanLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "${uiState.scanProgress}/${uiState.scanTotal} items • ${uiState.scanFolderCount} folders",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+            ) {
+                Spacer(Modifier.height(AppSpacing.small))
+
             // ── Notifications ──
             SettingsSubHeader("Notifications")
 
@@ -77,12 +144,13 @@ fun GeneralSettingsScreen(
                     Icon(Icons.Rounded.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
-                    if (uiState.isScanning) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    } else {
-                        FilledTonalButton(onClick = { viewModel.scanForChanges() }) {
-                            Text("Scan")
+                    FilledTonalButton(
+                        onClick = {
+                            pendingScanAction = ScanAction.CHANGES
+                            showScanDialog = true
                         }
+                    ) {
+                        Text("Scan")
                     }
                 }
             )
@@ -94,12 +162,13 @@ fun GeneralSettingsScreen(
                     Icon(Icons.Rounded.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
-                    if (uiState.isScanning) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    } else {
-                        FilledTonalButton(onClick = { viewModel.fullScan() }) {
-                            Text("Full Scan")
+                    FilledTonalButton(
+                        onClick = {
+                            pendingScanAction = ScanAction.FULL
+                            showScanDialog = true
                         }
+                    ) {
+                        Text("Full Scan")
                     }
                 }
             )
@@ -171,7 +240,94 @@ fun GeneralSettingsScreen(
             )
 
             Spacer(Modifier.height(AppSpacing.xLarge))
+            }
         }
+    }
+
+    if (showScanDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!uiState.isScanning) {
+                    showScanDialog = false
+                }
+            },
+            icon = { Icon(Icons.Rounded.Sync, contentDescription = null) },
+            title = {
+                Text(
+                    if (pendingScanAction == ScanAction.FULL) {
+                        "Full scan library"
+                    } else {
+                        "Scan for changes"
+                    }
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.small)) {
+                    Text(
+                        if (pendingScanAction == ScanAction.FULL) {
+                            "Full scan rebuilds the library from MediaStore and refreshes cached metadata."
+                        } else {
+                            "Scan for changes checks for new or removed songs and updates the library."
+                        }
+                    )
+                    Text(
+                        "You can move this scan to the background and keep using the app while it finishes.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (uiState.isScanning) {
+                        val progressFraction = if (uiState.scanTotal > 0) {
+                            uiState.scanProgress.toFloat() / uiState.scanTotal.toFloat()
+                        } else {
+                            0f
+                        }
+                        LinearProgressIndicator(
+                            progress = { progressFraction },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            text = "${uiState.scanProgress}/${uiState.scanTotal} items • ${uiState.scanFolderCount} folders",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        uiState.scanCurrentFolder?.let { folder ->
+                            Text(
+                                text = "Now scanning: $folder",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (pendingScanAction == ScanAction.FULL) {
+                            viewModel.fullScan()
+                        } else {
+                            viewModel.scanForChanges()
+                        }
+                    },
+                    enabled = !uiState.isScanning
+                ) {
+                    Text("Start scan")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        if (pendingScanAction == ScanAction.FULL) {
+                            viewModel.fullScan()
+                        } else {
+                            viewModel.scanForChanges()
+                        }
+                        showScanDialog = false
+                    }
+                ) {
+                    Text("Background scan")
+                }
+            }
+        )
     }
 
     if (showFolderPicker) {

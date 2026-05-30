@@ -6,6 +6,7 @@ import android.os.Build
 import android.provider.MediaStore
 import com.tosin.musicplayer.data.models.Song
 import java.io.File
+import java.util.LinkedHashSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -20,7 +21,9 @@ class MusicLoader(
         const val COLUMN_TRACK = "track"
     }
 
-    suspend fun loadSongs(): List<Song> = withContext(Dispatchers.IO) {
+    suspend fun loadSongs(
+        onProgress: suspend (ScanProgress) -> Unit = {}
+    ): List<Song> = withContext(Dispatchers.IO) {
         val songs = mutableListOf<Song>()
         val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val folderColumnName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -67,7 +70,11 @@ class MusicLoader(
             val trackColumn = cursor.getColumnIndex(COLUMN_TRACK)
             val folderColumn = cursor.getColumnIndex(folderColumnName)
 
+            val totalCount = cursor.count
+            var currentIndex = 0
+            val discoveredFolders = LinkedHashSet<String>()
             while (cursor.moveToNext()) {
+                currentIndex++
                 val id = cursor.getLong(idColumn)
                 val title = cursor.getString(titleColumn).orEmpty()
                 val artist = cursor.getString(artistColumn).orEmpty()
@@ -75,6 +82,10 @@ class MusicLoader(
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val folder = if (folderColumn >= 0) cursor.getString(folderColumn) else null
+                val normalizedFolder = extractFolderName(folder)
+                if (!normalizedFolder.isNullOrBlank()) {
+                    discoveredFolders.add(normalizedFolder)
+                }
                 val dateAddedSeconds = if (dateAddedColumn >= 0 && !cursor.isNull(dateAddedColumn)) {
                     cursor.getLong(dateAddedColumn)
                 } else null
@@ -122,6 +133,17 @@ class MusicLoader(
                         rating = rating
                     )
                 )
+
+                if (currentIndex % 25 == 0 || currentIndex == totalCount) {
+                    onProgress(
+                        ScanProgress(
+                            scannedItems = currentIndex,
+                            totalItems = totalCount,
+                            scannedFolders = discoveredFolders.size,
+                            currentFolder = normalizedFolder
+                        )
+                    )
+                }
             }
         }
 
@@ -143,20 +165,22 @@ class MusicLoader(
         }?.takeIf { it.isNullOrBlank().not() }
     }
 
-    private fun extractFolderName(rawPath: String?): String? {
-        val normalizedPath = rawPath
-            ?.trim()
-            ?.trimEnd('/')
-            ?.takeIf { it.isNotBlank() }
-            ?: return null
-
-        return File(normalizedPath).name.takeIf { it.isNotBlank() }
-    }
-
     private fun normalizeFolderPath(rawPath: String?): String? {
         return rawPath
             ?.trim()
             ?.trimEnd('/')
             ?.takeIf { it.isNotBlank() }
     }
+
+    private fun extractFolderName(rawPath: String?): String? {
+        val normalizedPath = normalizeFolderPath(rawPath) ?: return null
+        return File(normalizedPath).name.takeIf { it.isNotBlank() }
+    }
 }
+
+data class ScanProgress(
+    val scannedItems: Int,
+    val totalItems: Int,
+    val scannedFolders: Int,
+    val currentFolder: String? = null
+)

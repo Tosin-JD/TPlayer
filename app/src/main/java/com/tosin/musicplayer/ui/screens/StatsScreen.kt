@@ -21,6 +21,19 @@ import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import java.util.*
 
+fun formatDuration(minutes: Long): String {
+    val safeMinutes = minutes.coerceAtLeast(0L)
+    val days = safeMinutes / (24 * 60)
+    val hours = (safeMinutes % (24 * 60)) / 60
+    val mins = safeMinutes % 60
+
+    return when {
+        days > 0 -> "${days}d ${hours}h ${mins}min"
+        hours > 0 -> "${hours}h ${mins}min"
+        else -> "${mins}min"
+    }
+}
+
 enum class StatsRange(val label: String) {
     Today("Today"),
     ThisWeek("This Week"),
@@ -172,7 +185,7 @@ fun StatsScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "${stat.totalMinutes} min",
+                                text = formatDuration(stat.totalMinutes),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
