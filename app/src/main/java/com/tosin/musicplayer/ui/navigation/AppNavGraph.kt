@@ -15,8 +15,10 @@ import androidx.compose.material.icons.rounded.MusicVideo
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavType
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.tosin.musicplayer.ui.components.MiniPlayer
 import com.tosin.musicplayer.ui.screens.*
 import com.tosin.musicplayer.ui.state.LibraryTab
@@ -39,7 +41,10 @@ fun AppNavGraph(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val showBottomNav = currentRoute in listOf("home", "stats")
-    val showMiniPlayer = currentRoute != "player" && currentRoute != "lyrics"
+    val showMiniPlayer = currentRoute != "player" &&
+        currentRoute != "lyrics" &&
+        currentRoute?.startsWith("songEditor") != true &&
+        currentRoute?.startsWith("lyricsEditor") != true
 
     Scaffold(
         bottomBar = {
@@ -160,15 +165,66 @@ fun AppNavGraph(
                     onOpenEqualizer = {
                         navController.navigate("equalizer")
                     },
+                    onOpenSongEditor = { songId ->
+                        navController.navigate("songEditor/$songId")
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
                 )
             }
 
+            composable(
+                route = "songEditor/{songId}",
+                arguments = listOf(navArgument("songId") { type = NavType.LongType }),
+                enterTransition = {
+                    slideInVertically { it } + fadeIn()
+                },
+                exitTransition = {
+                    slideOutVertically { it } + fadeOut()
+                },
+                popEnterTransition = {
+                    slideInVertically { it } + fadeIn()
+                },
+                popExitTransition = {
+                    slideOutVertically { it } + fadeOut()
+                }
+            ) { backStackEntry ->
+                val songId = backStackEntry.arguments?.getLong("songId") ?: 0L
+                SongEditorScreen(
+                    viewModel = viewModel,
+                    songId = songId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
             composable("equalizer") {
                 EqualizerScreen(
                     viewModel = equalizerViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = "lyricsEditor/{songId}",
+                arguments = listOf(navArgument("songId") { type = NavType.LongType }),
+                enterTransition = {
+                    slideInVertically { it } + fadeIn()
+                },
+                exitTransition = {
+                    slideOutVertically { it } + fadeOut()
+                },
+                popEnterTransition = {
+                    slideInVertically { it } + fadeIn()
+                },
+                popExitTransition = {
+                    slideOutVertically { it } + fadeOut()
+                }
+            ) { backStackEntry ->
+                val songId = backStackEntry.arguments?.getLong("songId") ?: 0L
+                LyricsEditorScreen(
+                    viewModel = viewModel,
+                    songId = songId,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -187,7 +243,10 @@ fun AppNavGraph(
             composable("lyrics") {
                 LyricsScreen(
                     viewModel = viewModel,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onOpenLyricsEditor = { songId ->
+                        navController.navigate("lyricsEditor/$songId")
+                    }
                 )
             }
 

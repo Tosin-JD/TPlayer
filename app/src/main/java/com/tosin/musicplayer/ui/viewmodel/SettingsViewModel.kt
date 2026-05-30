@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
+import com.tosin.musicplayer.ui.state.FolderEntry
 import com.tosin.musicplayer.ui.state.SettingsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * ViewModel for the Settings screen and all sub-settings screens.
@@ -25,6 +27,7 @@ class SettingsViewModel(
 
     init {
         loadSavedSettings()
+        loadAvailableFolders()
     }
 
     // ── Appearance ──
@@ -73,6 +76,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isScanning = true) }
             musicRepository.scanForChanges()
+            loadAvailableFolders()
             _uiState.update { it.copy(isScanning = false) }
         }
     }
@@ -81,6 +85,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isScanning = true) }
             musicRepository.fullScan()
+            loadAvailableFolders()
             _uiState.update { it.copy(isScanning = false) }
         }
     }
@@ -112,6 +117,18 @@ class SettingsViewModel(
 
     fun togglePauseOnZeroVolume(enabled: Boolean) {
         updateSettings { it.copy(pauseOnZeroVolume = enabled) }
+    }
+
+    fun toggleExcludedFolder(folderPath: String) {
+        updateSettings { state ->
+            val excluded = state.excludedFolders.toMutableList()
+            if (folderPath in excluded) {
+                excluded.remove(folderPath)
+            } else {
+                excluded.add(folderPath)
+            }
+            state.copy(excludedFolders = excluded.distinct())
+        }
     }
 
     // ── Reset Helpers ──
@@ -170,6 +187,10 @@ class SettingsViewModel(
         }
     }
 
+    fun refreshAvailableFolders() {
+        loadAvailableFolders()
+    }
+
     fun resetAllSettings() {
         _uiState.value = SettingsUiState()
         viewModelScope.launch {
@@ -195,9 +216,26 @@ class SettingsViewModel(
                     pauseOnZeroVolume = saved.boolean("pauseOnZeroVolume", current.pauseOnZeroVolume),
                     accentColorIndex = saved.int("accentColorIndex", current.accentColorIndex),
                     tabOrder = saved.stringList("tabOrder", current.tabOrder),
-                    visibleTabs = saved.stringList("visibleTabs", current.visibleTabs)
+                    visibleTabs = saved.stringList("visibleTabs", current.visibleTabs),
+                    excludedFolders = saved.stringList("excludedFolders", current.excludedFolders)
                 )
             }
+        }
+    }
+
+    private fun loadAvailableFolders() {
+        viewModelScope.launch {
+            val folders = musicRepository.loadAllSongs()
+                .mapNotNull { song -> song.folderPath?.takeIf { it.isNotBlank() } }
+                .distinct()
+                .sortedBy { it.lowercase() }
+                .map { path ->
+                    FolderEntry(
+                        path = path,
+                        label = File(path).name.ifBlank { path }
+                    )
+                }
+            _uiState.update { it.copy(availableFolders = folders) }
         }
     }
 
@@ -257,6 +295,7 @@ class SettingsViewModel(
         "accentColorIndex" to accentColorIndex,
         "isScanning" to isScanning,
         "tabOrder" to tabOrder,
-        "visibleTabs" to visibleTabs
+        "visibleTabs" to visibleTabs,
+        "excludedFolders" to excludedFolders
     )
 }

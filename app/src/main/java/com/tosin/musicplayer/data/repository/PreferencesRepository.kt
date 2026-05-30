@@ -1,6 +1,7 @@
 package com.tosin.musicplayer.data.repository
 
 import android.content.Context
+import com.tosin.musicplayer.data.models.SongMetadataOverride
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -13,6 +14,7 @@ import java.io.File
 class PreferencesRepository(private val context: Context) {
     private val prefsFile = File(context.filesDir, "tplayer_prefs.json")
     private val queueFile = File(context.filesDir, "queue_state.json")
+    private val metadataFile = File(context.filesDir, "song_metadata_overrides.json")
 
     // --- Settings ---
     suspend fun saveSettings(settings: Map<String, Any>) = withContext(Dispatchers.IO) {
@@ -99,6 +101,76 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun getResumePosition(songId: Long): Long = withContext(Dispatchers.IO) {
         loadResumePositions()[songId] ?: 0L
+    }
+
+    // --- Per-song metadata overrides ---
+    suspend fun loadSongMetadataOverrides(): Map<Long, SongMetadataOverride> = withContext(Dispatchers.IO) {
+        if (!metadataFile.exists()) return@withContext emptyMap()
+        try {
+            val obj = JSONObject(metadataFile.readText())
+            val map = mutableMapOf<Long, SongMetadataOverride>()
+            obj.keys().forEach { key ->
+                val songId = key.toLongOrNull() ?: return@forEach
+                val value = obj.getJSONObject(key)
+                map[songId] = SongMetadataOverride(
+                    title = value.optString("title").takeIf { it.isNotBlank() },
+                    artist = value.optString("artist").takeIf { it.isNotBlank() },
+                    album = value.optString("album").takeIf { it.isNotBlank() },
+                    genre = value.optString("genre").takeIf { it.isNotBlank() },
+                    lyrics = value.optString("lyrics").takeIf { it.isNotBlank() }
+                )
+            }
+            map
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    suspend fun saveSongMetadataOverride(
+        songId: Long,
+        override: SongMetadataOverride
+    ) = withContext(Dispatchers.IO) {
+        try {
+            val current = loadSongMetadataOverrides().toMutableMap()
+            if (
+                override.title.isNullOrBlank() &&
+                override.artist.isNullOrBlank() &&
+                override.album.isNullOrBlank() &&
+                override.genre.isNullOrBlank() &&
+                override.lyrics.isNullOrBlank()
+            ) {
+                current.remove(songId)
+            } else {
+                current[songId] = override
+            }
+            saveSongMetadataOverrides(current)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun removeSongMetadataOverride(songId: Long) = withContext(Dispatchers.IO) {
+        try {
+            val current = loadSongMetadataOverrides().toMutableMap()
+            current.remove(songId)
+            saveSongMetadataOverrides(current)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun saveSongMetadataOverrides(overrides: Map<Long, SongMetadataOverride>) {
+        val obj = JSONObject()
+        overrides.forEach { (songId, override) ->
+            val value = JSONObject()
+            override.title?.let { value.put("title", it) }
+            override.artist?.let { value.put("artist", it) }
+            override.album?.let { value.put("album", it) }
+            override.genre?.let { value.put("genre", it) }
+            override.lyrics?.let { value.put("lyrics", it) }
+            obj.put(songId.toString(), value)
+        }
+        metadataFile.writeText(obj.toString())
     }
 
     private fun loadResumePositions(): Map<Long, Long> {

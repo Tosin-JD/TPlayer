@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val musicLoader = MusicLoader(contentResolver)
-                val repository = MusicRepository(musicLoader)
+                val repository = MusicRepository(musicLoader, preferencesRepository)
                 val playerController = PlayerController(this@MainActivity, statsRepository)
 
                 return when {
@@ -86,6 +86,10 @@ class MainActivity : ComponentActivity() {
             val settingsUiState by settingsViewModel.uiState.collectAsState()
             androidx.compose.runtime.LaunchedEffect(settingsUiState.pauseOnZeroVolume) {
                 playerViewModel.setPauseOnZeroVolumeEnabled(settingsUiState.pauseOnZeroVolume)
+            }
+            androidx.compose.runtime.LaunchedEffect(settingsUiState.excludedFolders) {
+                playerViewModel.setExcludedFolders(settingsUiState.excludedFolders.toSet())
+                playerViewModel.refreshLibrary()
             }
 
             TPlayerTheme {

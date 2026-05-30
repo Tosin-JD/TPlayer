@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.data.models.SongMetadataOverride
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PlaylistRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
@@ -170,7 +171,14 @@ class PlayerViewModel(
                     _isLoading.value = false
                     // Restore queue state
                     restoreQueueState(songs)
+                    enforceCurrentPlaybackStillVisible(songs)
                 }
+        }
+    }
+
+    fun refreshLibrary() {
+        if (_hasAudioPermission.value) {
+            loadSongs()
         }
     }
 
@@ -181,6 +189,13 @@ class PlayerViewModel(
         val queueSongs = queueState.songIds.mapNotNull { songMap[it] }
         if (queueSongs.isNotEmpty()) {
             playerController.setPlaylist(queueSongs, queueState.currentIndex.coerceIn(0, queueSongs.size - 1))
+        }
+    }
+
+    private fun enforceCurrentPlaybackStillVisible(songs: List<Song>) {
+        val currentSong = playerController.currentSong.value ?: return
+        if (songs.none { it.id == currentSong.id }) {
+            playerController.stop()
         }
     }
 
@@ -375,6 +390,12 @@ class PlayerViewModel(
         return playlist.songIds.mapNotNull { songMap[it] }
     }
 
+    fun getSongById(songId: Long): Song? {
+        return _songs.value.firstOrNull { it.id == songId }
+            ?: uiState.value.currentSong?.takeIf { it.id == songId }
+            ?: uiState.value.queue.firstOrNull { it.id == songId }
+    }
+
     fun playPlaylist(playlist: Playlist, startIndex: Int = 0) {
         val songs = getSongsForPlaylist(playlist)
         if (songs.isNotEmpty()) {
@@ -385,6 +406,54 @@ class PlayerViewModel(
 
     fun setPauseOnZeroVolumeEnabled(enabled: Boolean) {
         playerController.setPauseOnZeroVolumeEnabled(enabled)
+    }
+
+    fun setExcludedFolders(folders: Set<String>) {
+        playerController.setExcludedFolders(folders)
+    }
+
+    fun saveSongTags(
+        songId: Long,
+        title: String,
+        artist: String,
+        album: String,
+        genre: String
+    ) {
+        viewModelScope.launch {
+            val currentLyrics = _songs.value.firstOrNull { it.id == songId }?.lyrics
+            preferencesRepository.saveSongMetadataOverride(
+                songId,
+                SongMetadataOverride(
+                    title = title,
+                    artist = artist,
+                    album = album,
+                    genre = genre,
+                    lyrics = currentLyrics
+                )
+            )
+            playerController.updateSongMetadata(songId, title, artist, album, genre, currentLyrics)
+            refreshLibrary()
+        }
+    }
+
+    fun saveLyrics(songId: Long, lyrics: String) {
+        viewModelScope.launch {
+            val currentSong = _songs.value.firstOrNull { it.id == songId }
+            if (currentSong != null) {
+                preferencesRepository.saveSongMetadataOverride(
+                    songId,
+                    SongMetadataOverride(
+                        title = currentSong.title,
+                        artist = currentSong.artist,
+                        album = currentSong.album,
+                        genre = currentSong.genre,
+                        lyrics = lyrics
+                    )
+                )
+                playerController.updateSongMetadata(songId, currentSong.title, currentSong.artist, currentSong.album, currentSong.genre, lyrics)
+                refreshLibrary()
+            }
+        }
     }
 
     override fun onCleared() {

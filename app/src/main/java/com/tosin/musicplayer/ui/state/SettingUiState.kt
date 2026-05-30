@@ -1,5 +1,10 @@
 package com.tosin.musicplayer.ui.state
 
+data class FolderEntry(
+    val path: String,
+    val label: String
+)
+
 data class SettingsUiState(
     val isDarkMode: Boolean = true,
     val showNotifications: Boolean = true,
@@ -15,5 +20,7 @@ data class SettingsUiState(
     val accentColorIndex: Int = 0,
     val isScanning: Boolean = false,
     val tabOrder: List<String> = listOf("All", "Album", "Artist", "Genre", "Folder"),
-    val visibleTabs: List<String> = listOf("All", "Album", "Artist", "Genre", "Folder")
+    val visibleTabs: List<String> = listOf("All", "Album", "Artist", "Genre", "Folder"),
+    val availableFolders: List<FolderEntry> = emptyList(),
+    val excludedFolders: List<String> = emptyList()
 )

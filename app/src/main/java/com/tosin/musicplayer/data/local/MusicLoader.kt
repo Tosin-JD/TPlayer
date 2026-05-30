@@ -83,6 +83,7 @@ class MusicLoader(
                         album = album.ifBlank { "Unknown album" },
                         genre = loadGenreForSong(id),
                         folder = extractFolderName(folder),
+                        folderPath = normalizeFolderPath(folder),
                         uri = contentUri.toString(),
                         albumArt = if (hasAlbumArt) albumArtUri.toString() else null,
                         duration = duration,
@@ -118,5 +119,12 @@ class MusicLoader(
             ?: return null
 
         return File(normalizedPath).name.takeIf { it.isNotBlank() }
+    }
+
+    private fun normalizeFolderPath(rawPath: String?): String? {
+        return rawPath
+            ?.trim()
+            ?.trimEnd('/')
+            ?.takeIf { it.isNotBlank() }
     }
 }

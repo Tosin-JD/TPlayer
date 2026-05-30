@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.io.File
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
@@ -23,6 +24,7 @@ fun GeneralSettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    var showFolderPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -108,6 +110,27 @@ fun GeneralSettingsScreen(
                 }
             )
 
+            SettingsSubHeader("Excluded Folders")
+
+            ListItem(
+                headlineContent = { Text("Manage excluded folders") },
+                supportingContent = {
+                    if (uiState.excludedFolders.isEmpty()) {
+                        Text("All folders are currently included")
+                    } else {
+                        Text("${uiState.excludedFolders.size} folder(s) excluded")
+                    }
+                },
+                leadingContent = {
+                    Icon(Icons.Rounded.FolderOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                },
+                trailingContent = {
+                    FilledTonalButton(onClick = { showFolderPicker = true }) {
+                        Text("Choose")
+                    }
+                }
+            )
+
             Spacer(Modifier.weight(1f))
 
             // Reset General Settings
@@ -117,6 +140,87 @@ fun GeneralSettingsScreen(
             )
 
             Spacer(Modifier.height(AppSpacing.xLarge))
+        }
+    }
+
+    if (showFolderPicker) {
+        ModalBottomSheet(
+            onDismissRequest = { showFolderPicker = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
+            ) {
+                Text(
+                    text = "Exclude folders",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Songs in excluded folders will disappear everywhere in the app and will not play in playlists.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = AppSpacing.xSmall, bottom = AppSpacing.medium)
+                )
+
+                if (uiState.availableFolders.isEmpty()) {
+                    Text(
+                        text = "No folders found yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = AppSpacing.large)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xSmall)) {
+                        uiState.availableFolders.forEach { folder ->
+                            val selected = uiState.excludedFolders.contains(folder.path)
+                            Card(
+                                onClick = { viewModel.toggleExcludedFolder(folder.path) },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (selected) {
+                                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainerLow
+                                    }
+                                )
+                            ) {
+                                ListItem(
+                                    headlineContent = {
+                                        Text(folder.label, fontWeight = FontWeight.SemiBold)
+                                    },
+                                    supportingContent = {
+                                        Text(folder.path, maxLines = 1)
+                                    },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Rounded.Folder,
+                                            contentDescription = null,
+                                            tint = if (selected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                                        )
+                                    },
+                                    trailingContent = {
+                                        Checkbox(
+                                            checked = selected,
+                                            onCheckedChange = { viewModel.toggleExcludedFolder(folder.path) }
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(AppSpacing.medium))
+                TextButton(
+                    onClick = { showFolderPicker = false },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Close")
+                }
+            }
         }
     }
 

@@ -60,6 +60,8 @@ class PlayerController(
             _queue.value = value
         }
 
+    private var excludedFolders: Set<String> = emptySet()
+
     private var currentRepeatMode = RepeatMode.PLAY_ALL_ONCE
     
     private var pauseOnZeroVolumeEnabled = true
@@ -191,6 +193,52 @@ class PlayerController(
         sleepTimerJob?.cancel()
         _sleepTimerRemaining.value = null
         clearABRepeat()
+    }
+
+    fun setExcludedFolders(folders: Set<String>) {
+        excludedFolders = folders.map { it.trim().trimEnd('/') }.toSet()
+        val currentSongId = _currentSong.value?.id
+        val filteredPlaylist = playlist.filterNot { it.isExcluded(excludedFolders) }
+        playlist = filteredPlaylist
+
+        if (currentSongId != null && filteredPlaylist.none { it.id == currentSongId }) {
+            stop()
+            return
+        }
+
+        val controller = mediaController ?: return
+        if (filteredPlaylist.isNotEmpty()) {
+            val currentIndex = filteredPlaylist.indexOfFirst { it.id == currentSongId }.takeIf { it >= 0 }
+                ?: _currentIndex.value.coerceIn(0, filteredPlaylist.lastIndex)
+            controller.setMediaItems(filteredPlaylist.map { it.toMediaItem() }, currentIndex, controller.currentPosition)
+        }
+    }
+
+    fun updateSongMetadata(
+        songId: Long,
+        title: String? = null,
+        artist: String? = null,
+        album: String? = null,
+        genre: String? = null,
+        lyrics: String? = null
+    ) {
+        val updated = playlist.map { song ->
+            if (song.id == songId) {
+                song.copy(
+                    title = title?.takeIf { it.isNotBlank() } ?: song.title,
+                    artist = artist?.takeIf { it.isNotBlank() } ?: song.artist,
+                    album = album?.takeIf { it.isNotBlank() } ?: song.album,
+                    genre = genre?.takeIf { it.isNotBlank() } ?: song.genre,
+                    lyrics = lyrics ?: song.lyrics
+                )
+            } else {
+                song
+            }
+        }
+        playlist = updated
+        if (_currentSong.value?.id == songId) {
+            _currentSong.value = updated.firstOrNull { it.id == songId }
+        }
     }
 
     fun seekToMediaItem(index: Int) {
@@ -345,6 +393,12 @@ class PlayerController(
 
     private fun stopProgressUpdate() {
         progressJob?.cancel()
+    }
+
+    private fun Song.isExcluded(excluded: Set<String>): Boolean {
+        val folderPathMatch = folderPath?.trim()?.trimEnd('/')?.let { it in excluded } ?: false
+        val folderNameMatch = folder?.trim()?.let { it in excluded } ?: false
+        return folderPathMatch || folderNameMatch
     }
 }
 

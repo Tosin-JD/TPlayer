@@ -1,6 +1,10 @@
 package com.tosin.musicplayer.ui.screens
 
+import android.app.Activity
 import android.graphics.drawable.BitmapDrawable
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -12,7 +16,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -51,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -66,9 +70,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.palette.graphics.Palette
+import androidx.core.view.WindowCompat
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -87,18 +93,22 @@ fun PlayerScreen(
     onOpenPlaylist: () -> Unit = {},
     onOpenLyrics: () -> Unit = {},
     onOpenEqualizer: () -> Unit = {},
+    onOpenSongEditor: (Long) -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
     val context = LocalContext.current
+    val view = LocalView.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
 
     val configuration = LocalConfiguration.current
     val isSmallScreen = configuration.screenWidthDp < 360
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
     val bottomIconSize = if (isSmallScreen) 44.dp else 32.dp
     val bottomButtonSize = if (isSmallScreen) 60.dp else 48.dp
+    val albumArtSize = if (isLandscape) 240.dp else 320.dp
     val swipeThresholdPx = with(LocalDensity.current) { 96.dp.toPx() }
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
@@ -106,6 +116,19 @@ fun PlayerScreen(
 
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        val window = activity?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        controller?.systemBarsBehavior =
+            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        onDispose {
+            controller?.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+    }
 
     LaunchedEffect(state.currentSong?.albumArt) {
         val data = state.currentSong?.albumArt.orDefaultAlbumArt()
@@ -185,6 +208,68 @@ fun PlayerScreen(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
                 )
+
+                if (state.currentSong != null) {
+                    androidx.compose.material3.ListItem(
+                        headlineContent = { Text("Edit tags") },
+                        supportingContent = { Text("Update title, artist, album and genre") },
+                        leadingContent = { Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        modifier = Modifier.clickable {
+                            showMoreOptionsSheet = false
+                            onOpenSongEditor(state.currentSong!!.id)
+                        }
+                    )
+
+                    androidx.compose.material3.ListItem(
+                        headlineContent = { Text("Set as ringtone") },
+                        supportingContent = { Text("Make this song your default ringtone") },
+                        leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        modifier = Modifier.clickable {
+                            showMoreOptionsSheet = false
+                            state.currentSong?.uri?.let { uriString ->
+                                runCatching {
+                                    android.media.RingtoneManager.setActualDefaultRingtoneUri(
+                                        context,
+                                        android.media.RingtoneManager.TYPE_RINGTONE,
+                                        Uri.parse(uriString)
+                                    )
+                                    Toast.makeText(context, "Ringtone updated", Toast.LENGTH_SHORT).show()
+                                }.getOrElse {
+                                    Toast.makeText(context, "Unable to set ringtone", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    )
+
+                    androidx.compose.material3.ListItem(
+                        headlineContent = { Text("Share song") },
+                        supportingContent = { Text("Send the audio file to another app") },
+                        leadingContent = { Icon(Icons.AutoMirrored.Rounded.PlaylistPlay, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        modifier = Modifier.clickable {
+                            showMoreOptionsSheet = false
+                            state.currentSong?.let { song ->
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "audio/*"
+                                    putExtra(Intent.EXTRA_STREAM, Uri.parse(song.uri))
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Share song"))
+                            }
+                        }
+                    )
+
+                    androidx.compose.material3.ListItem(
+                        headlineContent = { Text("Delete permanently") },
+                        supportingContent = { Text("Remove the file from storage forever") },
+                        leadingContent = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                        modifier = Modifier.clickable {
+                            showMoreOptionsSheet = false
+                            showDeleteConfirm = true
+                        }
+                    )
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.small))
                 
                 // Speed
                 androidx.compose.material3.ListItem(
@@ -249,11 +334,50 @@ fun PlayerScreen(
         )
     }
 
+    if (showDeleteConfirm && state.currentSong != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            icon = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("Delete permanently?") },
+            text = {
+                Text("This will permanently delete \"${state.currentSong?.title}\". This cannot be reversed.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val song = state.currentSong
+                        if (song != null) {
+                            runCatching {
+                                val deleted = context.contentResolver.delete(Uri.parse(song.uri), null, null)
+                                if (deleted > 0) {
+                                    viewModel.stop()
+                                    viewModel.refreshLibrary()
+                                    Toast.makeText(context, "Song deleted", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Unable to delete song", Toast.LENGTH_SHORT).show()
+                                }
+                            }.getOrElse {
+                                Toast.makeText(context, "Unable to delete song", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        showDeleteConfirm = false
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .navigationBarsPadding()
                 .padding(horizontal = AppSpacing.small)
                 .pointerInput(onNavigateBack) {
                     var dragDistance = 0f
@@ -352,12 +476,12 @@ fun PlayerScreen(
                 }
             }
 
-            Spacer(Modifier.height(AppSpacing.large))
+        Spacer(Modifier.height(AppSpacing.large))
 
         // Album Art
         Card(
             modifier = Modifier
-                .size(320.dp)
+                .size(albumArtSize)
                 .aspectRatio(1f),
             shape = RoundedCornerShape(28.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
@@ -576,7 +700,7 @@ fun PlayerScreen(
             }
 
             IconButton(
-                onClick = { showMoreOptionsSheet = true },
+            onClick = { showMoreOptionsSheet = true },
                 modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(
