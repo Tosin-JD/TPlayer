@@ -6,7 +6,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
@@ -16,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
@@ -43,46 +46,26 @@ fun AppNavGraph(
 
     val showMiniPlayer = currentRoute != "player"
 
-    Scaffold(
-        floatingActionButton = {
-            if (currentRoute == "home") {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    FloatingActionButton(onClick = { navController.navigate("stats") }) {
-                        Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
-                    }
-                    FloatingActionButton(onClick = { navController.navigate("search") }) {
-                        Icon(Icons.Rounded.Search, contentDescription = "Open Search")
-                    }
-                }
-            }
-        },
-        bottomBar = {
-            Column(
-                modifier = Modifier.navigationBarsPadding()
-            ) {
-                AnimatedVisibility(
-                    visible = showMiniPlayer,
-                    enter = slideInVertically { fullHeight -> fullHeight } + fadeIn(),
-                    exit = slideOutVertically { fullHeight -> fullHeight } + fadeOut()
-                ) {
-                    MiniPlayer(
-                        viewModel = viewModel,
-                        onExpand = {
-                            navController.navigate("player")
-                        },
-                        onStop = {
-                            viewModel.stop()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            floatingActionButton = {
+                if (currentRoute == "home") {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        FloatingActionButton(onClick = { navController.navigate("stats") }) {
+                            Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
                         }
-                    )
+                        FloatingActionButton(onClick = { navController.navigate("search") }) {
+                            Icon(Icons.Rounded.Search, contentDescription = "Open Search")
+                        }
+                    }
                 }
             }
-        }
-    ) { paddingValues ->
-        NavHost(
-            navController, 
-            startDestination = "home",
-            modifier = Modifier.padding(paddingValues)
-        ) {
+        ) { paddingValues ->
+            NavHost(
+                navController, 
+                startDestination = "home",
+                modifier = Modifier.padding(paddingValues)
+            ) {
 
             composable("home") {
                 HomeScreen(
@@ -331,6 +314,28 @@ fun AppNavGraph(
                     onNavigateToPlayer = { navController.navigate("player") }
                 )
             }
+            }
+        }
+
+        // MiniPlayer floating overlay – outside Scaffold so no background is drawn behind it
+        AnimatedVisibility(
+            visible = showMiniPlayer,
+            enter = slideInVertically { fullHeight -> fullHeight } + fadeIn(),
+            exit = slideOutVertically { fullHeight -> fullHeight } + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+        ) {
+            MiniPlayer(
+                viewModel = viewModel,
+                onExpand = {
+                    navController.navigate("player")
+                },
+                onStop = {
+                    viewModel.stop()
+                }
+            )
         }
     }
 }

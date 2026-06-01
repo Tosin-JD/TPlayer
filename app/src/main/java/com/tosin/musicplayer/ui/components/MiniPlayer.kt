@@ -73,7 +73,7 @@ fun MiniPlayer(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = AppSpacing.medium),
+                .padding(start = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
