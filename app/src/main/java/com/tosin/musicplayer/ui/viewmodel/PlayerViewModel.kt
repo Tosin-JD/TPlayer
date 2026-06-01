@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import com.tosin.musicplayer.data.repository.StatsRepository
 import com.tosin.musicplayer.data.models.SongStats
 
@@ -66,6 +68,30 @@ class PlayerViewModel(
     val mostPlayed = _mostPlayed.asStateFlow()
 
     val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
+
+    init {
+        viewModelScope.launch {
+            combine(
+                playerController.currentSong,
+                playerController.isPlaying,
+                playerController.queue
+            ) { song, playing, queue ->
+                Triple(song, playing, queue)
+            }.collect { (song, playing, queue) ->
+                if (song != null && queue.isNotEmpty()) {
+                    saveQueueState()
+                }
+            }
+        }
+        viewModelScope.launch {
+            while (isActive) {
+                delay(5000)
+                if (playerController.isPlaying.value) {
+                    saveQueueState()
+                }
+            }
+        }
+    }
 
     val uiState: StateFlow<PlayerUiState> = combine(
         _songs,

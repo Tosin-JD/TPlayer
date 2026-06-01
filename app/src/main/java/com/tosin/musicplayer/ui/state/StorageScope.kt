@@ -13,15 +13,15 @@ fun Song.isInternalStorage(): Boolean {
     val path = folderPath?.lowercase().orEmpty()
     return path.isBlank() ||
         !path.contains("/storage/") ||
-        path.contains("/storage/emulated/0") ||
-        path.contains("/storage/self/primary")
+        path.contains("/storage/emulated") ||
+        path.contains("/storage/self")
 }
 
 fun Song.isSdCardStorage(): Boolean {
     val path = folderPath?.lowercase().orEmpty()
     return path.contains("/storage/") &&
-        !path.contains("/storage/emulated/0") &&
-        !path.contains("/storage/self/primary") &&
+        !path.contains("/storage/emulated") &&
+        !path.contains("/storage/self") &&
         !path.isBlank()
 }
 

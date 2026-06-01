@@ -424,7 +424,7 @@ fun PlayerScreen(
                         0.dp
                     }
                 )
-                .pointerInput(onNavigateBack) {
+                .pointerInput(onNavigateBack, onOpenLyrics) {
                     var dragDistance = 0f
                     detectVerticalDragGestures(
                         onDragStart = {
@@ -437,6 +437,8 @@ fun PlayerScreen(
                         onDragEnd = {
                             if (dragDistance > swipeThresholdPx) {
                                 onNavigateBack()
+                            } else if (dragDistance < -swipeThresholdPx) {
+                                onOpenLyrics()
                             }
                             dragDistance = 0f
                         },

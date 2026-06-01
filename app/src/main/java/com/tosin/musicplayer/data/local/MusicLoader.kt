@@ -43,7 +43,8 @@ class MusicLoader(
             COLUMN_SIZE,
             COLUMN_YEAR,
             COLUMN_TRACK,
-            folderColumnName
+            folderColumnName,
+            MediaStore.Audio.Media.DATA
         )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
@@ -69,6 +70,7 @@ class MusicLoader(
             val yearColumn = cursor.getColumnIndex(COLUMN_YEAR)
             val trackColumn = cursor.getColumnIndex(COLUMN_TRACK)
             val folderColumn = cursor.getColumnIndex(folderColumnName)
+            val dataColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
 
             val totalCount = cursor.count
             var currentIndex = 0
@@ -82,6 +84,7 @@ class MusicLoader(
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val folder = if (folderColumn >= 0) cursor.getString(folderColumn) else null
+                val absolutePath = if (dataColumn >= 0) cursor.getString(dataColumn) else null
                 val normalizedFolder = extractFolderName(folder)
                 if (!normalizedFolder.isNullOrBlank()) {
                     discoveredFolders.add(normalizedFolder)
@@ -121,7 +124,7 @@ class MusicLoader(
                         album = album.ifBlank { "Unknown album" },
                         genre = loadGenreForSong(id),
                         folder = extractFolderName(folder),
-                        folderPath = normalizeFolderPath(folder),
+                        folderPath = absolutePath ?: normalizeFolderPath(folder),
                         uri = contentUri.toString(),
                         albumArt = if (hasAlbumArt) albumArtUri.toString() else null,
                         duration = duration,

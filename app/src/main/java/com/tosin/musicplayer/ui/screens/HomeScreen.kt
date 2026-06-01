@@ -106,9 +106,9 @@ fun HomeScreen(
     val context = LocalContext.current
     val availableStorageScopes = remember(context) {
         if (context.hasRemovableStorage()) {
-            StorageScope.entries
+            StorageScope.entries.toList()
         } else {
-            listOf(StorageScope.Internal, StorageScope.Both)
+            listOf(StorageScope.Internal)
         }
     }
     
@@ -318,13 +318,19 @@ private fun AllSongsTab(
     val playlists by viewModel.playlists.collectAsState()
     var showCreatePlaylistDialog by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
-    val storageScope = remember(settingsViewModel.uiState.collectAsState().value) {
-        settingsViewModel.getStorageScopeForTab(tab.label)
+    val storageScope = remember(settingsViewModel.uiState.collectAsState().value, availableStorageScopes) {
+        val scope = settingsViewModel.getStorageScopeForTab(tab.label)
+        if (scope !in availableStorageScopes && availableStorageScopes.isNotEmpty()) {
+            availableStorageScopes.first()
+        } else {
+            scope
+        }
     }
     val visibleSongs = remember(uiState.songs, sortBy, storageScope) {
         sortSongs(uiState.songs.filter { it.matchesStorageScope(storageScope) }, sortBy)
     }
     var actionSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    var actionInitialIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var showActions by remember { mutableStateOf(false) }
 
     if (visibleSongs.isEmpty()) {
@@ -369,7 +375,7 @@ private fun AllSongsTab(
     if (showActions) {
         SongActionsSheet(
             songs = actionSongs,
-            initialSelectedIds = actionSongs.map { it.id }.toSet(),
+            initialSelectedIds = actionInitialIds,
             playlists = playlists,
             onDismiss = { showActions = false },
             onAddToQueue = { viewModel.addSongsToQueue(it) },
@@ -390,12 +396,14 @@ private fun AllSongsTab(
                 onSortClick = { showSortMenu = true },
                 sortLabel = sortBy.label
             )
-            StorageScopeSelector(
-                selected = storageScope,
-                onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
-                availableScopes = availableStorageScopes
-            )
+            if (availableStorageScopes.size > 1) {
+                StorageScopeSelector(
+                    selected = storageScope,
+                    onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
+                    modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
+                    availableScopes = availableStorageScopes
+                )
+            }
             DropdownMenu(
                 expanded = showSortMenu,
                 onDismissRequest = { showSortMenu = false }
@@ -425,10 +433,15 @@ private fun AllSongsTab(
                 },
                 onLongClick = {
                     actionSongs = visibleSongs
+                    actionInitialIds = setOf(song.id)
                     showActions = true
                 },
                 trailingContent = {
-                    IconButton(onClick = { actionSongs = listOf(song); showActions = true }) {
+                    IconButton(onClick = {
+                        actionSongs = listOf(song)
+                        actionInitialIds = setOf(song.id)
+                        showActions = true
+                    }) {
                         Icon(androidx.compose.material.icons.Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = "Actions", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -447,8 +460,13 @@ private fun LibraryGroupsTab(
     onGroupClick: (LibraryGroup) -> Unit,
     availableStorageScopes: List<StorageScope>
 ) {
-    val storageScope = remember(settingsViewModel.uiState.collectAsState().value) {
-        settingsViewModel.getStorageScopeForTab(tab.label)
+    val storageScope = remember(settingsViewModel.uiState.collectAsState().value, availableStorageScopes) {
+        val scope = settingsViewModel.getStorageScopeForTab(tab.label)
+        if (scope !in availableStorageScopes && availableStorageScopes.isNotEmpty()) {
+            availableStorageScopes.first()
+        } else {
+            scope
+        }
     }
     val sortedGroups = remember(groups, sortBy) {
         sortLibraryGroups(filterGroupsForStorage(groups, storageScope), sortBy)
@@ -475,12 +493,14 @@ private fun LibraryGroupsTab(
                 onSortClick = { showSortMenu = true },
                 sortLabel = sortBy.label
             )
-            StorageScopeSelector(
-                selected = storageScope,
-                onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
-                availableScopes = availableStorageScopes
-            )
+            if (availableStorageScopes.size > 1) {
+                StorageScopeSelector(
+                    selected = storageScope,
+                    onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
+                    modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
+                    availableScopes = availableStorageScopes
+                )
+            }
             DropdownMenu(
                 expanded = showSortMenu,
                 onDismissRequest = { showSortMenu = false }

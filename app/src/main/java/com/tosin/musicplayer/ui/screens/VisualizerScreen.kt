@@ -102,6 +102,7 @@ fun VisualizerScreen(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 TopAppBar(
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = { Text("Visualizer", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
@@ -123,7 +124,12 @@ fun VisualizerScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.large),
+                    .padding(
+                        start = AppSpacing.large,
+                        top = 0.dp,
+                        end = AppSpacing.large,
+                        bottom = AppSpacing.large
+                    ),
                 verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

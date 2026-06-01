@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
@@ -39,11 +38,12 @@ fun MiniPlayer(
 
     val dragThreshold = 72
 
-    Surface(
-        color = androidx.compose.ui.graphics.Color.Transparent,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
@@ -65,82 +65,71 @@ fun MiniPlayer(
             }
             .clickable { onExpand() }
     ) {
-        Card(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = AppSpacing.medium),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
+            AsyncImage(
+                model = song.albumArt.orDefaultAlbumArt(),
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = AppSpacing.medium),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = song.albumArt.orDefaultAlbumArt(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(Modifier.width(AppSpacing.medium))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = song.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Text(
+                    text = song.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-                Spacer(Modifier.width(AppSpacing.medium))
+            IconButton(onClick = { viewModel.previous() }) {
+                Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous")
+            }
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = song.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = song.artist,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            IconButton(
+                onClick = {
+                    if (uiState.isPlaying) viewModel.pause() else viewModel.play()
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Icon(
+                    imageVector = if (uiState.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                    contentDescription = if (uiState.isPlaying) "Pause" else "Play"
+                )
+            }
 
-                IconButton(onClick = { viewModel.previous() }) {
-                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous")
-                }
+            IconButton(onClick = { viewModel.next() }) {
+                Icon(Icons.Rounded.SkipNext, contentDescription = "Next")
+            }
 
-                IconButton(
-                    onClick = {
-                        if (uiState.isPlaying) viewModel.pause() else viewModel.play()
-                    },
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = if (uiState.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (uiState.isPlaying) "Pause" else "Play"
-                    )
-                }
-
-                IconButton(onClick = { viewModel.next() }) {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next")
-                }
-
-                IconButton(
-                    onClick = onStop,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                ) {
-                    Icon(Icons.Rounded.Stop, contentDescription = "Stop")
-                }
+            IconButton(
+                onClick = onStop,
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Icon(Icons.Rounded.Stop, contentDescription = "Stop")
             }
         }
     }

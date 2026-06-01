@@ -10,6 +10,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -140,6 +141,7 @@ fun LyricsScreen(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 TopAppBar(
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = {
                         Column(modifier = Modifier.fillMaxWidth().padding(end = AppSpacing.large)) {
                             Text(
@@ -202,7 +204,7 @@ fun LyricsScreen(
                         .padding(innerPadding)
                         .padding(horizontal = AppSpacing.large),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = AppSpacing.large)
+                    contentPadding = PaddingValues(bottom = AppSpacing.large)
                 ) {
                     itemsIndexed(parsedLines) { index, line ->
                         val isActive = index == currentLineIndex

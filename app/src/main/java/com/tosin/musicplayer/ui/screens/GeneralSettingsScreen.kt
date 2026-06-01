@@ -37,9 +37,9 @@ fun GeneralSettingsScreen(
     val context = LocalContext.current
     val availableStorageScopes = remember(context) {
         if (context.hasRemovableStorage()) {
-            StorageScope.entries
+            StorageScope.entries.toList()
         } else {
-            listOf(StorageScope.Internal, StorageScope.Both)
+            listOf(StorageScope.Internal)
         }
     }
     val snackbarHostState = remember { SnackbarHostState() }

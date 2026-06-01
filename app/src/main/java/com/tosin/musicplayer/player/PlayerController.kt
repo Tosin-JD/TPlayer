@@ -341,7 +341,26 @@ class PlayerController(
     }
 
     fun setShuffleEnabled(enabled: Boolean) {
-        mediaController?.shuffleModeEnabled = enabled
+        if (enabled && playlist.size > 1) {
+            val controller = mediaController ?: return
+            val currentId = _currentSong.value?.id
+            val currentPos = controller.currentPosition
+            val shuffled = playlist.toMutableList()
+            // Remove current song, shuffle the rest, put current song at index 0
+            val currentSongObj = shuffled.firstOrNull { it.id == currentId }
+            if (currentSongObj != null) {
+                shuffled.remove(currentSongObj)
+                shuffled.shuffle()
+                shuffled.add(0, currentSongObj)
+            } else {
+                shuffled.shuffle()
+            }
+            playlist = shuffled
+            val newIndex = if (currentSongObj != null) 0 else 0
+            controller.setMediaItems(shuffled.map { it.toMediaItem() }, newIndex, currentPos)
+            controller.prepare()
+        }
+        // Don't use Media3's built-in shuffle — we manage it ourselves
     }
 
     fun setRepeatMode(mode: RepeatMode) {
