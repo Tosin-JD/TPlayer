@@ -1,6 +1,6 @@
 package com.tosin.musicplayer.ui.components
 
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +39,7 @@ fun MiniPlayer(
     val dragThreshold = 72
 
     Card(
+        onClick = { onExpand() },
         shape = RoundedCornerShape(
             topStart = 28.dp,
             topEnd = 28.dp,
@@ -68,7 +69,6 @@ fun MiniPlayer(
                     onDragCancel = { dragDistance = 0f }
                 )
             }
-            .clickable { onExpand() }
     ) {
         Row(
             modifier = Modifier
