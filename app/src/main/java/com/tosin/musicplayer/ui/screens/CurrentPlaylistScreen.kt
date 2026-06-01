@@ -5,7 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -48,6 +49,9 @@ fun CurrentPlaylistScreen(
 
     var isEditMode by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    var draggedSongId by remember { mutableStateOf<Long?>(null) }
+    var draggedOffsetY by remember { mutableStateOf(0f) }
+    var draggedIndex by remember { mutableStateOf(-1) }
 
     // Scroll to currently playing song on startup
     LaunchedEffect(currentSong) {
@@ -115,14 +119,29 @@ fun CurrentPlaylistScreen(
                 items = queue,
                 key = { _, song -> song.id }
             ) { index, song ->
-                var itemOffset by remember { mutableStateOf(0f) }
-                var isDragging by remember { mutableStateOf(false) }
+                val isDragging = draggedSongId == song.id
+                val dragScale by animateFloatAsState(
+                    targetValue = if (isDragging) 0.96f else 1f,
+                    animationSpec = tween(durationMillis = 180),
+                    label = "playlistDragScale"
+                )
+                val animatedColor by animateColorAsState(
+                    targetValue = when {
+                        isDragging -> MaterialTheme.colorScheme.surfaceVariant
+                        currentSong?.id == song.id -> MaterialTheme.colorScheme.primaryContainer
+                        else -> MaterialTheme.colorScheme.surfaceContainerLow
+                    },
+                    animationSpec = tween(durationMillis = 180),
+                    label = "playlistItemColor"
+                )
 
                 PlaylistItem(
                     song = song,
                     isCurrentlyPlaying = currentSong?.id == song.id,
                     isEditMode = isEditMode,
                     isDragging = isDragging,
+                    containerColor = animatedColor,
+                    scale = dragScale,
                     onItemClick = {
                         if (!isEditMode) {
                             onPlaySong(song)
@@ -136,29 +155,43 @@ fun CurrentPlaylistScreen(
                         }
                     },
                     modifier = Modifier
-                        .offset { IntOffset(0, itemOffset.roundToInt()) }
-                        .animateContentSize(),
-                    dragHandleModifier = Modifier.pointerInput(index, queue.size) {
-                        detectDragGestures(
+                        .animateItemPlacement()
+                        .graphicsLayer {
+                            translationY = if (isDragging) draggedOffsetY else 0f
+                            scaleX = if (isDragging) dragScale else 1f
+                            scaleY = if (isDragging) dragScale else 1f
+                        },
+                    dragModifier = Modifier.pointerInput(song.id, isEditMode) {
+                        if (!isEditMode) return@pointerInput
+
+                        detectDragGesturesAfterLongPress(
                             onDragStart = {
-                                isDragging = true
+                                draggedSongId = song.id
+                                draggedOffsetY = 0f
+                                draggedIndex = queue.indexOfFirst { it.id == song.id }
                             },
                             onDragEnd = {
-                                isDragging = false
-                                itemOffset = 0f
+                                draggedSongId = null
+                                draggedOffsetY = 0f
+                                draggedIndex = -1
                             },
                             onDragCancel = {
-                                isDragging = false
-                                itemOffset = 0f
+                                draggedSongId = null
+                                draggedOffsetY = 0f
+                                draggedIndex = -1
                             },
                             onDrag = { change, dragAmount ->
                                 change.consume()
-                                itemOffset += dragAmount.y
+                                if (draggedSongId != song.id || draggedIndex < 0) return@detectDragGesturesAfterLongPress
+
+                                draggedOffsetY += dragAmount.y
                                 val dragThreshold = with(density) { 72.dp.toPx() }
-                                val targetIndex = index + (itemOffset / dragThreshold).roundToInt()
-                                if (targetIndex != index && targetIndex in queue.indices) {
-                                    viewModel.reorderCurrentQueue(index, targetIndex)
-                                    itemOffset = 0f
+                                val targetIndex = (draggedIndex + (draggedOffsetY / dragThreshold).roundToInt())
+                                    .coerceIn(0, queue.lastIndex)
+                                if (targetIndex != draggedIndex) {
+                                    viewModel.reorderCurrentQueue(draggedIndex, targetIndex)
+                                    draggedIndex = targetIndex
+                                    draggedOffsetY = 0f
                                 }
                             }
                         )
