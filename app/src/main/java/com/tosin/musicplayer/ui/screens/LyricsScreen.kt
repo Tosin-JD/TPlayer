@@ -70,6 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -96,6 +97,8 @@ fun LyricsScreen(
     val currentLineIndex = remember(parsedLines, uiState.progress) {
         if (parsedLines.isEmpty()) -1 else parsedLines.lastIndexOfLastBefore(uiState.progress)
     }
+
+    StatusBarColorEffect(Color.Black)
 
     LaunchedEffect(currentLineIndex) {
         if (currentLineIndex >= 0) {

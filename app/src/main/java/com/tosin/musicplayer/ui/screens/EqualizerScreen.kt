@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalConfiguration
 import com.tosin.musicplayer.ui.state.EqBand
 import com.tosin.musicplayer.ui.state.EqualizerPresetUi
+import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import java.util.Locale
@@ -81,6 +82,9 @@ fun EqualizerScreen(
             MaterialTheme.colorScheme.surface
         )
     )
+    val topBackgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+
+    StatusBarColorEffect(topBackgroundColor)
 
     Scaffold(
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),

@@ -309,11 +309,13 @@ private fun PlaylistItem(
                 Text(
                     text = song.artist,
                     style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
                     color = if (isCurrentlyPlaying) {
                         MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     } else {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    }
+                    },
+                    modifier = Modifier.basicMarquee()
                 )
             }
 

@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Canvas
+import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import kotlin.math.abs
@@ -83,6 +84,9 @@ fun VisualizerScreen(
     }
     val activeColor = MaterialTheme.colorScheme.primary
     val accentColor = MaterialTheme.colorScheme.tertiary
+    val topBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+
+    StatusBarColorEffect(topBackgroundColor)
 
     Box(
         modifier = Modifier
@@ -90,7 +94,7 @@ fun VisualizerScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                        topBackgroundColor,
                         MaterialTheme.colorScheme.surface,
                         MaterialTheme.colorScheme.surfaceContainerLow
                     )

@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.tosin.musicplayer.ui.components.MiniPlayer
+import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.screens.*
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -45,12 +47,24 @@ fun AppNavGraph(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val showMiniPlayer = currentRoute != "player"
+    val fabLift by animateDpAsState(
+        targetValue = if (showMiniPlayer) 104.dp else 0.dp,
+        label = "miniPlayerFabLift"
+    )
+
+    when (currentRoute) {
+        "player", "visualizer", "lyrics" -> Unit
+        else -> StatusBarColorEffect(MaterialTheme.colorScheme.surface)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             floatingActionButton = {
                 if (currentRoute == "home") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(bottom = fabLift)
+                    ) {
                         FloatingActionButton(onClick = { navController.navigate("stats") }) {
                             Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
                         }

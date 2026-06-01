@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,7 +67,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -131,21 +131,6 @@ fun HomeScreen(
     val coroutineScope = rememberCoroutineScope()
     val sortState = remember { mutableStateMapOf<LibraryTab, LibrarySortOption>() }
     
-    val colorScheme = MaterialTheme.colorScheme
-    val brush = remember(
-        colorScheme.surface,
-        colorScheme.surfaceContainerLowest,
-        colorScheme.surfaceContainerHigh
-    ) {
-        Brush.verticalGradient(
-            colors = listOf(
-                colorScheme.surface,
-                colorScheme.surfaceContainerLowest,
-                colorScheme.surfaceContainerHigh
-            )
-        )
-    }
-
     // Sync pager with selected tab
     LaunchedEffect(uiState.selectedTab, safeActiveTabs) {
         val index = safeActiveTabs.indexOf(uiState.selectedTab)
@@ -249,7 +234,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(brush)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             HorizontalPager(
                 state = pagerState,
@@ -548,13 +533,17 @@ private fun LibraryGroupsTab(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = group.title,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            modifier = Modifier.basicMarquee()
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
                             text = group.subtitle,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            modifier = Modifier.basicMarquee()
                         )
                     }
 

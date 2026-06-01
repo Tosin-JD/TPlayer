@@ -71,7 +71,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -91,6 +90,7 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.tosin.musicplayer.ui.components.PlayPauseButton
 import com.tosin.musicplayer.ui.components.ProgressBar
+import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -145,12 +145,7 @@ fun PlayerScreen(
         }
     }
 
-    LaunchedEffect(bgColor) {
-        val activity = context as? Activity
-        val window = activity?.window ?: return@LaunchedEffect
-        window.statusBarColor = bgColor.toArgb()
-        window.navigationBarColor = bgColor.toArgb()
-    }
+    StatusBarColorEffect(bgColor)
 
     LaunchedEffect(showSystemBars) {
         val activity = context as? Activity
