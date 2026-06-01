@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
@@ -120,6 +121,7 @@ fun PlayerScreen(
     val bottomButtonSize = if (isSmallScreen) 60.dp else 48.dp
     val albumArtSize = if (isLandscape) 240.dp else 320.dp
     val swipeThresholdPx = with(LocalDensity.current) { 96.dp.toPx() }
+    val albumSwipeThresholdPx = with(LocalDensity.current) { 72.dp.toPx() }
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
     var contentColor by remember { mutableStateOf(onSurfaceColor) }
@@ -540,7 +542,24 @@ fun PlayerScreen(
         Card(
             modifier = Modifier
                 .size(albumArtSize)
-                .aspectRatio(1f),
+                .aspectRatio(1f)
+                .pointerInput(state.currentSong?.id) {
+                    var dragDistance = 0f
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, dragAmount ->
+                            dragDistance += dragAmount
+                            change.consume()
+                        },
+                        onDragEnd = {
+                            when {
+                                dragDistance > albumSwipeThresholdPx -> viewModel.previous()
+                                dragDistance < -albumSwipeThresholdPx -> viewModel.next()
+                            }
+                            dragDistance = 0f
+                        },
+                        onDragCancel = { dragDistance = 0f }
+                    )
+                },
             shape = RoundedCornerShape(28.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
         ) {

@@ -39,7 +39,12 @@ fun MiniPlayer(
     val dragThreshold = 72
 
     Card(
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(
+            topStart = 28.dp,
+            topEnd = 28.dp,
+            bottomStart = 16.dp,
+            bottomEnd = 16.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),

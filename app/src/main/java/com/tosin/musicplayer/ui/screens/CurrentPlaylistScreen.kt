@@ -1,8 +1,9 @@
 package com.tosin.musicplayer.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -22,9 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
@@ -52,6 +54,7 @@ fun CurrentPlaylistScreen(
     var draggedSongId by remember { mutableStateOf<Long?>(null) }
     var draggedOffsetY by remember { mutableStateOf(0f) }
     var draggedIndex by remember { mutableStateOf(-1) }
+    var draggedItemHeightPx by remember { mutableStateOf(0) }
 
     // Scroll to currently playing song on startup
     LaunchedEffect(currentSong) {
@@ -141,7 +144,6 @@ fun CurrentPlaylistScreen(
                     isEditMode = isEditMode,
                     isDragging = isDragging,
                     containerColor = animatedColor,
-                    scale = dragScale,
                     onItemClick = {
                         if (!isEditMode) {
                             onPlaySong(song)
@@ -155,7 +157,12 @@ fun CurrentPlaylistScreen(
                         }
                     },
                     modifier = Modifier
-                        .animateItemPlacement()
+                        .animateItem()
+                        .onSizeChanged { size ->
+                            if (draggedSongId == song.id) {
+                                draggedItemHeightPx = size.height
+                            }
+                        }
                         .graphicsLayer {
                             translationY = if (isDragging) draggedOffsetY else 0f
                             scaleX = if (isDragging) dragScale else 1f
@@ -168,7 +175,8 @@ fun CurrentPlaylistScreen(
                             onDragStart = {
                                 draggedSongId = song.id
                                 draggedOffsetY = 0f
-                                draggedIndex = queue.indexOfFirst { it.id == song.id }
+                                draggedIndex = index
+                                draggedItemHeightPx = 0
                             },
                             onDragEnd = {
                                 draggedSongId = null
@@ -186,12 +194,15 @@ fun CurrentPlaylistScreen(
 
                                 draggedOffsetY += dragAmount.y
                                 val dragThreshold = with(density) { 72.dp.toPx() }
+                                val itemStep = (draggedItemHeightPx.takeIf { it > 0 }?.toFloat() ?: dragThreshold) +
+                                    with(density) { AppSpacing.itemSpacing.toPx() }
+                                val maxIndex = viewModel.uiState.value.queue.lastIndex
                                 val targetIndex = (draggedIndex + (draggedOffsetY / dragThreshold).roundToInt())
-                                    .coerceIn(0, queue.lastIndex)
+                                    .coerceIn(0, maxIndex)
                                 if (targetIndex != draggedIndex) {
                                     viewModel.reorderCurrentQueue(draggedIndex, targetIndex)
+                                    draggedOffsetY -= (targetIndex - draggedIndex) * itemStep
                                     draggedIndex = targetIndex
-                                    draggedOffsetY = 0f
                                 }
                             }
                         )
@@ -224,38 +235,34 @@ private fun PlaylistItem(
     isCurrentlyPlaying: Boolean,
     isEditMode: Boolean,
     isDragging: Boolean,
+    containerColor: androidx.compose.ui.graphics.Color,
     onItemClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
-    dragHandleModifier: Modifier = Modifier
+    dragModifier: Modifier = Modifier
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = if (isDragging) {
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else if (isCurrentlyPlaying) {
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        } else {
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            )
-        },
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = if (isDragging) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else if (isCurrentlyPlaying) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
+        ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isDragging) 8.dp else if (isCurrentlyPlaying) 4.dp else 2.dp
+            defaultElevation = if (isDragging) 10.dp else if (isCurrentlyPlaying) 4.dp else 2.dp
         ),
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
+            .then(dragModifier)
             .combinedClickable(
                 onClick = onItemClick,
-                onLongClick = onLongClick
+                onLongClick = if (isEditMode) null else onLongClick
             )
     ) {
         Row(
@@ -266,7 +273,7 @@ private fun PlaylistItem(
         ) {
             if (isEditMode) {
                 Box(
-                    modifier = dragHandleModifier
+                    modifier = Modifier
                         .padding(end = AppSpacing.medium)
                         .size(36.dp),
                     contentAlignment = Alignment.Center
