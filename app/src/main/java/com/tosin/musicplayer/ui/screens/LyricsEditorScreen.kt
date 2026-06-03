@@ -71,8 +71,9 @@ fun LyricsEditorScreen(
                                 LyricsEditorTab.Synced -> buildSyncedLyrics(syncedLines)
                                 else -> simpleLyrics
                             }
-                            viewModel.saveLyrics(songId, lyricsToSave)
-                            onNavigateBack()
+                            viewModel.saveLyrics(songId, lyricsToSave) {
+                                onNavigateBack()
+                            }
                         }
                     ) {
                         Icon(Icons.Rounded.Check, contentDescription = "Save")

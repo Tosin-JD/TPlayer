@@ -58,9 +58,12 @@ fun SongEditorScreen(
                     IconButton(
                         onClick = {
                             if (song != null) {
-                                viewModel.saveSongTags(songId, title, artist, album, genre)
+                                viewModel.saveSongTags(songId, title, artist, album, genre) {
+                                    onNavigateBack()
+                                }
+                            } else {
+                                onNavigateBack()
                             }
-                            onNavigateBack()
                         }
                     ) {
                         Icon(Icons.Rounded.Check, contentDescription = "Save")

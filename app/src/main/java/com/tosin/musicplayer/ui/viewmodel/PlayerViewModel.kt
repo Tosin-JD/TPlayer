@@ -487,7 +487,8 @@ class PlayerViewModel(
         title: String,
         artist: String,
         album: String,
-        genre: String
+        genre: String,
+        onSaved: () -> Unit = {}
     ) {
         viewModelScope.launch {
             val currentLyrics = _songs.value.firstOrNull { it.id == songId }?.lyrics
@@ -503,10 +504,11 @@ class PlayerViewModel(
             )
             playerController.updateSongMetadata(songId, title, artist, album, genre, currentLyrics)
             refreshLibrary()
+            onSaved()
         }
     }
 
-    fun saveLyrics(songId: Long, lyrics: String) {
+    fun saveLyrics(songId: Long, lyrics: String, onSaved: () -> Unit = {}) {
         viewModelScope.launch {
             val currentSong = _songs.value.firstOrNull { it.id == songId }
             if (currentSong != null) {
@@ -522,6 +524,7 @@ class PlayerViewModel(
                 )
                 playerController.updateSongMetadata(songId, currentSong.title, currentSong.artist, currentSong.album, currentSong.genre, lyrics)
                 refreshLibrary()
+                onSaved()
             }
         }
     }
