@@ -22,6 +22,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -120,7 +128,7 @@ fun PlayerScreen(
     val bottomIconSize = if (isSmallScreen) 44.dp else 32.dp
     val bottomButtonSize = if (isSmallScreen) 60.dp else 48.dp
     val albumArtSize = if (isLandscape) 240.dp else 320.dp
-    val swipeThresholdPx = with(LocalDensity.current) { 96.dp.toPx() }
+    val swipeThresholdPx = with(LocalDensity.current) { 56.dp.toPx() }
     val albumSwipeThresholdPx = with(LocalDensity.current) { 72.dp.toPx() }
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
@@ -129,39 +137,33 @@ fun PlayerScreen(
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    var showSystemBars by remember { mutableStateOf(false) }
-    var hideBarsJob by remember { mutableStateOf<Job?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
-    DisposableEffect(Unit) {
-        val activity = context as? Activity
-        val window = activity?.window
-        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
-        controller?.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-        controller?.systemBarsBehavior =
-            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        onDispose {
-            controller?.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+    var lastSongId by remember { mutableStateOf<Long?>(null) }
+    var slideDirection by remember { mutableStateOf(1) } // 1 for next (slide left), -1 for previous (slide right)
+
+    LaunchedEffect(state.currentSong?.id) {
+        val prevId = lastSongId
+        val currentSong = state.currentSong
+        val queue = state.queue
+        if (prevId != null && currentSong != null && queue.isNotEmpty()) {
+            val prevIndex = queue.indexOfFirst { it.id == prevId }
+            val currentIndex = queue.indexOfFirst { it.id == currentSong.id }
+            if (prevIndex != -1 && currentIndex != -1) {
+                slideDirection = if (currentIndex == 0 && prevIndex == queue.lastIndex) {
+                    1
+                } else if (currentIndex == queue.lastIndex && prevIndex == 0) {
+                    -1
+                } else if (currentIndex > prevIndex) {
+                    1
+                } else {
+                    -1
+                }
+            }
         }
+        lastSongId = currentSong?.id
     }
 
     StatusBarColorEffect(bgColor)
-
-    LaunchedEffect(showSystemBars) {
-        val activity = context as? Activity
-        val window = activity?.window
-        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
-        if (showSystemBars) {
-            controller?.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            hideBarsJob?.cancel()
-            hideBarsJob = coroutineScope.launch {
-                delay(5000)
-                showSystemBars = false
-            }
-        } else {
-            controller?.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-        }
-    }
 
     LaunchedEffect(state.currentSong?.albumArt) {
         val data = state.currentSong?.albumArt.orDefaultAlbumArt()
@@ -259,16 +261,13 @@ fun PlayerScreen(
                         leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                         modifier = Modifier.clickable {
                             showMoreOptionsSheet = false
-                            state.currentSong?.uri?.let { uriString ->
-                                runCatching {
-                                    android.media.RingtoneManager.setActualDefaultRingtoneUri(
-                                        context,
-                                        android.media.RingtoneManager.TYPE_RINGTONE,
-                                        Uri.parse(uriString)
-                                    )
-                                    Toast.makeText(context, "Ringtone updated", Toast.LENGTH_SHORT).show()
-                                }.getOrElse {
-                                    Toast.makeText(context, "Unable to set ringtone", Toast.LENGTH_SHORT).show()
+                            state.currentSong?.let { song ->
+                                viewModel.setAsRingtone(context, song) { success ->
+                                    if (success) {
+                                        Toast.makeText(context, "Ringtone updated", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Unable to set ringtone", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
@@ -380,17 +379,12 @@ fun PlayerScreen(
                     onClick = {
                         val song = state.currentSong
                         if (song != null) {
-                            runCatching {
-                                val deleted = context.contentResolver.delete(Uri.parse(song.uri), null, null)
-                                if (deleted > 0) {
-                                    viewModel.stop()
-                                    viewModel.refreshLibrary()
+                            viewModel.deleteSong(song) { success ->
+                                if (success) {
                                     Toast.makeText(context, "Song deleted", Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(context, "Unable to delete song", Toast.LENGTH_SHORT).show()
                                 }
-                            }.getOrElse {
-                                Toast.makeText(context, "Unable to delete song", Toast.LENGTH_SHORT).show()
                             }
                         }
                         showDeleteConfirm = false
@@ -411,22 +405,13 @@ fun PlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .padding(
-                    start = AppSpacing.small,
-                    end = AppSpacing.small,
-                    top = 0.dp,
-                    bottom = if (showSystemBars) {
-                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-                    } else {
-                        0.dp
-                    }
-                )
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = AppSpacing.small)
                 .pointerInput(onNavigateBack, onOpenLyrics) {
                     var dragDistance = 0f
                     detectVerticalDragGestures(
-                        onDragStart = {
-                            showSystemBars = true
-                        },
+                        onDragStart = {},
                         onVerticalDrag = { change, dragAmount ->
                             dragDistance += dragAmount
                             change.consume()
@@ -534,36 +519,56 @@ fun PlayerScreen(
         Spacer(Modifier.height(AppSpacing.large))
 
         // Album Art
-        Card(
-            modifier = Modifier
-                .size(albumArtSize)
-                .aspectRatio(1f)
-                .pointerInput(state.currentSong?.id) {
-                    var dragDistance = 0f
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { change, dragAmount ->
-                            dragDistance += dragAmount
-                            change.consume()
-                        },
-                        onDragEnd = {
-                            when {
-                                dragDistance > albumSwipeThresholdPx -> viewModel.previous()
-                                dragDistance < -albumSwipeThresholdPx -> viewModel.next()
-                            }
-                            dragDistance = 0f
-                        },
-                        onDragCancel = { dragDistance = 0f }
-                    )
-                },
-            shape = RoundedCornerShape(28.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-        ) {
-            AsyncImage(
-                model = state.currentSong?.albumArt.orDefaultAlbumArt(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+        AnimatedContent(
+            targetState = state.currentSong,
+            transitionSpec = {
+                if (slideDirection > 0) {
+                    (slideInHorizontally { width -> width } + fadeIn()) togetherWith
+                    (slideOutHorizontally { width -> -width } + fadeOut())
+                } else {
+                    (slideInHorizontally { width -> -width } + fadeIn()) togetherWith
+                    (slideOutHorizontally { width -> width } + fadeOut())
+                }
+            },
+            label = "albumArtTransition"
+        ) { currentSong ->
+            Card(
+                modifier = Modifier
+                    .size(albumArtSize)
+                    .aspectRatio(1f)
+                    .pointerInput(currentSong?.id) {
+                        var dragDistance = 0f
+                        detectHorizontalDragGestures(
+                            onHorizontalDrag = { change, dragAmount ->
+                                dragDistance += dragAmount
+                                change.consume()
+                            },
+                            onDragEnd = {
+                                when {
+                                    dragDistance > albumSwipeThresholdPx -> {
+                                        slideDirection = -1
+                                        viewModel.previous()
+                                    }
+                                    dragDistance < -albumSwipeThresholdPx -> {
+                                        slideDirection = 1
+                                        viewModel.next()
+                                    }
+                                }
+                                dragDistance = 0f
+                            },
+                            onDragCancel = { dragDistance = 0f }
+                        )
+                    },
+                shape = RoundedCornerShape(28.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+            ) {
+                AsyncImage(
+                    model = currentSong?.albumArt.orDefaultAlbumArt(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
 
         Spacer(Modifier.height(AppSpacing.sectionSpacing))
@@ -634,7 +639,10 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             IconButton(
-                onClick = { viewModel.previous() },
+                onClick = {
+                    slideDirection = -1
+                    viewModel.previous()
+                },
                 modifier = Modifier.size(56.dp)
             ) {
                 Icon(
@@ -680,7 +688,10 @@ fun PlayerScreen(
             }
 
             IconButton(
-                onClick = { viewModel.next() },
+                onClick = {
+                    slideDirection = 1
+                    viewModel.next()
+                },
                 modifier = Modifier.size(56.dp)
             ) {
                 Icon(

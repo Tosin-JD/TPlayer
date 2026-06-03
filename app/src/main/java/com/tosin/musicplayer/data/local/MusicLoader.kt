@@ -14,6 +14,12 @@ class MusicLoader(
     private val contentResolver: ContentResolver
 ) {
 
+    suspend fun deleteSong(songUri: Uri): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            contentResolver.delete(songUri, null, null) > 0
+        }.getOrElse { false }
+    }
+
     private companion object {
         const val COLUMN_DATE_ADDED = "date_added"
         const val COLUMN_SIZE = "_size"

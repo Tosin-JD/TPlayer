@@ -529,6 +529,31 @@ class PlayerViewModel(
         }
     }
 
+    fun deleteSong(song: Song, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = repository.deleteSong(song.uri)
+            if (success) {
+                stop()
+                refreshLibrary()
+            }
+            onResult(success)
+        }
+    }
+
+    fun setAsRingtone(context: android.content.Context, song: Song, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val success = runCatching {
+                android.media.RingtoneManager.setActualDefaultRingtoneUri(
+                    context,
+                    android.media.RingtoneManager.TYPE_RINGTONE,
+                    android.net.Uri.parse(song.uri)
+                )
+                true
+            }.getOrElse { false }
+            onResult(success)
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         saveQueueState()

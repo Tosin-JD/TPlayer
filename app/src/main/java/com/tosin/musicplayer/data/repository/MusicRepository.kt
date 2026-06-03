@@ -16,6 +16,10 @@ class MusicRepository(
     private val statsRepository: StatsRepository
 ) {
 
+    suspend fun deleteSong(songUriString: String): Boolean {
+        return musicLoader.deleteSong(android.net.Uri.parse(songUriString))
+    }
+
     fun getSongs(): Flow<List<Song>> = channelFlow {
         val cachedSongs = loadPreparedSongsFromCache()
         val hasCachedSongs = cachedSongs.isNotEmpty()
