@@ -28,7 +28,6 @@ import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
-import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,8 +47,10 @@ fun SearchScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -157,7 +158,12 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = standardScreenPadding(top = 0.dp),
+                contentPadding = PaddingValues(
+                    start = AppSpacing.screenHorizontal,
+                    end = AppSpacing.screenHorizontal,
+                    top = 0.dp,
+                    bottom = 0.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
             ) {
                 item {
