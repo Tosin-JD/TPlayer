@@ -751,7 +751,7 @@ fun TabReorderDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(tab.icon(), null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(tab.icon(), null)
                             Spacer(Modifier.width(12.dp))
                             Text(tab.label)
                         }

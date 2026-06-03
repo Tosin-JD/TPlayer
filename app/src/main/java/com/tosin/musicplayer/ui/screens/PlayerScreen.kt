@@ -21,9 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.slideInHorizontally
@@ -405,8 +402,6 @@ fun PlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .statusBarsPadding()
-                .navigationBarsPadding()
                 .padding(horizontal = AppSpacing.small)
                 .pointerInput(onNavigateBack, onOpenLyrics) {
                     var dragDistance = 0f
@@ -708,9 +703,7 @@ fun PlayerScreen(
         // Bottom row: shuffle, lyrics, playlist, repeat, ellipsis
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = AppSpacing.large),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(

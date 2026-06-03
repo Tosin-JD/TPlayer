@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.compose.ui.Alignment
@@ -45,8 +46,9 @@ fun AppNavGraph(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val playerUiState by viewModel.uiState.collectAsState()
 
-    val showMiniPlayer = currentRoute != "player"
+    val showMiniPlayer = currentRoute != "player" && playerUiState.currentSong != null
     val fabLift by animateDpAsState(
         targetValue = if (showMiniPlayer) 104.dp else 0.dp,
         label = "miniPlayerFabLift"

@@ -271,6 +271,8 @@ class PlayerController(
             stop()
         }
         _isPlaying.value = false
+        _currentSong.value = null
+        _currentIndex.value = 0
         _progress.value = 0L
         sleepTimerJob?.cancel()
         _sleepTimerRemaining.value = null
