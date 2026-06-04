@@ -27,10 +27,12 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.LooksOne
 import androidx.compose.material.icons.rounded.Lyrics
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
@@ -136,6 +138,7 @@ fun PlayerScreen(
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
     var contentColor by remember { mutableStateOf(onSurfaceColor) }
+    var currentToast by remember { mutableStateOf<Toast?>(null) }
 
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
@@ -777,28 +780,45 @@ fun PlayerScreen(
             }
 
             val repeatIcon = when (state.repeatMode) {
-                RepeatMode.PLAY_ALL_ONCE -> Icons.Rounded.Repeat
-                RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.RepeatOne
+                RepeatMode.PLAY_ALL_ONCE -> Icons.AutoMirrored.Rounded.ArrowForward
+                RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.LooksOne
                 RepeatMode.REPEAT_ALL -> Icons.Rounded.Repeat
                 RepeatMode.REPEAT_ONE -> Icons.Rounded.RepeatOne
-                else -> Icons.Rounded.Repeat
             }
-            val repeatTint = if (state.repeatMode == RepeatMode.REPEAT_ALL || state.repeatMode == RepeatMode.REPEAT_ONE) {
+            val repeatTint = if (state.repeatMode != RepeatMode.PLAY_ALL_ONCE) {
                 MaterialTheme.colorScheme.primary
             } else {
                 contentColor.copy(alpha = 0.6f)
             }
             
             val repeatAccessibility = when (state.repeatMode) {
-                RepeatMode.PLAY_ALL_ONCE -> "Repeat Mode: All once"
-                RepeatMode.PLAY_ONE_ONCE -> "Repeat Mode: One once"
-                RepeatMode.REPEAT_ALL -> "Repeat Mode: All repeat"
-                RepeatMode.REPEAT_ONE -> "Repeat Mode: One repeat"
-                else -> "Repeat Mode"
+                RepeatMode.PLAY_ALL_ONCE -> "Repeat Mode: Play all once"
+                RepeatMode.PLAY_ONE_ONCE -> "Repeat Mode: Play one once"
+                RepeatMode.REPEAT_ALL -> "Repeat Mode: Repeat all"
+                RepeatMode.REPEAT_ONE -> "Repeat Mode: Repeat one"
             }
 
             IconButton(
-                onClick = { viewModel.cycleRepeatMode() },
+                onClick = {
+                    val nextMode = when (state.repeatMode) {
+                        RepeatMode.PLAY_ALL_ONCE -> RepeatMode.PLAY_ONE_ONCE
+                        RepeatMode.PLAY_ONE_ONCE -> RepeatMode.REPEAT_ALL
+                        RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
+                        RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ALL_ONCE
+                    }
+                    val statusText = when (nextMode) {
+                        RepeatMode.PLAY_ALL_ONCE -> "Play all once"
+                        RepeatMode.PLAY_ONE_ONCE -> "Play one once"
+                        RepeatMode.REPEAT_ALL -> "Repeat all"
+                        RepeatMode.REPEAT_ONE -> "Repeat one"
+                    }
+                    currentToast?.cancel()
+                    val newToast = Toast.makeText(context, statusText, Toast.LENGTH_LONG)
+                    newToast.show()
+                    currentToast = newToast
+
+                    viewModel.cycleRepeatMode()
+                },
                 modifier = Modifier.size(bottomButtonSize)
             ) {
                 Icon(

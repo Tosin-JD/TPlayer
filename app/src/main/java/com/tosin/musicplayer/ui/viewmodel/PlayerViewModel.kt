@@ -330,7 +330,6 @@ class PlayerViewModel(
             RepeatMode.PLAY_ONE_ONCE -> RepeatMode.REPEAT_ALL
             RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
             RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ALL_ONCE
-            else -> RepeatMode.PLAY_ALL_ONCE // Fallback
         }
         playerController.setRepeatMode(_repeatMode.value)
     }
@@ -562,7 +561,6 @@ class PlayerViewModel(
 }
 
 enum class RepeatMode {
-    OFF,
     PLAY_ALL_ONCE,
     PLAY_ONE_ONCE,
     REPEAT_ALL,

@@ -381,9 +381,6 @@ class PlayerController(
             RepeatMode.REPEAT_ONE -> {
                 controller.repeatMode = Player.REPEAT_MODE_ONE
             }
-            RepeatMode.OFF -> {
-                controller.repeatMode = Player.REPEAT_MODE_OFF
-            }
         }
     }
 
