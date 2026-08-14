@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import android.media.audiofx.Visualizer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,25 +28,31 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.player.EqualizerManager
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
-import kotlin.math.abs
-import kotlin.math.sin
+import kotlin.math.max
+import kotlin.math.sqrt
+
+private const val BAR_COUNT = 48
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,29 +62,64 @@ fun VisualizerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val song = uiState.currentSong
+    val playing = uiState.isPlaying
 
-    val wavePhase by produceState(initialValue = 0f, key1 = uiState.isPlaying, key2 = song?.id) {
-        if (!uiState.isPlaying || song == null) {
-            value = 0f
-            return@produceState
+    val bars = remember { FloatArray(BAR_COUNT) }
+    var barState by remember { mutableStateOf(FloatArray(BAR_COUNT)) }
+
+    DisposableEffect(song?.id, playing) {
+        val sessionId = EqualizerManager.currentAudioSessionId
+        val visualizer = if (sessionId > 0 && playing) {
+            runCatching {
+                Visualizer(sessionId).apply {
+                    setDataCaptureListener(
+                        object : Visualizer.OnDataCaptureListener {
+                            override fun onWaveFormDataCapture(
+                                visualizer: Visualizer?,
+                                waveform: ByteArray?,
+                                samplingRate: Int
+                            ) = Unit
+
+                            override fun onFftDataCapture(
+                                visualizer: Visualizer?,
+                                fft: ByteArray?,
+                                samplingRate: Int
+                            ) {
+                                updateBars(fft, bars)
+                            }
+                        },
+                        max(1000, Visualizer.getMaxCaptureRate() / 4),
+                        false,
+                        true
+                    )
+                    enabled = true
+                }
+            }.getOrNull()
+        } else {
+            null
         }
+        onDispose {
+            runCatching { visualizer?.enabled = false }
+            visualizer?.release()
+        }
+    }
 
+    LaunchedEffect(playing) {
         while (true) {
-            androidx.compose.runtime.withFrameNanos { frameTime ->
-                value = ((frameTime % 6_000_000_000L).toFloat() / 6_000_000_000f)
+            withFrameNanos {
+                if (playing) {
+                    barState = bars.copyOf()
+                } else {
+                    for (i in bars.indices) bars[i] *= 0.85f
+                    barState = bars.copyOf()
+                }
             }
         }
     }
 
-    val progressFraction = remember(song, uiState.progress) {
-        val duration = song?.duration?.takeIf { it > 0 } ?: 1L
-        (uiState.progress % duration).toFloat() / duration.toFloat()
-    }
-
     val activeColor = MaterialTheme.colorScheme.primary
-    val beatColor = MaterialTheme.colorScheme.tertiary
-    val trebleColor = MaterialTheme.colorScheme.secondary
-    val sopranoColor = MaterialTheme.colorScheme.error
+    val midColor = MaterialTheme.colorScheme.tertiary
+    val highColor = MaterialTheme.colorScheme.secondary
     val topBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
 
     StatusBarColorEffect(topBackgroundColor)
@@ -107,11 +150,20 @@ fun VisualizerScreen(
                         }
                     },
                     actions = {
-                        Icon(
-                            imageVector = Icons.Rounded.GraphicEq,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                        IconButton(
+                            onClick = { if (playing) viewModel.pause() else viewModel.play() },
+                            enabled = song != null
+                        ) {
+                            Icon(
+                                imageVector = if (playing) {
+                                    Icons.Rounded.Pause
+                                } else {
+                                    Icons.Rounded.PlayArrow
+                                },
+                                contentDescription = if (playing) "Pause" else "Play",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
@@ -137,7 +189,7 @@ fun VisualizerScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = song?.artist ?: "Open a song to animate the waves",
+                    text = song?.artist ?: "Play a song to see live audio",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -153,14 +205,12 @@ fun VisualizerScreen(
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            drawRhythmVisualizer(
-                                wavePhase = wavePhase,
-                                progressFraction = progressFraction,
-                                playing = uiState.isPlaying,
+                            drawFftBars(
+                                bars = barState,
+                                playing = playing,
                                 activeColor = activeColor,
-                                beatColor = beatColor,
-                                trebleColor = trebleColor,
-                                sopranoColor = sopranoColor
+                                midColor = midColor,
+                                highColor = highColor
                             )
                         }
 
@@ -170,10 +220,9 @@ fun VisualizerScreen(
                                 .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            RhythmLegendRow("Bass", activeColor, uiState.isPlaying)
-                            RhythmLegendRow("Beat", beatColor, uiState.isPlaying)
-                            RhythmLegendRow("Treble", trebleColor, uiState.isPlaying)
-                            RhythmLegendRow("Soprano", sopranoColor, uiState.isPlaying)
+                            FftLegendRow("Low", activeColor, playing)
+                            FftLegendRow("Mid", midColor, playing)
+                            FftLegendRow("High", highColor, playing)
                         }
                     }
                 }
@@ -183,7 +232,7 @@ fun VisualizerScreen(
 }
 
 @Composable
-private fun RhythmLegendRow(
+private fun FftLegendRow(
     label: String,
     color: Color,
     playing: Boolean
@@ -204,92 +253,82 @@ private fun RhythmLegendRow(
     }
 }
 
-private fun DrawScope.drawRhythmVisualizer(
-    wavePhase: Float,
-    progressFraction: Float,
+private fun updateBars(fft: ByteArray?, target: FloatArray) {
+    if (fft == null) return
+    val n = fft.size
+    if (n < 4) return
+    val binCount = n / 2
+    val scale = (n / 4f).coerceAtLeast(1f)
+
+    for (i in target.indices) {
+        val start = binCount * i / target.size
+        val end = (binCount * (i + 1) / target.size).coerceAtLeast(start + 1)
+        var peak = 0f
+        for (bin in start until end) {
+            val re = fft[bin * 2].toInt().toFloat()
+            val im = fft[bin * 2 + 1].toInt().toFloat()
+            val magnitude = sqrt(re * re + im * im) / scale
+            if (magnitude > peak) peak = magnitude
+        }
+        val shaped = sqrt(peak.coerceIn(0f, 1f))
+        target[i] += (shaped - target[i]) * 0.35f
+    }
+}
+
+private fun DrawScope.drawFftBars(
+    bars: FloatArray,
     playing: Boolean,
     activeColor: Color,
-    beatColor: Color,
-    trebleColor: Color,
-    sopranoColor: Color
+    midColor: Color,
+    highColor: Color
 ) {
-    val lanes = listOf(
-        RhythmLane(activeColor, 0.22f, 0.18f, 0.18f, 0.0f),
-        RhythmLane(beatColor, 0.42f, 0.24f, 0.26f, 0.45f),
-        RhythmLane(trebleColor, 0.63f, 0.17f, 0.32f, 0.9f),
-        RhythmLane(sopranoColor, 0.82f, 0.14f, 0.36f, 1.35f)
-    )
+    val centerY = size.height * 0.5f
+    val barGap = 3.dp.toPx()
+    val barWidth = (size.width / bars.size) - barGap
+    val maxBarHeight = size.height * 0.42f
 
     drawCircle(
-        color = activeColor.copy(alpha = if (playing) 0.12f else 0.06f),
+        color = activeColor.copy(alpha = if (playing) 0.1f else 0.05f),
         radius = size.minDimension * 0.42f,
-        center = Offset(size.width * 0.5f, size.height * 0.5f)
+        center = Offset(size.width * 0.5f, centerY)
     )
 
-    lanes.forEachIndexed { index, lane ->
-        val laneY = size.height * lane.centerRatio
-        val amplitude = size.height * lane.amplitudeRatio * if (playing) 1f else 0.35f
-        val path = Path().apply {
-            moveTo(0f, laneY)
-            val steps = 72
-            repeat(steps + 1) { step ->
-                val x = size.width * step / steps.toFloat()
-                val normalized = x / size.width
-                val majorWave = sin((normalized * (4.2f + index * 0.9f) * Math.PI.toFloat() * 2f) + wavePhase * (5.1f + index * 0.8f))
-                val minorWave = sin((normalized * (8.6f + index * 1.3f) * Math.PI.toFloat() * 2f) - wavePhase * (2.8f + index * 0.35f) + lane.phaseOffset)
-                val rhythmEnvelope = 0.5f + abs(sin(progressFraction * Math.PI.toFloat() * 2f + normalized * Math.PI.toFloat() * (3.0f + index * 0.45f))) * 0.5f
-                val beatLift = if (playing) abs(sin(wavePhase * Math.PI.toFloat() * (5.5f + index * 0.3f) + normalized * 6.2f)) else 0.1f
-                val y = laneY + (majorWave * 0.7f + minorWave * 0.3f) * amplitude * rhythmEnvelope * (0.7f + beatLift * 0.3f)
-                if (step == 0) moveTo(x, y) else lineTo(x, y)
-            }
-        }
+    val gradient = Brush.verticalGradient(
+        colors = listOf(activeColor, midColor, highColor),
+        startY = centerY - maxBarHeight,
+        endY = centerY + maxBarHeight
+    )
 
-        val brush = Brush.linearGradient(
-            colors = listOf(
-                lane.color.copy(alpha = 0.15f),
-                lane.color,
-                lane.color.copy(alpha = 0.9f)
-            ),
-            start = Offset(0f, laneY - amplitude),
-            end = Offset(size.width, laneY + amplitude)
+    bars.forEachIndexed { index, value ->
+        val x = index * (barWidth + barGap)
+        val barHeight = value * maxBarHeight
+        val radius = CornerRadius(barWidth / 2f, barWidth / 2f)
+
+        drawRoundRect(
+            brush = gradient,
+            topLeft = Offset(x, centerY - barHeight),
+            size = androidx.compose.ui.geometry.Size(barWidth, barHeight.coerceAtLeast(1f)),
+            cornerRadius = radius
         )
-
-        drawPath(
-            path = path,
-            brush = brush,
-            style = Stroke(
-                width = size.height * 0.018f,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                join = androidx.compose.ui.graphics.StrokeJoin.Round
-            )
+        drawRoundRect(
+            brush = gradient,
+            topLeft = Offset(x, centerY),
+            size = androidx.compose.ui.geometry.Size(barWidth, barHeight.coerceAtLeast(1f)),
+            cornerRadius = radius
         )
-
-        val glowCount = 4
-        repeat(glowCount) { glowIndex ->
-            val t = (glowIndex + 1) / (glowCount + 1f)
-            val x = size.width * t
-            val wave = sin((t * (4.2f + index * 0.9f) * Math.PI.toFloat() * 2f) + wavePhase * (5.1f + index * 0.8f))
-            val y = laneY + wave * amplitude * 0.72f
-            val pulse = 1f + abs(sin(wavePhase * Math.PI.toFloat() * 4.4f + glowIndex * 0.65f + index * 0.28f)) * if (playing) 0.7f else 0.2f
-            drawCircle(
-                color = lane.color.copy(alpha = if (playing) 0.38f else 0.14f),
-                radius = size.minDimension * 0.015f * pulse,
-                center = Offset(x, y)
-            )
-        }
     }
 
     drawCircle(
-        color = beatColor.copy(alpha = if (playing) 0.08f else 0.03f),
-        radius = size.minDimension * (if (playing) 0.26f else 0.2f),
-        center = Offset(size.width * 0.5f, size.height * 0.5f)
+        color = activeColor.copy(alpha = if (playing) 0.08f else 0.03f),
+        radius = size.minDimension * 0.24f,
+        center = Offset(size.width * 0.5f, centerY)
     )
-}
 
-private data class RhythmLane(
-    val color: Color,
-    val centerRatio: Float,
-    val amplitudeRatio: Float,
-    val thicknessRatio: Float,
-    val phaseOffset: Float
-)
+    if (!playing) {
+        drawCircle(
+            color = activeColor.copy(alpha = 0.15f),
+            radius = size.minDimension * 0.012f,
+            center = Offset(size.width * 0.5f, centerY)
+        )
+    }
+}

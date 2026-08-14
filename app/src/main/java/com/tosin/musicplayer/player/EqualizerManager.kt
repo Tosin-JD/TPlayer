@@ -23,6 +23,13 @@ object EqualizerManager {
 
     private var currentPresetId: String = "flat"
 
+    @Volatile
+    private var isInitialized = false
+
+    @Volatile
+    var currentAudioSessionId: Int = 0
+        private set
+
     private val presetDefinitions = listOf(
         PresetDefinition(
             id = "flat",
@@ -124,8 +131,12 @@ object EqualizerManager {
     )
     val uiState = _uiState.asStateFlow()
 
-    fun init(audioSessionId: Int) {
+    /** True once [init] has attached the audio effects to a live audio session. */
+    val isReady: Boolean get() = isInitialized
+
+    fun init(audioSessionId: Int, savedState: EqualizerUiState? = null) {
         if (audioSessionId == 0) return
+        currentAudioSessionId = audioSessionId
 
         release()
 
@@ -144,8 +155,14 @@ object EqualizerManager {
             return
         }
 
-        applyPreset(presetDefinitions.first())
-        refreshBandsAndEffects()
+        if (savedState != null) {
+            restoreState(savedState)
+        } else {
+            applyPreset(presetDefinitions.first())
+            refreshBandsAndEffects()
+        }
+
+        isInitialized = true
     }
 
     fun setEnabled(enabled: Boolean) {
@@ -212,6 +229,44 @@ object EqualizerManager {
         bassBoost = null
         virtualizer = null
         loudnessEnhancer = null
+        isInitialized = false
+    }
+
+    private fun restoreState(savedState: EqualizerUiState) {
+        val isCustom = savedState.selectedPresetId == CUSTOM_PRESET_ID
+        val preset = presetDefinitions.firstOrNull { it.id == savedState.selectedPresetId }
+            ?: presetDefinitions.first()
+        applyPreset(preset)
+
+        if (isCustom) {
+            if (savedState.bands.isNotEmpty()) {
+                savedState.bands.forEach { savedBand ->
+                    val target = _uiState.value.bands.firstOrNull { it.id == savedBand.id }
+                        ?: return@forEach
+                    val clamped = savedBand.level.coerceIn(target.minLevel, target.maxLevel)
+                    equalizer?.setBandLevel(target.id.toShort(), clamped.toShort())
+                }
+                refreshBandsAndEffects()
+            }
+            currentPresetId = CUSTOM_PRESET_ID
+            _uiState.value = _uiState.value.copy(
+                selectedPresetId = CUSTOM_PRESET_ID,
+                selectedPresetName = savedState.selectedPresetName.ifBlank { "Custom" },
+                selectedPresetDescription = savedState.selectedPresetDescription.ifBlank {
+                    "Manual tuning based on your adjustments."
+                }
+            )
+        }
+
+        _uiState.value = _uiState.value.copy(
+            bassBoost = savedState.bassBoost.coerceIn(0, 1000),
+            virtualizer = savedState.virtualizer.coerceIn(0, 1000),
+            loudness = savedState.loudness.coerceIn(0, 2000)
+        )
+        bassBoost?.setStrength(_uiState.value.bassBoost.toShort())
+        virtualizer?.setStrength(_uiState.value.virtualizer.toShort())
+        loudnessEnhancer?.setTargetGain(_uiState.value.loudness)
+        setEnabled(savedState.enabled)
     }
 
     private fun createEqualizer(audioSessionId: Int): Equalizer? = runCatching {

@@ -112,12 +112,12 @@ import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
-    onOpenPlaylist: () -> Unit = {},
-    onOpenLyrics: () -> Unit = {},
-    onOpenVisualizer: () -> Unit = {},
-    onOpenEqualizer: () -> Unit = {},
-    onOpenSongEditor: (Long) -> Unit = {},
-    onNavigateBack: () -> Unit = {}
+    onOpenPlaylist: () -> Unit,
+    onOpenLyrics: () -> Unit,
+    onOpenVisualizer: () -> Unit,
+    onOpenEqualizer: () -> Unit,
+    onOpenSongEditor: (Long) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 

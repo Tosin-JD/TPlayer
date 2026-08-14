@@ -244,9 +244,7 @@ fun AppNavGraph(
                 StatsScreen(
                     viewModel = viewModel,
                     onNavigateToHome = {
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
-                        }
+                        navController.popBackStack()
                     },
                     onNavigateToPlayer = {
                         navController.navigate("player")
@@ -349,6 +347,9 @@ fun AppNavGraph(
                     navController.navigate("player")
                 },
                 onStop = {
+                    viewModel.stop()
+                },
+                onCollapse = {
                     viewModel.stop()
                 }
             )

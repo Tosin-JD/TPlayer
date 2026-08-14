@@ -76,14 +76,14 @@ fun SongActionsSheet(
 
             Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.small), modifier = Modifier.padding(vertical = AppSpacing.medium)) {
                 FilterChip(
-                    selected = false,
+                    selected = songs.isNotEmpty() && selected.values.all { it },
                     onClick = {
                         songs.forEach { selected[it.id] = true }
                     },
                     label = { Text("Select all") }
                 )
                 FilterChip(
-                    selected = false,
+                    selected = selected.values.none { it },
                     onClick = {
                         songs.forEach { selected[it.id] = false }
                     },
@@ -173,8 +173,7 @@ fun SongActionsSheet(
                     }
                 }
             },
-            confirmButton = {},
-            dismissButton = {
+            confirmButton = {
                 TextButton(onClick = { showPlaylistDialog = false }) { Text("Cancel") }
             }
         )

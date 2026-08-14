@@ -80,14 +80,6 @@ class PlaylistRepository(private val context: Context) {
         _playlists.value = current
     }
 
-    suspend fun getPlaylist(playlistId: String): Playlist? = withContext(Dispatchers.IO) {
-        loadPlaylistsSync().find { it.id == playlistId }
-    }
-
-    suspend fun refreshPlaylists() = withContext(Dispatchers.IO) {
-        _playlists.value = loadPlaylistsSync()
-    }
-
     private fun loadPlaylistsSync(): List<Playlist> {
         if (!playlistFile.exists()) return emptyList()
         return try {

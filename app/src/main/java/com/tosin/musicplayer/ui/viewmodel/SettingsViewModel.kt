@@ -159,12 +159,14 @@ class SettingsViewModel(
                 updateSettings { current ->
                     current.copy(lastScanDate = formatNow())
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
                 _events.emit(
                     SettingsEvent.ScanFinished(
                         isFullScan = isFullScan
                     )
                 )
-            } finally {
                 _uiState.update {
                     it.copy(
                         isScanning = false,
@@ -218,10 +220,30 @@ class SettingsViewModel(
 
     // ── Reset Helpers ──
     fun resetGeneralSettings() {
-        _uiState.update { it.copy(showNotifications = true) }
+        _uiState.update {
+            it.copy(
+                showNotifications = true,
+                lastScanDate = "Never",
+                rememberLastPlay = true,
+                storageScopeAll = "Both",
+                storageScopeAlbum = "Both",
+                storageScopeArtist = "Both",
+                storageScopeGenre = "Both",
+                storageScopeFolder = "Both",
+                excludedFolders = emptyList()
+            )
+        }
         viewModelScope.launch {
             val current = preferencesRepository.loadSettings().toMutableMap()
             current.remove("showNotifications")
+            current.remove("lastScanDate")
+            current.remove("rememberLastPlay")
+            current.remove("storageScopeAll")
+            current.remove("storageScopeAlbum")
+            current.remove("storageScopeArtist")
+            current.remove("storageScopeGenre")
+            current.remove("storageScopeFolder")
+            current.remove("excludedFolders")
             preferencesRepository.saveSettings(current)
         }
     }

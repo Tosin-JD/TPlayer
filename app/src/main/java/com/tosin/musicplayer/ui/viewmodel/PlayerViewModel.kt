@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tosin.musicplayer.data.models.Playlist
@@ -8,13 +9,12 @@ import com.tosin.musicplayer.data.models.SongMetadataOverride
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PlaylistRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
+import com.tosin.musicplayer.data.repository.LyricsAppearance
 import com.tosin.musicplayer.player.PlayerController
 import com.tosin.musicplayer.ui.state.HomeUiState
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.PlayerUiState
-import com.tosin.musicplayer.ui.state.StorageScope
-import com.tosin.musicplayer.ui.state.matchesStorageScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -53,9 +53,6 @@ class PlayerViewModel(
     private val _lyricsVisible = MutableStateFlow(false)
     val lyricsVisible = _lyricsVisible.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
-
     private val _tabOrder = MutableStateFlow(listOf(
         LibraryTab.All,
         LibraryTab.Album,
@@ -66,6 +63,8 @@ class PlayerViewModel(
 
     private val _mostPlayed = MutableStateFlow<List<SongStats>>(emptyList())
     val mostPlayed = _mostPlayed.asStateFlow()
+
+    private var statsStartTime = 0L
 
     val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
 
@@ -128,8 +127,7 @@ class PlayerViewModel(
             playbackSpeed = playerController.playbackSpeed.value,
             abRepeatA = playerController.abRepeatA.value,
             abRepeatB = playerController.abRepeatB.value,
-            sleepTimerRemaining = playerController.sleepTimerRemaining.value,
-            searchQuery = _searchQuery.value
+            sleepTimerRemaining = playerController.sleepTimerRemaining.value
         )
     }.stateIn(
         scope = viewModelScope,
@@ -159,16 +157,10 @@ class PlayerViewModel(
     )
 
     fun loadStats(startTime: Long = 0L) {
+        statsStartTime = startTime
         viewModelScope.launch {
             _mostPlayed.value = statsRepository.getMostPlayed(_songs.value, startTime)
         }
-    }
-
-    fun reorderTabs(fromIndex: Int, toIndex: Int) {
-        val currentOrder = _tabOrder.value.toMutableList()
-        val item = currentOrder.removeAt(fromIndex)
-        currentOrder.add(toIndex, item)
-        _tabOrder.value = currentOrder
     }
 
     fun onAudioPermissionResult(isGranted: Boolean) {
@@ -199,6 +191,7 @@ class PlayerViewModel(
                 .collect { songs ->
                     _songs.value = songs
                     _isLoading.value = false
+                    loadStats(statsStartTime)
                     // Restore queue state
                     if (!hasRestoredQueueState) {
                         restoreQueueState(songs)
@@ -229,8 +222,22 @@ class PlayerViewModel(
                 queueState.positionMs
             )
             if (queueState.wasPlaying) {
+                playerController.ignoreNextPlayForStats()
                 playerController.play()
             }
+        }
+        applyPersistedPlaybackSettings(settings)
+    }
+
+    private suspend fun applyPersistedPlaybackSettings(settings: Map<String, Any>) {
+        val speed = (settings["playbackSpeed"] as? Float) ?: settings["playbackSpeed"] as? Double
+        if (speed != null) {
+            playerController.setPlaybackSpeed(speed.toFloat())
+        }
+        val sleepMinutes = (settings["sleepTimerMinutes"] as? Int)
+            ?: (settings["sleepTimerMinutes"] as? Double)?.toInt()
+        if (sleepMinutes != null && sleepMinutes > 0) {
+            playerController.setSleepTimer(sleepMinutes * 60L * 1000L)
         }
     }
 
@@ -303,6 +310,24 @@ class PlayerViewModel(
         playerController.play()
     }
 
+    fun playUri(uri: Uri, title: String? = null, artist: String? = null) {
+        val displayTitle = title?.takeIf { it.isNotBlank() } ?: uri.lastPathSegment.orEmpty().ifBlank { "Media" }
+        val song = Song(
+            id = uri.hashCode().toLong(),
+            title = displayTitle,
+            artist = artist.orEmpty(),
+            album = "",
+            genre = null,
+            folder = null,
+            folderPath = null,
+            uri = uri.toString(),
+            albumArt = null,
+            duration = 0L
+        )
+        playerController.setPlaylist(listOf(song), 0)
+        playerController.play()
+    }
+
     fun play() = playerController.play()
 
     fun pause() = playerController.pause()
@@ -320,9 +345,17 @@ class PlayerViewModel(
         playerController.setShuffleEnabled(_shuffle.value)
     }
 
-    fun toggleLyrics() {
-        _lyricsVisible.value = !_lyricsVisible.value
+    fun setLyricsVisible(visible: Boolean) {
+        _lyricsVisible.value = visible
     }
+
+    fun saveLyricsAppearance(fontSize: String, textAlign: String, fontFamily: String) {
+        viewModelScope.launch {
+            preferencesRepository.saveLyricsAppearance(fontSize, textAlign, fontFamily)
+        }
+    }
+
+    suspend fun loadLyricsAppearance(): LyricsAppearance? = preferencesRepository.loadLyricsAppearance()
 
     fun cycleRepeatMode() {
         _repeatMode.value = when (_repeatMode.value) {
@@ -352,22 +385,7 @@ class PlayerViewModel(
         }
     }
 
-    fun getSongsForTab(tab: LibraryTab, storageScope: StorageScope): List<Song> {
-        val songs = _songs.value.filter { it.matchesStorageScope(storageScope) }
-        return when (tab) {
-            LibraryTab.All -> songs
-            LibraryTab.Album -> songs
-            LibraryTab.Artist -> songs
-            LibraryTab.Genre -> songs
-            LibraryTab.Folder -> songs
-        }
-    }
-
     // --- Search & Filter ---
-    fun setSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
-
     fun searchSongs(query: String): List<Song> {
         if (query.isBlank()) return _songs.value
         val q = query.lowercase()
@@ -383,6 +401,9 @@ class PlayerViewModel(
     // --- Playback Speed ---
     fun setPlaybackSpeed(speed: Float) {
         playerController.setPlaybackSpeed(speed)
+        viewModelScope.launch {
+            preferencesRepository.saveSettings(mapOf("playbackSpeed" to speed))
+        }
     }
 
     // --- A-B Repeat ---
@@ -396,6 +417,9 @@ class PlayerViewModel(
             playerController.cancelSleepTimer()
         } else {
             playerController.setSleepTimer(minutes * 60L * 1000L)
+        }
+        viewModelScope.launch {
+            preferencesRepository.saveSettings(mapOf("sleepTimerMinutes" to minutes))
         }
     }
 
@@ -424,12 +448,6 @@ class PlayerViewModel(
         }
     }
 
-    fun addSongToPlaylist(playlistId: String, songId: Long) {
-        viewModelScope.launch {
-            playlistRepository.addSongToPlaylist(playlistId, songId)
-        }
-    }
-
     fun addSongsToPlaylist(playlistId: String, songIds: List<Long>) {
         viewModelScope.launch {
             playlistRepository.addSongsToPlaylist(playlistId, songIds)
@@ -453,12 +471,14 @@ class PlayerViewModel(
             ?: uiState.value.queue.firstOrNull { it.id == songId }
     }
 
-    fun playPlaylist(playlist: Playlist, startIndex: Int = 0) {
+    fun playPlaylist(playlist: Playlist, startIndex: Int = 0): Boolean {
         val songs = getSongsForPlaylist(playlist)
         if (songs.isNotEmpty()) {
             playerController.setPlaylist(songs, startIndex)
             playerController.play()
+            return true
         }
+        return false
     }
 
     fun addSongsToQueue(songs: List<Song>) {
@@ -477,6 +497,10 @@ class PlayerViewModel(
         playerController.setPauseOnZeroVolumeEnabled(enabled)
     }
 
+    fun setAutoResumeEnabled(enabled: Boolean) {
+        playerController.setAutoResumeEnabled(enabled)
+    }
+
     fun setExcludedFolders(folders: Set<String>) {
         playerController.setExcludedFolders(folders)
     }
@@ -490,41 +514,45 @@ class PlayerViewModel(
         onSaved: () -> Unit = {}
     ) {
         viewModelScope.launch {
-            val currentLyrics = _songs.value.firstOrNull { it.id == songId }?.lyrics
-            preferencesRepository.saveSongMetadataOverride(
-                songId,
-                SongMetadataOverride(
-                    title = title,
-                    artist = artist,
-                    album = album,
-                    genre = genre,
-                    lyrics = currentLyrics
+            val currentSong = getSongById(songId)
+            if (currentSong != null) {
+                val currentLyrics = currentSong.lyrics
+                preferencesRepository.saveSongMetadataOverride(
+                    songId,
+                    SongMetadataOverride(
+                        title = title,
+                        artist = artist,
+                        album = album,
+                        genre = genre,
+                        lyrics = currentLyrics
+                    )
                 )
-            )
-            playerController.updateSongMetadata(songId, title, artist, album, genre, currentLyrics)
-            refreshLibrary()
+                playerController.updateSongMetadata(songId, title, artist, album, genre, currentLyrics)
+                repository.writeTags(songId, title, artist, album)
+                refreshLibrary()
+            }
             onSaved()
         }
     }
 
     fun saveLyrics(songId: Long, lyrics: String, onSaved: () -> Unit = {}) {
         viewModelScope.launch {
-            val currentSong = _songs.value.firstOrNull { it.id == songId }
-            if (currentSong != null) {
+            val targetSong = getSongById(songId)
+            if (targetSong != null) {
                 preferencesRepository.saveSongMetadataOverride(
                     songId,
                     SongMetadataOverride(
-                        title = currentSong.title,
-                        artist = currentSong.artist,
-                        album = currentSong.album,
-                        genre = currentSong.genre,
+                        title = targetSong.title,
+                        artist = targetSong.artist,
+                        album = targetSong.album,
+                        genre = targetSong.genre,
                         lyrics = lyrics
                     )
                 )
-                playerController.updateSongMetadata(songId, currentSong.title, currentSong.artist, currentSong.album, currentSong.genre, lyrics)
+                playerController.updateSongMetadata(songId, targetSong.title, targetSong.artist, targetSong.album, targetSong.genre, lyrics)
                 refreshLibrary()
-                onSaved()
             }
+            onSaved()
         }
     }
 

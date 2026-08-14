@@ -9,7 +9,6 @@ data class PlayerUiState(
     val currentSong: Song? = null,
     val isPlaying: Boolean = false,
     val progress: Long = 0L,
-    val duration: Long = 0L,
     val isLoading: Boolean = true,
     val shuffleEnabled: Boolean = false,
     val repeatMode: RepeatMode = RepeatMode.PLAY_ALL_ONCE,
@@ -17,6 +16,5 @@ data class PlayerUiState(
     val playbackSpeed: Float = 1.0f,
     val abRepeatA: Long? = null,
     val abRepeatB: Long? = null,
-    val sleepTimerRemaining: Long? = null,
-    val searchQuery: String = ""
+    val sleepTimerRemaining: Long? = null
 )

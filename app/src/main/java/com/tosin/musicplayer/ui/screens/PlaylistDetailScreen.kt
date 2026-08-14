@@ -28,8 +28,10 @@ fun PlaylistDetailScreen(
 ) {
     val playlists by viewModel.playlists.collectAsState()
     val playlist = playlists.find { it.id == playlistId }
-    val songs = remember(playlist) { playlist?.let { viewModel.getSongsForPlaylist(it) } ?: emptyList() }
     val playerState by viewModel.uiState.collectAsState()
+    val songs = remember(playlist, playerState.songs) {
+        playlist?.let { viewModel.getSongsForPlaylist(it) } ?: emptyList()
+    }
 
     Scaffold(
         topBar = {
@@ -91,7 +93,7 @@ fun PlaylistDetailScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Add songs from the library",
+                        "Long-press any song in the library and choose \"Add to Playlist\"",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )

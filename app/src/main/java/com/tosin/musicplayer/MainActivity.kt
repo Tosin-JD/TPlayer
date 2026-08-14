@@ -1,7 +1,9 @@
 package com.tosin.musicplayer
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -27,6 +29,8 @@ import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import com.tosin.musicplayer.data.repository.StatsRepository
 
 class MainActivity : ComponentActivity() {
+    private lateinit var playerViewModel: PlayerViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -38,7 +42,7 @@ class MainActivity : ComponentActivity() {
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val musicLoader = MusicLoader(contentResolver)
-                val playerController = PlayerController(this@MainActivity, statsRepository)
+                val playerController = PlayerController(this@MainActivity, statsRepository, preferencesRepository)
                 val repository = MusicRepository(musicLoader, preferencesRepository, statsRepository)
 
                 return when {
@@ -55,14 +59,14 @@ class MainActivity : ComponentActivity() {
                         SettingsViewModel(preferencesRepository, repository) as T
                     }
                     modelClass.isAssignableFrom(EqualizerViewModel::class.java) -> {
-                        EqualizerViewModel() as T
+                        EqualizerViewModel(preferencesRepository) as T
                     }
                     else -> throw IllegalArgumentException("Unknown ViewModel class")
                 }
             }
         }
 
-        val playerViewModel = ViewModelProvider(this, factory)[PlayerViewModel::class.java]
+        playerViewModel = ViewModelProvider(this, factory)[PlayerViewModel::class.java]
         val settingsViewModel = ViewModelProvider(this, factory)[SettingsViewModel::class.java]
         val equalizerViewModel = ViewModelProvider(this, factory)[EqualizerViewModel::class.java]
 
@@ -82,11 +86,15 @@ class MainActivity : ComponentActivity() {
         ) == PackageManager.PERMISSION_GRANTED
 
         playerViewModel.onAudioPermissionResult(hasAudioPermission)
+        handleIncomingIntent(intent)
 
         setContent {
             val settingsUiState by settingsViewModel.uiState.collectAsState()
             androidx.compose.runtime.LaunchedEffect(settingsUiState.pauseOnZeroVolume) {
                 playerViewModel.setPauseOnZeroVolumeEnabled(settingsUiState.pauseOnZeroVolume)
+            }
+            androidx.compose.runtime.LaunchedEffect(settingsUiState.autoResumeEnabled) {
+                playerViewModel.setAutoResumeEnabled(settingsUiState.autoResumeEnabled)
             }
             androidx.compose.runtime.LaunchedEffect(settingsUiState.excludedFolders) {
                 playerViewModel.setExcludedFolders(settingsUiState.excludedFolders.toSet())
@@ -96,7 +104,8 @@ class MainActivity : ComponentActivity() {
             TPlayerTheme(
                 darkTheme = settingsUiState.isDarkMode,
                 dynamicColor = settingsUiState.useDynamicColor,
-                themePreset = AppThemePreset.fromStored(settingsUiState.themePreset)
+                themePreset = AppThemePreset.fromStored(settingsUiState.themePreset),
+                accentColorIndex = settingsUiState.accentColorIndex
             ) {
                 AppNavGraph(
                     viewModel = playerViewModel,
@@ -109,6 +118,26 @@ class MainActivity : ComponentActivity() {
 
         if (!hasAudioPermission) {
             permissionLauncher.launch(audioPermission)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        val nonNullIntent = intent ?: return
+        val uri = when (nonNullIntent.action) {
+            Intent.ACTION_VIEW -> nonNullIntent.data
+            Intent.ACTION_SEND -> nonNullIntent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            Intent.ACTION_SEND_MULTIPLE -> nonNullIntent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.firstOrNull()
+            else -> null
+        } ?: return
+
+        val type = nonNullIntent.type?.lowercase().orEmpty()
+        if (nonNullIntent.action == Intent.ACTION_VIEW || type.startsWith("audio/") || type.startsWith("video/")) {
+            playerViewModel.playUri(uri)
         }
     }
 }

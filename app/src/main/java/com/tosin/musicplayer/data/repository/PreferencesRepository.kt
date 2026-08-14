@@ -3,6 +3,8 @@ package com.tosin.musicplayer.data.repository
 import android.content.Context
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.data.models.SongMetadataOverride
+import com.tosin.musicplayer.ui.state.EqBand
+import com.tosin.musicplayer.ui.state.EqualizerUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -17,6 +19,8 @@ class PreferencesRepository(private val context: Context) {
     private val queueFile = File(context.filesDir, "queue_state.json")
     private val metadataFile = File(context.filesDir, "song_metadata_overrides.json")
     private val songsCacheFile = File(context.filesDir, "song_cache.json")
+    private val equalizerStateFile = File(context.filesDir, "equalizer_state.json")
+    private val lyricsAppearanceFile = File(context.filesDir, "lyrics_appearance.json")
 
     // --- Settings ---
     suspend fun saveSettings(settings: Map<String, Any>) = withContext(Dispatchers.IO) {
@@ -154,16 +158,6 @@ class PreferencesRepository(private val context: Context) {
         }
     }
 
-    suspend fun removeSongMetadataOverride(songId: Long) = withContext(Dispatchers.IO) {
-        try {
-            val current = loadSongMetadataOverrides().toMutableMap()
-            current.remove(songId)
-            saveSongMetadataOverrides(current)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     private fun saveSongMetadataOverrides(overrides: Map<Long, SongMetadataOverride>) {
         val obj = JSONObject()
         overrides.forEach { (songId, override) ->
@@ -208,6 +202,99 @@ class PreferencesRepository(private val context: Context) {
                 jsonArray.getJSONObject(index).toSong()
             }
         }.getOrDefault(emptyList())
+    }
+
+    // --- Equalizer State ---
+    suspend fun saveEqualizerState(state: EqualizerUiState) = withContext(Dispatchers.IO) {
+        try {
+            val obj = JSONObject()
+            obj.put("enabled", state.enabled)
+            obj.put("selectedPresetId", state.selectedPresetId)
+            obj.put("selectedPresetName", state.selectedPresetName)
+            obj.put("selectedPresetDescription", state.selectedPresetDescription)
+            obj.put("bassBoost", state.bassBoost)
+            obj.put("virtualizer", state.virtualizer)
+            obj.put("loudness", state.loudness)
+            val bandsArray = JSONArray()
+            state.bands.forEach { band ->
+                bandsArray.put(JSONObject().apply {
+                    put("id", band.id)
+                    put("level", band.level)
+                })
+            }
+            obj.put("bands", bandsArray)
+            equalizerStateFile.writeText(obj.toString())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadEqualizerState(): EqualizerUiState? = withContext(Dispatchers.IO) {
+        if (!equalizerStateFile.exists()) return@withContext null
+        try {
+            val obj = JSONObject(equalizerStateFile.readText())
+            val bandsArray = obj.optJSONArray("bands")
+            val bands = if (bandsArray == null) {
+                emptyList()
+            } else {
+                List(bandsArray.length()) { i ->
+                    val band = bandsArray.getJSONObject(i)
+                    EqBand(
+                        id = band.getInt("id"),
+                        frequency = 0,
+                        level = band.getInt("level"),
+                        minLevel = 0,
+                        maxLevel = 0
+                    )
+                }
+            }
+            EqualizerUiState(
+                enabled = obj.optBoolean("enabled", false),
+                bands = bands,
+                selectedPresetId = obj.optString("selectedPresetId", "flat"),
+                selectedPresetName = obj.optString("selectedPresetName", "Flat"),
+                selectedPresetDescription = obj.optString(
+                    "selectedPresetDescription",
+                    "Balanced sound with no coloration."
+                ),
+                bassBoost = obj.optInt("bassBoost", 0),
+                virtualizer = obj.optInt("virtualizer", 0),
+                loudness = obj.optInt("loudness", 0)
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // --- Lyrics Appearance ---
+    suspend fun saveLyricsAppearance(
+        fontSize: String,
+        textAlign: String,
+        fontFamily: String
+    ) = withContext(Dispatchers.IO) {
+        try {
+            val obj = JSONObject()
+            obj.put("fontSize", fontSize)
+            obj.put("textAlign", textAlign)
+            obj.put("fontFamily", fontFamily)
+            lyricsAppearanceFile.writeText(obj.toString())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadLyricsAppearance(): LyricsAppearance? = withContext(Dispatchers.IO) {
+        if (!lyricsAppearanceFile.exists()) return@withContext null
+        try {
+            val obj = JSONObject(lyricsAppearanceFile.readText())
+            LyricsAppearance(
+                fontSize = obj.optString("fontSize", "Medium"),
+                textAlign = obj.optString("textAlign", "Center"),
+                fontFamily = obj.optString("fontFamily", "SansSerif")
+            )
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun loadResumePositions(): Map<Long, Long> {
@@ -282,4 +369,10 @@ data class QueueState(
     val currentIndex: Int,
     val positionMs: Long,
     val wasPlaying: Boolean
+)
+
+data class LyricsAppearance(
+    val fontSize: String,
+    val textAlign: String,
+    val fontFamily: String
 )

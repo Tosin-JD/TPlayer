@@ -34,10 +34,10 @@ fun LibraryGroupDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPlayer: () -> Unit
 ) {
-    val songs = remember(tab, groupTitle) {
+    val playerState by viewModel.uiState.collectAsState()
+    val songs = remember(tab, groupTitle, playerState.songs) {
         viewModel.getSongsForGroup(tab, groupTitle)
     }
-    val playerState by viewModel.uiState.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
 
     // SongActionsSheet state (for single song long-press or group action)

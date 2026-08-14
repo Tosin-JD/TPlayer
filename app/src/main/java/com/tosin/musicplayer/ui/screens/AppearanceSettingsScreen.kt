@@ -1,9 +1,13 @@
 package com.tosin.musicplayer.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -12,8 +16,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.theme.AccentColors
 import com.tosin.musicplayer.ui.theme.AppThemePreset
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
@@ -105,6 +113,56 @@ fun AppearanceSettingsScreen(
                         onClick = { viewModel.setThemePreset(preset.label) },
                         label = { Text(preset.label) }
                     )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
+
+            // ── Accent Color ──
+            Text(
+                text = "Accent Color",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small)
+            )
+
+            Text(
+                text = "Pick a primary accent used across the app.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = AppSpacing.large)
+            )
+
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+            ) {
+                AccentColors.forEachIndexed { index, color ->
+                    val selected = uiState.accentColorIndex == index
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(color)
+                            .border(
+                                width = if (selected) 3.dp else 1.dp,
+                                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                            .clickable { viewModel.setAccentColor(index) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (selected) {
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = if (color.luminance() > 0.5f) Color.Black else Color.White
+                            )
+                        }
+                    }
                 }
             }
 

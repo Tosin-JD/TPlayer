@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
@@ -51,13 +53,14 @@ fun CurrentPlaylistScreen(
 
     var isEditMode by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val context = LocalContext.current
     var draggedSongId by remember { mutableStateOf<Long?>(null) }
     var draggedOffsetY by remember { mutableStateOf(0f) }
     var draggedIndex by remember { mutableStateOf(-1) }
     var draggedItemHeightPx by remember { mutableStateOf(0) }
 
     // Scroll to currently playing song on startup
-    LaunchedEffect(currentSong) {
+    LaunchedEffect(Unit) {
         if (!isEditMode) {
             val index = queue.indexOfFirst { it.id == currentSong?.id }
             if (index >= 0) {
@@ -145,7 +148,13 @@ fun CurrentPlaylistScreen(
                     isDragging = isDragging,
                     containerColor = animatedColor,
                     onItemClick = {
-                        if (!isEditMode) {
+                        if (isEditMode) {
+                            Toast.makeText(
+                                context,
+                                "Edit mode: long-press and drag to reorder",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
                             onPlaySong(song)
                         }
                     },

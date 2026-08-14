@@ -3,6 +3,7 @@ package com.tosin.musicplayer.player
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
@@ -23,10 +24,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 import com.tosin.musicplayer.data.repository.StatsRepository
+import com.tosin.musicplayer.data.repository.PreferencesRepository
 
 class PlayerController(
     private val context: Context,
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
+    private val preferencesRepository: PreferencesRepository
 ) {
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val mediaController: MediaController?
@@ -66,6 +69,18 @@ class PlayerController(
     
     private var pauseOnZeroVolumeEnabled = true
         private var wasPlayingBeforeZeroVolume = false
+
+    private var playStartedAtMs: Long? = null
+    private var accumulatedListenMs = 0L
+    private var suppressStatsForRestore = false
+
+    private companion object {
+        const val MIN_LISTEN_MS = 1_000L
+    }
+
+    // Auto-resume (per-track position)
+    private var autoResumeEnabled = true
+    private var lastPersistedSongId: Long? = null
 
     // A-B Repeat
     private val _abRepeatA = MutableStateFlow<Long?>(null)
@@ -131,12 +146,21 @@ class PlayerController(
                 _isPlaying.value = isPlaying
                 if (isPlaying) {
                     startProgressUpdate()
+                    startListenIfNeeded()
                 } else {
                     stopProgressUpdate()
+                    persistPosition(_currentSong.value, mediaController?.currentPosition ?: 0L)
+                    accumulateListenSegment()
                 }
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                // Close out the outgoing song's listened-time before switching.
+                recordCurrentListen()
+
+                // Persist the outgoing song's position before switching to the new one.
+                persistPosition(_currentSong.value, _progress.value)
+
                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO && currentRepeatMode == RepeatMode.PLAY_ONE_ONCE) {
                     controller.pause()
                     controller.seekToPrevious()
@@ -163,13 +187,13 @@ class PlayerController(
                 }
 
                 _currentSong.value = song
+                lastPersistedSongId = null
                 // Clear A-B repeat on track change
                 clearABRepeat()
 
-                song?.let {
-                    scope.launch {
-                        statsRepository.recordPlay(it.id, it.duration.coerceAtLeast(0L))
-                    }
+                // Keep counting if playback continues seamlessly into the next song.
+                if (controller.isPlaying) {
+                    startListenIfNeeded()
                 }
             }
 
@@ -217,6 +241,19 @@ class PlayerController(
         controller.setMediaItems(mediaItems)
         controller.prepare()
         controller.seekTo(startIndex, startPositionMs.coerceAtLeast(0L))
+
+        if (autoResumeEnabled && startPositionMs <= 0L) {
+            val startSongId = songs.getOrNull(startIndex)?.id
+            if (startSongId != null) {
+                scope.launch {
+                    val saved = preferencesRepository.getResumePosition(startSongId)
+                    if (saved > 0L) {
+                        controller.seekTo(startIndex, saved)
+                        _progress.value = saved
+                    }
+                }
+            }
+        }
     }
 
     fun addSongsToQueue(songs: List<Song>) {
@@ -267,6 +304,9 @@ class PlayerController(
     }
 
     fun stop() {
+        recordCurrentListen()
+        persistPosition(_currentSong.value, _progress.value)
+        lastPersistedSongId = null
         mediaController?.run {
             stop()
         }
@@ -391,6 +431,21 @@ class PlayerController(
         }
     }
 
+    fun setAutoResumeEnabled(enabled: Boolean) {
+        autoResumeEnabled = enabled
+    }
+
+    private fun persistPosition(song: Song?, positionMs: Long) {
+        if (!autoResumeEnabled) return
+        val songId = song?.id ?: return
+        if (lastPersistedSongId == songId) return
+        if (positionMs <= 0L) return
+        lastPersistedSongId = songId
+        scope.launch {
+            preferencesRepository.saveResumePosition(songId, positionMs)
+        }
+    }
+
     // --- Playback Speed ---
     fun setPlaybackSpeed(speed: Float) {
         val controller = mediaController ?: return
@@ -473,11 +528,49 @@ class PlayerController(
     }
 
     fun release() {
+        recordCurrentListen()
+        persistPosition(_currentSong.value, mediaController?.currentPosition ?: 0L)
         stopProgressUpdate()
         sleepTimerJob?.cancel()
         abRepeatJob?.cancel()
         controllerFuture?.let {
             MediaController.releaseFuture(it)
+        }
+    }
+
+    fun ignoreNextPlayForStats() {
+        suppressStatsForRestore = true
+    }
+
+    private fun accumulateListenSegment() {
+        val now = SystemClock.elapsedRealtime()
+        val segment = playStartedAtMs?.let { (now - it).coerceAtLeast(0L) } ?: 0L
+        playStartedAtMs = null
+        accumulatedListenMs += segment
+    }
+
+    private fun recordCurrentListen() {
+        val song = _currentSong.value ?: return
+        val now = SystemClock.elapsedRealtime()
+        val segment = playStartedAtMs?.let { (now - it).coerceAtLeast(0L) } ?: 0L
+        playStartedAtMs = null
+        val total = accumulatedListenMs + segment
+        accumulatedListenMs = 0L
+        if (total >= MIN_LISTEN_MS) {
+            scope.launch {
+                statsRepository.recordPlay(song.id, total)
+            }
+        }
+    }
+
+    private fun startListenIfNeeded() {
+        if (suppressStatsForRestore) {
+            suppressStatsForRestore = false
+            playStartedAtMs = null
+            return
+        }
+        if (playStartedAtMs == null) {
+            playStartedAtMs = SystemClock.elapsedRealtime()
         }
     }
 

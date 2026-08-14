@@ -51,6 +51,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -100,6 +101,20 @@ fun LyricsScreen(
 
     StatusBarColorEffect(Color.Black)
 
+    LaunchedEffect(Unit) {
+        viewModel.setLyricsVisible(true)
+        val appearance = viewModel.loadLyricsAppearance()
+        if (appearance != null) {
+            fontSizeChoice = LyricsFontSize.entries.firstOrNull { it.name == appearance.fontSize } ?: fontSizeChoice
+            textAlignChoice = LyricsTextAlign.entries.firstOrNull { it.name == appearance.textAlign } ?: textAlignChoice
+            fontFamilyChoice = LyricsFontFamily.entries.firstOrNull { it.name == appearance.fontFamily } ?: fontFamilyChoice
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { viewModel.setLyricsVisible(false) }
+    }
+
     LaunchedEffect(currentLineIndex) {
         if (currentLineIndex >= 0) {
             listState.animateScrollToItem(currentLineIndex.coerceAtLeast(0))
@@ -109,11 +124,20 @@ fun LyricsScreen(
     if (showAppearanceDialog) {
         LyricsAppearanceDialog(
             fontSize = fontSizeChoice,
-            onFontSizeSelected = { fontSizeChoice = it },
+            onFontSizeSelected = {
+                fontSizeChoice = it
+                viewModel.saveLyricsAppearance(it.name, textAlignChoice.name, fontFamilyChoice.name)
+            },
             textAlign = textAlignChoice,
-            onTextAlignSelected = { textAlignChoice = it },
+            onTextAlignSelected = {
+                textAlignChoice = it
+                viewModel.saveLyricsAppearance(fontSizeChoice.name, it.name, fontFamilyChoice.name)
+            },
             fontFamily = fontFamilyChoice,
-            onFontFamilySelected = { fontFamilyChoice = it },
+            onFontFamilySelected = {
+                fontFamilyChoice = it
+                viewModel.saveLyricsAppearance(fontSizeChoice.name, textAlignChoice.name, it.name)
+            },
             onDismiss = { showAppearanceDialog = false }
         )
     }
@@ -246,7 +270,7 @@ fun LyricsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 AssistChip(
-                                    onClick = { },
+                                    onClick = { viewModel.seekTo(line.timeMs) },
                                     label = {
                                         Text(
                                             formatTime(line.timeMs),
@@ -395,8 +419,7 @@ private fun LyricsAppearanceDialog(
                 }
             }
         },
-        confirmButton = {},
-        dismissButton = {
+        confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text("Close")
             }

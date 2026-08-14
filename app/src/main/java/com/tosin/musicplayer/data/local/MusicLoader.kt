@@ -20,6 +20,29 @@ class MusicLoader(
         }.getOrElse { false }
     }
 
+    suspend fun writeTags(
+        songId: Long,
+        title: String,
+        artist: String,
+        album: String
+    ): Boolean = withContext(Dispatchers.IO) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return@withContext false
+        runCatching {
+            val values = android.content.ContentValues().apply {
+                if (title.isNotBlank()) put(MediaStore.Audio.Media.TITLE, title)
+                if (artist.isNotBlank()) put(MediaStore.Audio.Media.ARTIST, artist)
+                if (album.isNotBlank()) put(MediaStore.Audio.Media.ALBUM, album)
+            }
+            if (values.size() == 0) return@runCatching true
+            contentResolver.update(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                values,
+                "${MediaStore.Audio.Media._ID} = ?",
+                arrayOf(songId.toString())
+            ) > 0
+        }.getOrElse { false }
+    }
+
     private companion object {
         const val COLUMN_DATE_ADDED = "date_added"
         const val COLUMN_SIZE = "_size"
@@ -107,13 +130,12 @@ class MusicLoader(
                 val trackNumber = if (trackColumn >= 0 && !cursor.isNull(trackColumn)) {
                     cursor.getInt(trackColumn).takeIf { it > 0 } ?: 0
                 } else 0
-                val rating = null
+                val lyrics = loadLyrics(absolutePath)
 
                 val contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                     .buildUpon()
                     .appendPath(id.toString())
                     .build()
-
                 val albumArtUri = Uri.parse("content://media/external/audio/albumart/$albumId")
                 // Check if album art actually exists for this album
                 val hasAlbumArt = try {
@@ -134,12 +156,12 @@ class MusicLoader(
                         uri = contentUri.toString(),
                         albumArt = if (hasAlbumArt) albumArtUri.toString() else null,
                         duration = duration,
-                        lyrics = null,
+                        lyrics = lyrics,
                         trackNumber = trackNumber,
                         year = year,
                         dateAddedMs = dateAddedSeconds?.times(1000L),
                         fileSizeBytes = sizeBytes,
-                        rating = rating
+                        rating = null
                     )
                 )
 
@@ -157,6 +179,18 @@ class MusicLoader(
         }
 
         songs
+    }
+
+    private fun loadLyrics(path: String?): String? {
+        if (path == null) return null
+        val file = File(path)
+        if (!file.exists()) return null
+
+        val lrcFile = File(file.parentFile, file.nameWithoutExtension + ".lrc")
+        if (lrcFile.exists()) {
+            return runCatching { lrcFile.readText() }.getOrNull()
+        }
+        return null
     }
 
     private fun loadGenreForSong(audioId: Long): String? {

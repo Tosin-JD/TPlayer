@@ -1,5 +1,6 @@
 package com.tosin.musicplayer.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,6 +38,7 @@ fun PlaylistScreen(
     onNavigateToPlaylistDetail: (String) -> Unit
 ) {
     val playlists by viewModel.playlists.collectAsState()
+    val context = LocalContext.current
     var showCreateDialog by remember { mutableStateOf(false) }
     var playlistToDelete by remember { mutableStateOf<Playlist?>(null) }
     var playlistToRename by remember { mutableStateOf<Playlist?>(null) }
@@ -160,8 +163,15 @@ fun PlaylistScreen(
                         songCount = playlist.songIds.size,
                         onClick = { onNavigateToPlaylistDetail(playlist.id) },
                         onPlay = {
-                            viewModel.playPlaylist(playlist)
-                            onNavigateToPlayer()
+                            if (viewModel.playPlaylist(playlist)) {
+                                onNavigateToPlayer()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Playlist is empty",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         },
                         onDelete = { playlistToDelete = playlist },
                         onRename = { playlistToRename = playlist }

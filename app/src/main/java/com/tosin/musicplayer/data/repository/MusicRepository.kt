@@ -20,6 +20,10 @@ class MusicRepository(
         return musicLoader.deleteSong(android.net.Uri.parse(songUriString))
     }
 
+    suspend fun writeTags(songId: Long, title: String, artist: String, album: String): Boolean {
+        return musicLoader.writeTags(songId, title, artist, album)
+    }
+
     fun getSongs(): Flow<List<Song>> = channelFlow {
         val cachedSongs = loadPreparedSongsFromCache()
         val hasCachedSongs = cachedSongs.isNotEmpty()

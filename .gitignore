@@ -13,3 +13,49 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+*.iml
+.DS_Store
+Thumbs.db
+
+# Gradle and build outputs
+/.gradle/
+/.kotlin/
+/build/
+**/build/
+/captures/
+/.externalNativeBuild/
+/.cxx/
+build_output.txt
+
+# Local machine and IDE files
+/.idea/
+/.vscode/
+/.codex
+/.codex/
+/local.properties
+
+# Signing keys and private config
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+release.properties
+secrets.properties
+.env
+.env.*
+
+# Android artifacts
+*.apk
+*.aab
+*.ap_
+*.dex
+*.hprof
+hs_err_pid*
+replay_pid*
+
+# Misceleneous files
+TODO[0-9]*.md
+TASK[0-9]*.md
+REPORT[0-9]*.md
+IMPLEMENTATION_PLAN[0-9]*.md

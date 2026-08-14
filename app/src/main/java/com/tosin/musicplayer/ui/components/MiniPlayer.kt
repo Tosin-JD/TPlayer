@@ -30,7 +30,8 @@ import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 fun MiniPlayer(
     viewModel: PlayerViewModel,
     onExpand: () -> Unit,
-    onStop: () -> Unit
+    onStop: () -> Unit,
+    onCollapse: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val song = uiState.currentSong ?: return
@@ -60,8 +61,9 @@ fun MiniPlayer(
                         change.consume()
                     },
                     onDragEnd = {
-                        if (dragDistance < -dragThreshold) {
-                            onExpand()
+                        when {
+                            dragDistance < -dragThreshold -> onExpand()
+                            dragDistance > dragThreshold -> onCollapse()
                         }
                         dragDistance = 0f
                     },

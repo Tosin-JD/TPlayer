@@ -35,7 +35,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material.icons.rounded.Search
@@ -67,6 +66,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -82,6 +82,9 @@ import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.state.matchesStorageScope
+import com.tosin.musicplayer.ui.state.removableStorageVolumes
+import com.tosin.musicplayer.ui.state.displayName
+import com.tosin.musicplayer.ui.state.requestEject
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -111,6 +114,8 @@ fun HomeScreen(
             listOf(StorageScope.Internal)
         }
     }
+    val removableVolumes = remember(context) { context.removableStorageVolumes() }
+    var showStorageMenu by remember { mutableStateOf(false) }
     
     val activeTabs = remember(settingsState.tabOrder, settingsState.visibleTabs) {
         settingsState.tabOrder
@@ -194,6 +199,35 @@ fun HomeScreen(
                                 contentDescription = "Playlists",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                        if (removableVolumes.isNotEmpty()) {
+                            IconButton(onClick = { showStorageMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                                    contentDescription = "External storage",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showStorageMenu,
+                                onDismissRequest = { showStorageMenu = false }
+                            ) {
+                                removableVolumes.forEach { volume ->
+                                    val label = volume.displayName(context)
+                                    DropdownMenuItem(
+                                        text = { Text("Eject $label") },
+                                        onClick = {
+                                            val success = volume.requestEject()
+                                            Toast.makeText(
+                                                context,
+                                                if (success) "Eject requested for $label" else "Unable to eject $label",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            showStorageMenu = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                         IconButton(onClick = onNavigateToSettings) {
                             Icon(
@@ -729,52 +763,4 @@ private fun filterGroupsForStorage(
         if (filteredSongs.isEmpty()) null
         else group.copy(songs = filteredSongs, songCount = filteredSongs.size)
     }
-}
-
-@Composable
-fun TabReorderDialog(
-    tabOrder: List<LibraryTab>,
-    onReorder: (Int, Int) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Reorder Tabs") },
-        text = {
-            Column {
-                tabOrder.forEachIndexed { index, tab ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(tab.icon(), null)
-                            Spacer(Modifier.width(12.dp))
-                            Text(tab.label)
-                        }
-                        Row {
-                            IconButton(
-                                onClick = { if (index > 0) onReorder(index, index - 1) },
-                                enabled = index > 0
-                            ) {
-                                Icon(Icons.Rounded.KeyboardArrowUp, "Move Up")
-                            }
-                            IconButton(
-                                onClick = { if (index < tabOrder.size - 1) onReorder(index, index + 1) },
-                                enabled = index < tabOrder.size - 1
-                            ) {
-                                Icon(Icons.Rounded.KeyboardArrowDown, "Move Down")
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Done") }
-        }
-    )
 }

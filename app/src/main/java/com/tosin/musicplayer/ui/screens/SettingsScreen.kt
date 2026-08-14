@@ -74,7 +74,7 @@ fun SettingsScreen(
             SettingsCategoryCard(
                 icon = Icons.Rounded.PlayCircle,
                 title = "Playback",
-                subtitle = "Crossfade, gapless, speed, auto-resume",
+                subtitle = "Crossfade, gapless, speed, sleep timer",
                 onClick = onNavigateToPlayback
             )
 
