@@ -1,14 +1,11 @@
 package com.tosin.musicplayer.ui.screens.home
 
-import android.os.storage.StorageVolume
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,9 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
-import androidx.compose.material.icons.rounded.Eject
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -30,40 +24,25 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tosin.musicplayer.ui.components.menu.ActionMenuBottomSheet
-import com.tosin.musicplayer.ui.components.menu.ActionMenuOption
 import com.tosin.musicplayer.ui.state.LibraryTab
-import com.tosin.musicplayer.ui.state.displayName
-import com.tosin.musicplayer.ui.state.requestEject
 import com.tosin.musicplayer.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(
-    removableVolumes: List<StorageVolume>,
     selectedTab: LibraryTab,
     tabs: List<LibraryTab>,
     onTabSelected: (Int) -> Unit,
-    onNavigateToSearch: () -> Unit,
     onNavigateToPlaylists: () -> Unit,
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    var showEjectMenu by remember { mutableStateOf(false) }
-
     Column(modifier = modifier) {
         TopAppBar(
-            windowInsets = WindowInsets(0, 0, 0, 0),
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -91,28 +70,12 @@ fun HomeTopBar(
                 }
             },
             actions = {
-                IconButton(onClick = onNavigateToSearch) {
-                    Icon(
-                        imageVector = Icons.Rounded.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
                 IconButton(onClick = onNavigateToPlaylists) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
                         contentDescription = "Playlists",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                if (removableVolumes.isNotEmpty()) {
-                    IconButton(onClick = { showEjectMenu = true }) {
-                        Icon(
-                            imageVector = Icons.Rounded.KeyboardArrowDown,
-                            contentDescription = "External storage",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
                 IconButton(onClick = onNavigateToSettings) {
                     Icon(
@@ -140,27 +103,5 @@ fun HomeTopBar(
                 )
             }
         }
-    }
-
-    if (showEjectMenu) {
-        ActionMenuBottomSheet(
-            title = "External storage",
-            options = removableVolumes.map { volume ->
-                val label = volume.displayName(context)
-                ActionMenuOption(
-                    label = "Eject $label",
-                    icon = Icons.Rounded.Eject,
-                    onClick = {
-                        val success = volume.requestEject()
-                        Toast.makeText(
-                            context,
-                            if (success) "Eject requested for $label" else "Unable to eject $label",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                )
-            },
-            onDismiss = { showEjectMenu = false }
-        )
     }
 }

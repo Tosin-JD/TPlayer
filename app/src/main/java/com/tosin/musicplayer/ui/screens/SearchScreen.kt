@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -47,10 +46,8 @@ fun SearchScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,

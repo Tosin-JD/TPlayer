@@ -66,7 +66,9 @@ fun AppNavGraph(
                 if (currentRoute == "home") {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.padding(bottom = fabLift)
+                        modifier = Modifier
+                            .navigationBarsPadding()
+                            .padding(bottom = fabLift)
                     ) {
                         FloatingActionButton(onClick = { navController.navigate("stats") }) {
                             Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")

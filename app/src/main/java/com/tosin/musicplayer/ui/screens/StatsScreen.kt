@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -60,11 +59,9 @@ fun StatsScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text("Most Played", fontWeight = FontWeight.Bold) },
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 navigationIcon = {
                     IconButton(onClick = onNavigateToHome) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back to Home")

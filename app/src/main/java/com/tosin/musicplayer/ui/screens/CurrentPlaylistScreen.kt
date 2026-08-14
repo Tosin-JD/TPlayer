@@ -4,15 +4,11 @@ import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
@@ -20,20 +16,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.components.PlaylistItemCard
 import com.tosin.musicplayer.ui.components.SongActionsSheet
-import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -59,7 +51,6 @@ fun CurrentPlaylistScreen(
     var draggedIndex by remember { mutableStateOf(-1) }
     var draggedItemHeightPx by remember { mutableStateOf(0) }
 
-    // Scroll to currently playing song on startup
     LaunchedEffect(Unit) {
         if (!isEditMode) {
             val index = queue.indexOfFirst { it.id == currentSong?.id }
@@ -69,7 +60,6 @@ fun CurrentPlaylistScreen(
         }
     }
 
-    // Action sheet state for long press
     var actionSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var actionInitialIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var showActions by remember { mutableStateOf(false) }
@@ -86,12 +76,13 @@ fun CurrentPlaylistScreen(
         )
     }
 
+    val showMiniPlayer = currentSong != null
+    val extraBottomPadding = if (showMiniPlayer) 88.dp else AppSpacing.xLarge
+
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text("Current Playlist", fontWeight = FontWeight.Bold) },
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -118,7 +109,7 @@ fun CurrentPlaylistScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = standardScreenPadding(top = 8.dp, bottom = 16.dp),
+            contentPadding = standardScreenPadding(top = 0.dp, bottom = extraBottomPadding),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
         ) {
             itemsIndexed(
@@ -141,7 +132,7 @@ fun CurrentPlaylistScreen(
                     label = "playlistItemColor"
                 )
 
-                PlaylistItem(
+                PlaylistItemCard(
                     song = song,
                     isCurrentlyPlaying = currentSong?.id == song.id,
                     isEditMode = isEditMode,
@@ -232,109 +223,6 @@ fun CurrentPlaylistScreen(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun PlaylistItem(
-    song: Song,
-    isCurrentlyPlaying: Boolean,
-    isEditMode: Boolean,
-    isDragging: Boolean,
-    containerColor: androidx.compose.ui.graphics.Color,
-    onItemClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    dragModifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = if (isDragging) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else if (isCurrentlyPlaying) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isDragging) 10.dp else if (isCurrentlyPlaying) 4.dp else 2.dp
-        ),
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .then(dragModifier)
-            .combinedClickable(
-                onClick = onItemClick,
-                onLongClick = if (isEditMode) null else onLongClick
-            )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (isEditMode) {
-                Box(
-                    modifier = Modifier
-                        .padding(end = AppSpacing.medium)
-                        .size(36.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.DragHandle,
-                        contentDescription = "Drag to reorder",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Album art thumbnail
-            AsyncImage(
-                model = song.albumArt.orDefaultAlbumArt(),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(14.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.large))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (isCurrentlyPlaying) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                    modifier = Modifier.basicMarquee()
-                )
-                Text(
-                    text = song.artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    color = if (isCurrentlyPlaying) {
-                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    },
-                    modifier = Modifier.basicMarquee()
-                )
-            }
-
-            if (!isEditMode && isCurrentlyPlaying) {
-                Icon(
-                    imageVector = Icons.Rounded.Equalizer,
-                    contentDescription = "Now playing",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
     }

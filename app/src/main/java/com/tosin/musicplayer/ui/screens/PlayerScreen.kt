@@ -1,114 +1,34 @@
 package com.tosin.musicplayer.ui.screens
 
-import kotlin.math.abs
-import android.app.Activity
 import android.graphics.drawable.BitmapDrawable
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Forward10
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.LooksOne
-import androidx.compose.material.icons.rounded.Lyrics
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.RepeatOne
-import androidx.compose.material.icons.rounded.RepeatOneOn
-import androidx.compose.material.icons.rounded.Replay10
-import androidx.compose.material.icons.rounded.Shuffle
-import androidx.compose.material.icons.rounded.ShuffleOn
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
 import androidx.palette.graphics.Palette
-import androidx.core.view.WindowCompat
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import coil.ImageLoader
-import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.tosin.musicplayer.ui.components.PlayPauseButton
 import com.tosin.musicplayer.ui.components.ProgressBar
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
+import com.tosin.musicplayer.ui.screens.player.*
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
-import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
@@ -122,7 +42,6 @@ fun PlayerScreen(
     val state by viewModel.uiState.collectAsState()
 
     val context = LocalContext.current
-    val view = LocalView.current
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
 
@@ -138,15 +57,15 @@ fun PlayerScreen(
 
     var bgColor by remember { mutableStateOf(surfaceColor) }
     var contentColor by remember { mutableStateOf(onSurfaceColor) }
-    var currentToast by remember { mutableStateOf<Toast?>(null) }
 
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    var albumDragOffsetX by remember(state.currentSong?.id) { mutableFloatStateOf(0f) }
+    var showMoreOptionsSheet by remember { mutableStateOf(false) }
+    var showABRepeatDialog by remember { mutableStateOf(false) }
 
     var lastSongId by remember { mutableStateOf<Long?>(null) }
-    var slideDirection by remember { mutableStateOf(1) } // 1 for next (slide left), -1 for previous (slide right)
+    var slideDirection by remember { mutableStateOf(1) }
 
     LaunchedEffect(state.currentSong?.id) {
         val prevId = lastSongId
@@ -203,397 +122,87 @@ fun PlayerScreen(
         }
     }
 
-    // Speed dialog
-    if (showSpeedDialog) {
-        SpeedPickerDialog(
-            currentSpeed = state.playbackSpeed,
-            onSpeedSelected = { speed ->
-                viewModel.setPlaybackSpeed(speed)
-                showSpeedDialog = false
-            },
-            onDismiss = { showSpeedDialog = false }
-        )
-    }
+    PlayerDialogContainer(
+        state = state,
+        viewModel = viewModel,
+        context = context,
+        showSpeedDialog = showSpeedDialog,
+        showSleepTimerDialog = showSleepTimerDialog,
+        showMoreOptionsSheet = showMoreOptionsSheet,
+        showABRepeatDialog = showABRepeatDialog,
+        showDeleteConfirm = showDeleteConfirm,
+        onDismissSpeed = { showSpeedDialog = false },
+        onDismissSleep = { showSleepTimerDialog = false },
+        onDismissMoreOptions = { showMoreOptionsSheet = false },
+        onDismissABRepeat = { showABRepeatDialog = false },
+        onDismissDeleteConfirm = { showDeleteConfirm = false },
+        onOpenSongEditor = onOpenSongEditor,
+        onShowDeleteConfirm = { showDeleteConfirm = true },
+        onOpenSpeedDialog = { showSpeedDialog = true },
+        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
+        onOpenABRepeatDialog = { showABRepeatDialog = true }
+    )
 
-    // Sleep timer dialog
-    if (showSleepTimerDialog) {
-        SleepTimerDialog(
-            currentRemaining = state.sleepTimerRemaining,
-            onSetTimer = { minutes ->
-                viewModel.setSleepTimer(minutes)
-                showSleepTimerDialog = false
-            },
-            onCancel = {
-                viewModel.cancelSleepTimer()
-                showSleepTimerDialog = false
-            },
-            onDismiss = { showSleepTimerDialog = false }
-        )
-    }
-
-    var showMoreOptionsSheet by remember { mutableStateOf(false) }
-    var showABRepeatDialog by remember { mutableStateOf(false) }
-
-    if (showMoreOptionsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showMoreOptionsSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = AppSpacing.xLarge)
-            ) {
-                Text(
-                    text = "More Options",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
-                )
-
-                if (state.currentSong != null) {
-                    androidx.compose.material3.ListItem(
-                        headlineContent = { Text("Edit tags") },
-                        supportingContent = { Text("Update title, artist, album and genre") },
-                        leadingContent = { Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.clickable {
-                            showMoreOptionsSheet = false
-                            onOpenSongEditor(state.currentSong!!.id)
-                        }
-                    )
-
-                    androidx.compose.material3.ListItem(
-                        headlineContent = { Text("Set as ringtone") },
-                        supportingContent = { Text("Make this song your default ringtone") },
-                        leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.clickable {
-                            showMoreOptionsSheet = false
-                            state.currentSong?.let { song ->
-                                viewModel.setAsRingtone(context, song) { success ->
-                                    if (success) {
-                                        Toast.makeText(context, "Ringtone updated", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "Unable to set ringtone", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
-                        }
-                    )
-
-                    androidx.compose.material3.ListItem(
-                        headlineContent = { Text("Share song") },
-                        supportingContent = { Text("Send the audio file to another app") },
-                        leadingContent = { Icon(Icons.AutoMirrored.Rounded.PlaylistPlay, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.clickable {
-                            showMoreOptionsSheet = false
-                            state.currentSong?.let { song ->
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "audio/*"
-                                    putExtra(Intent.EXTRA_STREAM, Uri.parse(song.uri))
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                                context.startActivity(Intent.createChooser(shareIntent, "Share song"))
-                            }
-                        }
-                    )
-
-                    androidx.compose.material3.ListItem(
-                        headlineContent = { Text("Delete permanently") },
-                        supportingContent = { Text("Remove the file from storage forever") },
-                        leadingContent = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                        modifier = Modifier.clickable {
-                            showMoreOptionsSheet = false
-                            showDeleteConfirm = true
-                        }
-                    )
-                }
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.small))
-                
-                // Speed
-                androidx.compose.material3.ListItem(
-                    headlineContent = { Text("Playback Speed") },
-                    supportingContent = { Text("${state.playbackSpeed}x") },
-                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Rounded.Speed, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier.clickable {
-                        showMoreOptionsSheet = false
-                        showSpeedDialog = true
-                    }
-                )
-
-                // Sleep Timer
-                androidx.compose.material3.ListItem(
-                    headlineContent = { Text("Sleep Timer") },
-                    supportingContent = { 
-                        if (state.sleepTimerRemaining != null) {
-                            Text("${state.sleepTimerRemaining!! / 60000} mins remaining")
-                        } else {
-                            Text("Off")
-                        }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bgColor)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = AppSpacing.small)
+            .pointerInput(onNavigateBack, onOpenLyrics) {
+                var dragDistance = 0f
+                detectVerticalDragGestures(
+                    onDragStart = {},
+                    onVerticalDrag = { change, dragAmount ->
+                        dragDistance += dragAmount
+                        change.consume()
                     },
-                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier.clickable {
-                        showMoreOptionsSheet = false
-                        showSleepTimerDialog = true
-                    }
-                )
-
-                // A-B Repeat
-                androidx.compose.material3.ListItem(
-                    headlineContent = { Text("A-B Repeat") },
-                    supportingContent = {
-                        if (state.abRepeatA != null || state.abRepeatB != null) {
-                            val a = state.abRepeatA?.let { formatTime(it) } ?: "—"
-                            val b = state.abRepeatB?.let { formatTime(it) } ?: "—"
-                            Text("Active: $a to $b")
-                        } else {
-                            Text("Off")
+                    onDragEnd = {
+                        if (dragDistance > swipeThresholdPx) {
+                            onNavigateBack()
+                        } else if (dragDistance < -swipeThresholdPx) {
+                            onOpenLyrics()
                         }
+                        dragDistance = 0f
                     },
-                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Rounded.RepeatOneOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier.clickable {
-                        showMoreOptionsSheet = false
-                        showABRepeatDialog = true
-                    }
+                    onDragCancel = { dragDistance = 0f }
                 )
-            }
-        }
-    }
-
-    if (showABRepeatDialog) {
-        ABRepeatDialog(
-            currentA = state.abRepeatA,
-            currentB = state.abRepeatB,
-            currentProgress = state.progress,
-            duration = state.currentSong?.duration ?: 0L,
-            onSetA = { viewModel.setABRepeatA() },
-            onSetB = { viewModel.setABRepeatB() },
-            onClear = { viewModel.clearABRepeat() },
-            onDismiss = { showABRepeatDialog = false }
-        )
-    }
-
-    if (showDeleteConfirm && state.currentSong != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            icon = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete permanently?") },
-            text = {
-                Text("This will permanently delete \"${state.currentSong?.title}\". This cannot be reversed.")
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val song = state.currentSong
-                        if (song != null) {
-                            viewModel.deleteSong(song) { success ->
-                                if (success) {
-                                    Toast.makeText(context, "Song deleted", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Unable to delete song", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                        showDeleteConfirm = false
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
-                }
-            }
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        PlayerTopBar(
+            currentSong = state.currentSong,
+            contentColor = contentColor,
+            sleepTimerRemaining = state.sleepTimerRemaining,
+            playbackSpeed = state.playbackSpeed,
+            onNavigateBack = onNavigateBack,
+            onOpenSleepTimer = { showSleepTimerDialog = true },
+            onOpenSpeedDialog = { showSpeedDialog = true },
+            onOpenVisualizer = onOpenVisualizer,
+            onOpenEqualizer = onOpenEqualizer
         )
-    }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(bgColor)
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(horizontal = AppSpacing.small)
-                .pointerInput(onNavigateBack, onOpenLyrics) {
-                    var dragDistance = 0f
-                    detectVerticalDragGestures(
-                        onDragStart = {},
-                        onVerticalDrag = { change, dragAmount ->
-                            dragDistance += dragAmount
-                            change.consume()
-                        },
-                        onDragEnd = {
-                            if (dragDistance > swipeThresholdPx) {
-                                onNavigateBack()
-                            } else if (dragDistance < -swipeThresholdPx) {
-                                onOpenLyrics()
-                            }
-                            dragDistance = 0f
-                        },
-                        onDragCancel = { dragDistance = 0f }
-                    )
-                },
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Top bar with back + extra controls
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.Rounded.KeyboardArrowDown,
-                        contentDescription = "Back to Library",
-                        tint = contentColor,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-
-                Column(modifier = Modifier.weight(1f).padding(horizontal = AppSpacing.small)) {
-                    Text(
-                        text = state.currentSong?.title ?: "No Song Playing",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = contentColor,
-                        maxLines = 1,
-                        modifier = Modifier.basicMarquee()
-                    )
-                    Text(
-                        text = state.currentSong?.artist ?: "Unknown Artist",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        modifier = Modifier.basicMarquee()
-                    )
-                }
-
-                Row {
-                    // Sleep timer indicator
-                    if (state.sleepTimerRemaining != null) {
-                        val remaining = state.sleepTimerRemaining!! / 1000
-                        val mins = remaining / 60
-                        val secs = remaining % 60
-                        AssistChip(
-                            onClick = { showSleepTimerDialog = true },
-                            label = {
-                                Text(
-                                    "$mins:${secs.toString().padStart(2, '0')}",
-                                    color = contentColor
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Rounded.Timer,
-                                    contentDescription = "Sleep Timer",
-                                    tint = contentColor,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        )
-                        Spacer(Modifier.width(AppSpacing.small))
-                    }
-
-                    // Speed indicator
-                    if (state.playbackSpeed != 1.0f) {
-                        AssistChip(
-                            onClick = { showSpeedDialog = true },
-                            label = {
-                                Text("${state.playbackSpeed}x", color = contentColor)
-                            }
-                        )
-                        Spacer(Modifier.width(AppSpacing.small))
-                    }
-
-                    IconButton(onClick = onOpenVisualizer) {
-                        Icon(
-                            Icons.Rounded.GraphicEq,
-                            contentDescription = "Visualizer",
-                            tint = contentColor
-                        )
-                    }
-
-                    IconButton(onClick = onOpenEqualizer) {
-                        Icon(
-                            Icons.Rounded.Tune,
-                            contentDescription = "Equalizer",
-                            tint = contentColor
-                        )
-                    }
-                }
-            }
 
         Spacer(Modifier.height(AppSpacing.large))
 
-        // Album Art
-        AnimatedContent(
-            targetState = state.currentSong,
-            transitionSpec = {
-                if (slideDirection > 0) {
-                    (slideInHorizontally { width -> width } + fadeIn()) togetherWith
-                    (slideOutHorizontally { width -> -width } + fadeOut())
-                } else {
-                    (slideInHorizontally { width -> -width } + fadeIn()) togetherWith
-                    (slideOutHorizontally { width -> width } + fadeOut())
-                }
+        PlayerAlbumArt(
+            currentSong = state.currentSong,
+            albumArtSize = albumArtSize,
+            slideDirection = slideDirection,
+            albumDragRangePx = albumDragRangePx,
+            albumSwipeThresholdPx = albumSwipeThresholdPx,
+            onPrevious = {
+                slideDirection = -1
+                viewModel.previous()
             },
-            label = "albumArtTransition"
-        ) { currentSong ->
-            Card(
-                modifier = Modifier
-                    .size(albumArtSize)
-                    .aspectRatio(1f)
-                    .graphicsLayer {
-                        translationX = albumDragOffsetX
-                        val dragFraction = (albumDragOffsetX / albumDragRangePx).coerceIn(-1f, 1f)
-                        scaleX = 1f - (abs(dragFraction) * 0.06f)
-                        scaleY = 1f - (abs(dragFraction) * 0.06f)
-                        rotationZ = dragFraction * 4f
-                        alpha = 1f - (abs(dragFraction) * 0.12f)
-                    }
-                    .pointerInput(currentSong?.id) {
-                        var dragDistance = 0f
-                        detectHorizontalDragGestures(
-                            onHorizontalDrag = { change, dragAmount ->
-                                dragDistance = (dragDistance + dragAmount).coerceIn(-albumDragRangePx, albumDragRangePx)
-                                albumDragOffsetX = dragDistance
-                                change.consume()
-                            },
-                            onDragEnd = {
-                                when {
-                                    dragDistance > albumSwipeThresholdPx -> {
-                                        slideDirection = -1
-                                        viewModel.previous()
-                                    }
-                                    dragDistance < -albumSwipeThresholdPx -> {
-                                        slideDirection = 1
-                                        viewModel.next()
-                                    }
-                                }
-                                dragDistance = 0f
-                                albumDragOffsetX = 0f
-                            },
-                            onDragCancel = {
-                                dragDistance = 0f
-                                albumDragOffsetX = 0f
-                            }
-                        )
-                    },
-                shape = RoundedCornerShape(28.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-            ) {
-                AsyncImage(
-                    model = currentSong?.albumArt.orDefaultAlbumArt(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+            onNext = {
+                slideDirection = 1
+                viewModel.next()
             }
-        }
+        )
 
         Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
-        // Song Info (Artist only, title in top bar)
         Text(
             text = state.currentSong?.artist ?: "Unknown Artist",
             style = MaterialTheme.typography.headlineSmall,
@@ -604,7 +213,6 @@ fun PlayerScreen(
 
         Spacer(Modifier.height(AppSpacing.large))
 
-        // A-B Repeat indicators
         if (state.abRepeatA != null || state.abRepeatB != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -626,14 +234,12 @@ fun PlayerScreen(
             Spacer(Modifier.height(AppSpacing.small))
         }
 
-        // Progress
         ProgressBar(
             progress = state.progress,
             duration = state.currentSong?.duration ?: 0L,
             onSeek = { viewModel.seekTo(it) }
         )
 
-        // Time labels
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -652,363 +258,39 @@ fun PlayerScreen(
 
         Spacer(Modifier.height(AppSpacing.large))
 
-        // Main Controls
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(
-                onClick = {
-                    slideDirection = -1
-                    viewModel.previous()
-                },
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.SkipPrevious,
-                    contentDescription = "Previous",
-                    modifier = Modifier.size(36.dp),
-                    tint = contentColor
-                )
+        PlayerMainControls(
+            isPlaying = state.isPlaying,
+            contentColor = contentColor,
+            onPrevious = {
+                slideDirection = -1
+                viewModel.previous()
+            },
+            onRewind = { viewModel.rewind() },
+            onPlayPause = {
+                if (state.isPlaying) viewModel.pause() else viewModel.play()
+            },
+            onFastForward = { viewModel.fastForward() },
+            onNext = {
+                slideDirection = 1
+                viewModel.next()
             }
-
-            // Rewind
-            IconButton(
-                onClick = { viewModel.rewind() },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Replay10,
-                    contentDescription = "Rewind 10s",
-                    modifier = Modifier.size(28.dp),
-                    tint = contentColor
-                )
-            }
-
-            PlayPauseButton(
-                isPlaying = state.isPlaying,
-                onClick = {
-                    if (state.isPlaying) viewModel.pause()
-                    else viewModel.play()
-                }
-            )
-
-            // Fast Forward
-            IconButton(
-                onClick = { viewModel.fastForward() },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Forward10,
-                    contentDescription = "Forward 10s",
-                    modifier = Modifier.size(28.dp),
-                    tint = contentColor
-                )
-            }
-
-            IconButton(
-                onClick = {
-                    slideDirection = 1
-                    viewModel.next()
-                },
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.SkipNext,
-                    contentDescription = "Next",
-                    modifier = Modifier.size(36.dp),
-                    tint = contentColor
-                )
-            }
-        }
+        )
 
         Spacer(Modifier.weight(1f))
 
-        // Bottom row: shuffle, lyrics, playlist, repeat, ellipsis
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = { viewModel.toggleShuffle() },
-                modifier = Modifier.size(bottomButtonSize)
-            ) {
-                Icon(
-                    imageVector = if (state.shuffleEnabled) Icons.Rounded.ShuffleOn else Icons.Rounded.Shuffle,
-                    contentDescription = "Shuffle",
-                    tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(bottomIconSize)
-                )
-            }
-
-            IconButton(
-                onClick = { onOpenLyrics() },
-                modifier = Modifier.size(bottomButtonSize)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Lyrics,
-                    contentDescription = "Lyrics",
-                    tint = if (state.lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(bottomIconSize)
-                )
-            }
-
-            IconButton(
-                onClick = { onOpenVisualizer() },
-                modifier = Modifier.size(bottomButtonSize)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.GraphicEq,
-                    contentDescription = "Visualizer",
-                    tint = contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(bottomIconSize)
-                )
-            }
-
-            IconButton(
-                onClick = { onOpenPlaylist() },
-                modifier = Modifier.size(bottomButtonSize)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.PlaylistPlay,
-                    contentDescription = "Playlist",
-                    tint = contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(bottomIconSize)
-                )
-            }
-
-            val repeatIcon = when (state.repeatMode) {
-                RepeatMode.PLAY_ALL_ONCE -> Icons.AutoMirrored.Rounded.ArrowForward
-                RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.LooksOne
-                RepeatMode.REPEAT_ALL -> Icons.Rounded.Repeat
-                RepeatMode.REPEAT_ONE -> Icons.Rounded.RepeatOne
-            }
-            val repeatTint = if (state.repeatMode != RepeatMode.PLAY_ALL_ONCE) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                contentColor.copy(alpha = 0.6f)
-            }
-            
-            val repeatAccessibility = when (state.repeatMode) {
-                RepeatMode.PLAY_ALL_ONCE -> "Repeat Mode: Play all once"
-                RepeatMode.PLAY_ONE_ONCE -> "Repeat Mode: Play one once"
-                RepeatMode.REPEAT_ALL -> "Repeat Mode: Repeat all"
-                RepeatMode.REPEAT_ONE -> "Repeat Mode: Repeat one"
-            }
-
-            IconButton(
-                onClick = {
-                    val nextMode = when (state.repeatMode) {
-                        RepeatMode.PLAY_ALL_ONCE -> RepeatMode.PLAY_ONE_ONCE
-                        RepeatMode.PLAY_ONE_ONCE -> RepeatMode.REPEAT_ALL
-                        RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
-                        RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ALL_ONCE
-                    }
-                    val statusText = when (nextMode) {
-                        RepeatMode.PLAY_ALL_ONCE -> "Play all once"
-                        RepeatMode.PLAY_ONE_ONCE -> "Play one once"
-                        RepeatMode.REPEAT_ALL -> "Repeat all"
-                        RepeatMode.REPEAT_ONE -> "Repeat one"
-                    }
-                    currentToast?.cancel()
-                    val newToast = Toast.makeText(context, statusText, Toast.LENGTH_LONG)
-                    newToast.show()
-                    currentToast = newToast
-
-                    viewModel.cycleRepeatMode()
-                },
-                modifier = Modifier.size(bottomButtonSize)
-            ) {
-                Icon(
-                    imageVector = repeatIcon,
-                    contentDescription = repeatAccessibility,
-                    tint = repeatTint,
-                    modifier = Modifier.size(bottomIconSize)
-                )
-            }
-
-            IconButton(
-            onClick = { showMoreOptionsSheet = true },
-                modifier = Modifier.size(bottomButtonSize)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.MoreVert,
-                    contentDescription = "More Options",
-                    tint = contentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.size(bottomIconSize)
-                )
-            }
-        }
+        PlayerBottomBar(
+            shuffleEnabled = state.shuffleEnabled,
+            lyricsVisible = state.lyricsVisible,
+            repeatMode = state.repeatMode,
+            contentColor = contentColor,
+            bottomButtonSize = bottomButtonSize,
+            bottomIconSize = bottomIconSize,
+            onToggleShuffle = { viewModel.toggleShuffle() },
+            onOpenLyrics = onOpenLyrics,
+            onOpenVisualizer = onOpenVisualizer,
+            onOpenPlaylist = onOpenPlaylist,
+            onCycleRepeatMode = { viewModel.cycleRepeatMode() },
+            onOpenMoreOptions = { showMoreOptionsSheet = true }
+        )
     }
-}
-
-@Composable
-private fun SpeedPickerDialog(
-    currentSpeed: Float,
-    onSpeedSelected: (Float) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f)
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Playback Speed") },
-        text = {
-            Column {
-                speeds.forEach { speed ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = AppSpacing.xSmall),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = currentSpeed == speed,
-                            onClick = { onSpeedSelected(speed) }
-                        )
-                        Spacer(Modifier.width(AppSpacing.small))
-                        Text(
-                            text = "${speed}x",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        if (speed == 1.0f) {
-                            Spacer(Modifier.width(AppSpacing.small))
-                            Text(
-                                text = "(Normal)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
-    )
-}
-
-@Composable
-private fun SleepTimerDialog(
-    currentRemaining: Long?,
-    onSetTimer: (Int) -> Unit,
-    onCancel: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val durations = listOf(5, 10, 15, 30, 45, 60, 90, 120)
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Sleep Timer") },
-        text = {
-            Column {
-                if (currentRemaining != null) {
-                    val mins = currentRemaining / 60000
-                    Text(
-                        text = "Timer active: ${mins}min remaining",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(Modifier.height(AppSpacing.small))
-                    TextButton(onClick = onCancel) {
-                        Text("Cancel Timer", color = MaterialTheme.colorScheme.error)
-                    }
-                    HorizontalDivider(Modifier.padding(vertical = AppSpacing.small))
-                }
-                durations.forEach { minutes ->
-                    TextButton(
-                        onClick = { onSetTimer(minutes) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            "$minutes minutes",
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
-    )
-}
-
-private fun formatTime(ms: Long): String {
-    val totalSeconds = ms / 1000
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return "$minutes:${seconds.toString().padStart(2, '0')}"
-}
-
-@Composable
-private fun ABRepeatDialog(
-    currentA: Long?,
-    currentB: Long?,
-    currentProgress: Long,
-    duration: Long,
-    onSetA: () -> Unit,
-    onSetB: () -> Unit,
-    onClear: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("A-B Repeat") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
-                Text(
-                    text = "Current Position: ${formatTime(currentProgress)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Start Point (A)", style = MaterialTheme.typography.labelLarge)
-                        Text(currentA?.let { formatTime(it) } ?: "Not Set", style = MaterialTheme.typography.bodyLarge)
-                    }
-                    FilledTonalButton(onClick = onSetA) {
-                        Text("Set A")
-                    }
-                }
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("End Point (B)", style = MaterialTheme.typography.labelLarge)
-                        Text(currentB?.let { formatTime(it) } ?: "Not Set", style = MaterialTheme.typography.bodyLarge)
-                    }
-                    FilledTonalButton(onClick = onSetB, enabled = currentA != null) {
-                        Text("Set B")
-                    }
-                }
-                
-                if (currentA != null || currentB != null) {
-                    TextButton(
-                        onClick = {
-                            onClear()
-                            onDismiss()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Clear A-B Repeat", color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Done") }
-        }
-    )
 }

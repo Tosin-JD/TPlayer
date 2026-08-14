@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.lazy.LazyColumn
@@ -91,10 +90,8 @@ fun LibraryGroupDetailScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(

@@ -14,18 +14,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.StorageScopeSelector
-import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.screens.settings.ExcludedFolderBottomSheet
+import com.tosin.musicplayer.ui.screens.settings.ScanAction
+import com.tosin.musicplayer.ui.screens.settings.ScanDialog
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.state.hasRemovableStorage
+import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsEvent
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
-import kotlinx.coroutines.launch
-import java.io.File
-
-private enum class ScanAction {
-    CHANGES,
-    FULL
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,11 +50,7 @@ fun GeneralSettingsScreen(
                 is SettingsEvent.ScanFinished -> {
                     showScanDialog = false
                     snackbarHostState.showSnackbar(
-                        if (event.isFullScan) {
-                            "Full scan finished"
-                        } else {
-                            "Library scan finished"
-                        }
+                        if (event.isFullScan) "Full scan finished" else "Library scan finished"
                     )
                 }
             }
@@ -67,11 +59,9 @@ fun GeneralSettingsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text("General", fontWeight = FontWeight.Bold) },
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
@@ -86,29 +76,14 @@ fun GeneralSettingsScreen(
                 .padding(paddingValues)
         ) {
             if (uiState.isScanning) {
-                val progressFraction = if (uiState.scanTotal > 0) {
-                    uiState.scanProgress.toFloat() / uiState.scanTotal.toFloat()
-                } else {
-                    0f
-                }
-                LinearProgressIndicator(
-                    progress = { progressFraction },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                )
+                val progressFraction = if (uiState.scanTotal > 0) uiState.scanProgress.toFloat() / uiState.scanTotal.toFloat() else 0f
+                LinearProgressIndicator(progress = { progressFraction }, modifier = Modifier.fillMaxWidth().height(3.dp))
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = uiState.scanLabel,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text(text = uiState.scanLabel, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                     Text(
                         text = "${uiState.scanProgress}/${uiState.scanTotal} items • ${uiState.scanFolderCount} folders",
                         style = MaterialTheme.typography.labelMedium,
@@ -118,308 +93,115 @@ fun GeneralSettingsScreen(
             }
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
             ) {
                 Spacer(Modifier.height(AppSpacing.small))
 
-            // ── Notifications ──
-            SettingsSubHeader("Notifications")
-
-            ListItem(
-                headlineContent = { Text("Media Notifications") },
-                supportingContent = { Text("Show playback controls in notification") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.showNotifications,
-                        onCheckedChange = { viewModel.toggleNotifications(it) }
-                    )
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
-
-            // ── Library Scanning ──
-            SettingsSubHeader("Library")
-
-            ListItem(
-                headlineContent = { Text("Scan for Changes") },
-                supportingContent = { Text("Check for new or removed songs") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    FilledTonalButton(
-                        onClick = {
-                            pendingScanAction = ScanAction.CHANGES
-                            showScanDialog = true
-                        }
-                    ) {
-                        Text("Scan")
+                SettingsSubHeader("Notifications")
+                ListItem(
+                    headlineContent = { Text("Media Notifications") },
+                    supportingContent = { Text("Show playback controls in notification") },
+                    leadingContent = { Icon(Icons.Rounded.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingContent = {
+                        Switch(checked = uiState.showNotifications, onCheckedChange = { viewModel.toggleNotifications(it) })
                     }
-                }
-            )
+                )
 
-            ListItem(
-                headlineContent = { Text("Full Scan") },
-                supportingContent = { Text("Re-scan entire music library") },
-                leadingContent = {
-                    Icon(Icons.Rounded.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    FilledTonalButton(
-                        onClick = {
-                            pendingScanAction = ScanAction.FULL
-                            showScanDialog = true
-                        }
-                    ) {
-                        Text("Full Scan")
+                HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
+
+                SettingsSubHeader("Library")
+                ListItem(
+                    headlineContent = { Text("Scan for Changes") },
+                    supportingContent = { Text("Check for new or removed songs") },
+                    leadingContent = { Icon(Icons.Rounded.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingContent = {
+                        FilledTonalButton(onClick = { pendingScanAction = ScanAction.CHANGES; showScanDialog = true }) { Text("Scan") }
                     }
-                }
-            )
+                )
 
-            ListItem(
-                headlineContent = { Text("Last Library Scan") },
-                supportingContent = { Text(uiState.lastScanDate) },
-                leadingContent = {
-                    Icon(Icons.Rounded.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            )
-
-            SettingsSubHeader("Storage Source")
-
-            ListItem(
-                headlineContent = { Text("Default Library Storage") },
-                supportingContent = { Text("Choose which device the library should read from by default") },
-                leadingContent = {
-                    Icon(Icons.Rounded.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-            )
-            StorageScopeSelector(
-                selected = StorageScope.entries.firstOrNull { it.name == uiState.storageScopeAll } ?: StorageScope.Both,
-                onSelected = { viewModel.setStorageScopeForTab("All", it) },
-                modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
-                availableScopes = availableStorageScopes
-            )
-
-            ListItem(
-                headlineContent = { Text("Remember Last Play") },
-                supportingContent = { Text("Resume the last song and playback position when the app opens again") },
-                leadingContent = {
-                    Icon(Icons.Rounded.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.rememberLastPlay,
-                        onCheckedChange = { viewModel.toggleRememberLastPlay(it) }
-                    )
-                }
-            )
-
-            SettingsSubHeader("Excluded Folders")
-
-            ListItem(
-                headlineContent = { Text("Manage excluded folders") },
-                supportingContent = {
-                    if (uiState.excludedFolders.isEmpty()) {
-                        Text("All folders are currently included")
-                    } else {
-                        Text("${uiState.excludedFolders.size} folder(s) excluded")
+                ListItem(
+                    headlineContent = { Text("Full Scan") },
+                    supportingContent = { Text("Re-scan entire music library") },
+                    leadingContent = { Icon(Icons.Rounded.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingContent = {
+                        FilledTonalButton(onClick = { pendingScanAction = ScanAction.FULL; showScanDialog = true }) { Text("Full Scan") }
                     }
-                },
-                leadingContent = {
-                    Icon(Icons.Rounded.FolderOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    FilledTonalButton(onClick = { showFolderPicker = true }) {
-                        Text("Choose")
+                )
+
+                ListItem(
+                    headlineContent = { Text("Last Library Scan") },
+                    supportingContent = { Text(uiState.lastScanDate) },
+                    leadingContent = { Icon(Icons.Rounded.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+                )
+
+                SettingsSubHeader("Storage Source")
+                ListItem(
+                    headlineContent = { Text("Default Library Storage") },
+                    supportingContent = { Text("Choose which device the library should read from by default") },
+                    leadingContent = { Icon(Icons.Rounded.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                )
+                StorageScopeSelector(
+                    selected = StorageScope.entries.firstOrNull { it.name == uiState.storageScopeAll } ?: StorageScope.Both,
+                    onSelected = { viewModel.setStorageScopeForTab("All", it) },
+                    modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
+                    availableScopes = availableStorageScopes
+                )
+
+                ListItem(
+                    headlineContent = { Text("Remember Last Play") },
+                    supportingContent = { Text("Resume the last song and playback position when the app opens again") },
+                    leadingContent = { Icon(Icons.Rounded.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingContent = {
+                        Switch(checked = uiState.rememberLastPlay, onCheckedChange = { viewModel.toggleRememberLastPlay(it) })
                     }
-                }
-            )
+                )
 
-            Spacer(Modifier.weight(1f))
+                SettingsSubHeader("Excluded Folders")
+                ListItem(
+                    headlineContent = { Text("Manage excluded folders") },
+                    supportingContent = {
+                        Text(if (uiState.excludedFolders.isEmpty()) "All folders are currently included" else "${uiState.excludedFolders.size} folder(s) excluded")
+                    },
+                    leadingContent = { Icon(Icons.Rounded.FolderOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingContent = {
+                        FilledTonalButton(onClick = { showFolderPicker = true }) { Text("Choose") }
+                    }
+                )
 
-            // Reset General Settings
-            ResetSettingsButton(
-                label = "Reset General Settings",
-                onClick = { showResetDialog = true }
-            )
-
-            Spacer(Modifier.height(AppSpacing.xLarge))
+                Spacer(Modifier.weight(1f))
+                ResetSettingsButton(label = "Reset General Settings", onClick = { showResetDialog = true })
+                Spacer(Modifier.height(AppSpacing.xLarge))
             }
         }
     }
 
     if (showScanDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!uiState.isScanning) {
-                    showScanDialog = false
-                }
+        ScanDialog(
+            pendingScanAction = pendingScanAction,
+            isScanning = uiState.isScanning,
+            scanProgress = uiState.scanProgress,
+            scanTotal = uiState.scanTotal,
+            scanFolderCount = uiState.scanFolderCount,
+            scanCurrentFolder = uiState.scanCurrentFolder,
+            onStartScan = {
+                if (pendingScanAction == ScanAction.FULL) viewModel.fullScan() else viewModel.scanForChanges()
             },
-            icon = { Icon(Icons.Rounded.Sync, contentDescription = null) },
-            title = {
-                Text(
-                    if (pendingScanAction == ScanAction.FULL) {
-                        "Full scan library"
-                    } else {
-                        "Scan for changes"
-                    }
-                )
+            onBackgroundScan = {
+                if (pendingScanAction == ScanAction.FULL) viewModel.fullScan() else viewModel.scanForChanges()
+                showScanDialog = false
             },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.small)) {
-                    Text(
-                        if (pendingScanAction == ScanAction.FULL) {
-                            "Full scan rebuilds the library from MediaStore and refreshes cached metadata."
-                        } else {
-                            "Scan for changes checks for new or removed songs and updates the library."
-                        }
-                    )
-                    Text(
-                        "You can move this scan to the background and keep using the app while it finishes.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (uiState.isScanning) {
-                        val progressFraction = if (uiState.scanTotal > 0) {
-                            uiState.scanProgress.toFloat() / uiState.scanTotal.toFloat()
-                        } else {
-                            0f
-                        }
-                        LinearProgressIndicator(
-                            progress = { progressFraction },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text(
-                            text = "${uiState.scanProgress}/${uiState.scanTotal} items • ${uiState.scanFolderCount} folders",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        uiState.scanCurrentFolder?.let { folder ->
-                            Text(
-                                text = "Now scanning: $folder",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (pendingScanAction == ScanAction.FULL) {
-                            viewModel.fullScan()
-                        } else {
-                            viewModel.scanForChanges()
-                        }
-                    },
-                    enabled = !uiState.isScanning
-                ) {
-                    Text("Start scan")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        if (pendingScanAction == ScanAction.FULL) {
-                            viewModel.fullScan()
-                        } else {
-                            viewModel.scanForChanges()
-                        }
-                        showScanDialog = false
-                    }
-                ) {
-                    Text("Background scan")
-                }
-            }
+            onDismiss = { showScanDialog = false }
         )
     }
 
     if (showFolderPicker) {
-        ModalBottomSheet(
-            onDismissRequest = { showFolderPicker = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
-            ) {
-                Text(
-                    text = "Exclude folders",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Songs in excluded folders will disappear everywhere in the app and will not play in playlists.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = AppSpacing.xSmall, bottom = AppSpacing.medium)
-                )
-
-                if (uiState.availableFolders.isEmpty()) {
-                    Text(
-                        text = "No folders found yet.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = AppSpacing.large)
-                    )
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xSmall)) {
-                        uiState.availableFolders.forEach { folder ->
-                            val selected = uiState.excludedFolders.contains(folder.path)
-                            Card(
-                                onClick = { viewModel.toggleExcludedFolder(folder.path) },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (selected) {
-                                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surfaceContainerLow
-                                    }
-                                )
-                            ) {
-                                ListItem(
-                                    headlineContent = {
-                                        Text(folder.label, fontWeight = FontWeight.SemiBold)
-                                    },
-                                    supportingContent = {
-                                        Text(folder.path, maxLines = 1)
-                                    },
-                                    leadingContent = {
-                                        Icon(
-                                            Icons.Rounded.Folder,
-                                            contentDescription = null,
-                                            tint = if (selected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                                        )
-                                    },
-                                    trailingContent = {
-                                        Checkbox(
-                                            checked = selected,
-                                            onCheckedChange = { viewModel.toggleExcludedFolder(folder.path) }
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(AppSpacing.medium))
-                TextButton(
-                    onClick = { showFolderPicker = false },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text("Close")
-                }
-            }
-        }
+        ExcludedFolderBottomSheet(
+            availableFolders = uiState.availableFolders,
+            excludedFolders = uiState.excludedFolders.toSet(),
+            onToggleExcludedFolder = { viewModel.toggleExcludedFolder(it) },
+            onDismiss = { showFolderPicker = false }
+        )
     }
 
     if (showResetDialog) {
@@ -429,16 +211,11 @@ fun GeneralSettingsScreen(
             title = { Text("Reset General Settings?") },
             text = { Text("This will reset notification and scanning settings to their defaults.") },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.resetGeneralSettings()
-                    showResetDialog = false
-                }) {
+                TextButton(onClick = { viewModel.resetGeneralSettings(); showResetDialog = false }) {
                     Text("Reset", color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) { Text("Cancel") }
-            }
+            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel") } }
         )
     }
 }
@@ -455,18 +232,11 @@ internal fun SettingsSubHeader(title: String) {
 }
 
 @Composable
-internal fun ResetSettingsButton(
-    label: String,
-    onClick: () -> Unit
-) {
+internal fun ResetSettingsButton(label: String, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.error
-        )
+        modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
     ) {
         Icon(Icons.Rounded.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(AppSpacing.small))

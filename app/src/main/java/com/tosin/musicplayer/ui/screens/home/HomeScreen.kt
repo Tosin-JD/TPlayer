@@ -9,7 +9,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -29,7 +28,6 @@ import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.state.hasRemovableStorage
-import com.tosin.musicplayer.ui.state.removableStorageVolumes
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
@@ -56,7 +54,6 @@ fun HomeScreen(
             listOf(StorageScope.Internal)
         }
     }
-    val removableVolumes = remember(context) { context.removableStorageVolumes() }
     val sortState = rememberLibrarySortState()
 
     val activeTabs = remember(settingsState.tabOrder, settingsState.visibleTabs) {
@@ -98,7 +95,6 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             HomeTopBar(
-                removableVolumes = removableVolumes,
                 selectedTab = uiState.selectedTab,
                 tabs = safeActiveTabs,
                 onTabSelected = { index ->
@@ -106,13 +102,11 @@ fun HomeScreen(
                         pagerState.animateScrollToPage(index)
                     }
                 },
-                onNavigateToSearch = onNavigateToSearch,
                 onNavigateToPlaylists = onNavigateToPlaylists,
                 onNavigateToSettings = onNavigateToSettings
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Box(
             modifier = Modifier

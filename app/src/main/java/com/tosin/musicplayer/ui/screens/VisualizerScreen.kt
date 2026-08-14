@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -74,17 +73,8 @@ fun VisualizerScreen(
                 Visualizer(sessionId).apply {
                     setDataCaptureListener(
                         object : Visualizer.OnDataCaptureListener {
-                            override fun onWaveFormDataCapture(
-                                visualizer: Visualizer?,
-                                waveform: ByteArray?,
-                                samplingRate: Int
-                            ) = Unit
-
-                            override fun onFftDataCapture(
-                                visualizer: Visualizer?,
-                                fft: ByteArray?,
-                                samplingRate: Int
-                            ) {
+                            override fun onWaveFormDataCapture(v: Visualizer?, waveform: ByteArray?, samplingRate: Int) = Unit
+                            override fun onFftDataCapture(v: Visualizer?, fft: ByteArray?, samplingRate: Int) {
                                 updateBars(fft, bars)
                             }
                         },
@@ -125,24 +115,16 @@ fun VisualizerScreen(
     StatusBarColorEffect(topBackgroundColor)
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        topBackgroundColor,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surfaceContainerLow
-                    )
-                )
+        modifier = Modifier.fillMaxSize().background(
+            Brush.verticalGradient(
+                colors = listOf(topBackgroundColor, MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerLow)
             )
+        )
     ) {
         Scaffold(
             containerColor = Color.Transparent,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 TopAppBar(
-                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = { Text("Visualizer", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
@@ -155,11 +137,7 @@ fun VisualizerScreen(
                             enabled = song != null
                         ) {
                             Icon(
-                                imageVector = if (playing) {
-                                    Icons.Rounded.Pause
-                                } else {
-                                    Icons.Rounded.PlayArrow
-                                },
+                                imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                 contentDescription = if (playing) "Pause" else "Play",
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -170,15 +148,7 @@ fun VisualizerScreen(
             }
         ) { paddingValues ->
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(
-                        start = AppSpacing.large,
-                        top = 0.dp,
-                        end = AppSpacing.large,
-                        bottom = AppSpacing.large
-                    ),
+                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(start = AppSpacing.large, top = 0.dp, end = AppSpacing.large, bottom = AppSpacing.large),
                 verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -195,29 +165,17 @@ fun VisualizerScreen(
                 )
 
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     shape = RoundedCornerShape(32.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f)
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f))
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
-                            drawFftBars(
-                                bars = barState,
-                                playing = playing,
-                                activeColor = activeColor,
-                                midColor = midColor,
-                                highColor = highColor
-                            )
+                            drawFftBars(bars = barState, playing = playing, activeColor = activeColor, midColor = midColor, highColor = highColor)
                         }
 
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             FftLegendRow("Low", activeColor, playing)
@@ -232,17 +190,9 @@ fun VisualizerScreen(
 }
 
 @Composable
-private fun FftLegendRow(
-    label: String,
-    color: Color,
-    playing: Boolean
-) {
+private fun FftLegendRow(label: String, color: Color, playing: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color = color, shape = RoundedCornerShape(999.dp))
-        )
+        Box(modifier = Modifier.size(10.dp).background(color = color, shape = RoundedCornerShape(999.dp)))
         Text(
             text = label,
             modifier = Modifier.padding(start = AppSpacing.small),
@@ -254,11 +204,9 @@ private fun FftLegendRow(
 }
 
 private fun updateBars(fft: ByteArray?, target: FloatArray) {
-    if (fft == null) return
-    val n = fft.size
-    if (n < 4) return
-    val binCount = n / 2
-    val scale = (n / 4f).coerceAtLeast(1f)
+    if (fft == null || fft.size < 4) return
+    val binCount = fft.size / 2
+    val scale = (fft.size / 4f).coerceAtLeast(1f)
 
     for (i in target.indices) {
         val start = binCount * i / target.size
@@ -275,13 +223,7 @@ private fun updateBars(fft: ByteArray?, target: FloatArray) {
     }
 }
 
-private fun DrawScope.drawFftBars(
-    bars: FloatArray,
-    playing: Boolean,
-    activeColor: Color,
-    midColor: Color,
-    highColor: Color
-) {
+private fun DrawScope.drawFftBars(bars: FloatArray, playing: Boolean, activeColor: Color, midColor: Color, highColor: Color) {
     val centerY = size.height * 0.5f
     val barGap = 3.dp.toPx()
     val barWidth = (size.width / bars.size) - barGap

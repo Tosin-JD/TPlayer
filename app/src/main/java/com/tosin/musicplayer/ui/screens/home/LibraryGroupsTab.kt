@@ -53,7 +53,7 @@ internal fun LibraryGroupsTab(
             scope
         }
     }
-    val sortedGroups = remember(groups, sortBy) {
+    val sortedGroups = remember(groups, sortBy, storageScope) {
         sortLibraryGroups(filterGroupsForStorage(groups, storageScope), sortBy)
     }
     var showSortMenu by remember { mutableStateOf(false) }

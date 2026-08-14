@@ -41,23 +41,3 @@ fun Context.hasRemovableStorage(): Boolean {
     return storageManager.storageVolumes.any { it.isRemovable }
 }
 
-fun Context.removableStorageVolumes(): List<StorageVolume> {
-    val storageManager = getSystemService(StorageManager::class.java) ?: return emptyList()
-    return storageManager.storageVolumes.filter { it.isRemovable }
-}
-
-fun StorageVolume.displayName(context: Context): String {
-    val description = runCatching {
-        getDescription(context)?.toString()
-    }.getOrNull()
-    return description?.takeIf { it.isNotBlank() } ?: "External storage"
-}
-
-fun StorageVolume.requestEject(): Boolean {
-    return try {
-        val ejectMethod = javaClass.getMethod("eject")
-        (ejectMethod.invoke(this) as? Boolean) ?: false
-    } catch (_: Exception) {
-        false
-    }
-}
