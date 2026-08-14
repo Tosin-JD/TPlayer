@@ -26,13 +26,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import com.tosin.musicplayer.data.repository.StatsRepository
-import com.tosin.musicplayer.data.models.SongStats
 
 class PlayerViewModel(
     private val repository: MusicRepository,
     private val playerController: PlayerController,
-    private val statsRepository: StatsRepository,
     private val playlistRepository: PlaylistRepository,
     private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
@@ -60,11 +57,6 @@ class PlayerViewModel(
         LibraryTab.Genre,
         LibraryTab.Folder
     ))
-
-    private val _mostPlayed = MutableStateFlow<List<SongStats>>(emptyList())
-    val mostPlayed = _mostPlayed.asStateFlow()
-
-    private var statsStartTime = 0L
 
     val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
 
@@ -156,13 +148,6 @@ class PlayerViewModel(
         initialValue = HomeUiState()
     )
 
-    fun loadStats(startTime: Long = 0L) {
-        statsStartTime = startTime
-        viewModelScope.launch {
-            _mostPlayed.value = statsRepository.getMostPlayed(_songs.value, startTime)
-        }
-    }
-
     fun onAudioPermissionResult(isGranted: Boolean) {
         _hasAudioPermission.value = isGranted
         if (isGranted) {
@@ -191,7 +176,6 @@ class PlayerViewModel(
                 .collect { songs ->
                     _songs.value = songs
                     _isLoading.value = false
-                    loadStats(statsStartTime)
                     // Restore queue state
                     if (!hasRestoredQueueState) {
                         restoreQueueState(songs)

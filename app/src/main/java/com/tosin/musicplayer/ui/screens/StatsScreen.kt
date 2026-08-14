@@ -16,10 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.SongItem
+import com.tosin.musicplayer.ui.components.menu.SelectionBottomSheet
+import com.tosin.musicplayer.ui.components.menu.statsRangeOptions
+import com.tosin.musicplayer.ui.components.menu.statsSortOptions
+import com.tosin.musicplayer.ui.state.SortBy
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
-import java.util.*
+import com.tosin.musicplayer.ui.viewmodel.StatsViewModel
 
 fun formatDuration(minutes: Long): String {
     val safeMinutes = minutes.coerceAtLeast(0L)
@@ -34,37 +38,19 @@ fun formatDuration(minutes: Long): String {
     }
 }
 
-enum class StatsRange(val label: String) {
-    Today("Today"),
-    ThisWeek("This Week"),
-    ThisMonth("This Month"),
-    ThisYear("This Year"),
-    AllTime("All Time")
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(
-    viewModel: PlayerViewModel,
+    statsViewModel: StatsViewModel,
+    playerViewModel: PlayerViewModel,
     onNavigateToHome: () -> Unit,
     onNavigateToPlayer: () -> Unit
 ) {
-    val mostPlayed by viewModel.mostPlayed.collectAsState()
-    var selectedRange by remember { mutableStateOf(StatsRange.AllTime) }
-    var showMenu by remember { mutableStateOf(false) }
-
-    LaunchedEffect(selectedRange) {
-        val startTime = when (selectedRange) {
-            StatsRange.Today -> getStartOfToday()
-            StatsRange.ThisWeek -> getStartOfWeek()
-            StatsRange.ThisMonth -> getStartOfMonth()
-            StatsRange.ThisYear -> getStartOfYear()
-            StatsRange.AllTime -> 0L
-        }
-        viewModel.loadStats(startTime)
-    }
+    val mostPlayed by statsViewModel.mostPlayed.collectAsState()
+    val selectedRange by statsViewModel.selectedRange.collectAsState()
+    val sortBy by statsViewModel.sortBy.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
-    var sortBy by remember { mutableStateOf(SortBy.PLAY_COUNT) }
+    var showRangeMenu by remember { mutableStateOf(false) }
 
     val sortedMostPlayed = remember(mostPlayed, sortBy) {
         when (sortBy) {
@@ -89,155 +75,94 @@ fun StatsScreen(
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(Icons.Rounded.FilterList, contentDescription = "Sort By")
                         }
-                        DropdownMenu(
-                            expanded = showSortMenu,
-                            onDismissRequest = { showSortMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("By Plays") },
-                                onClick = {
-                                    sortBy = SortBy.PLAY_COUNT
-                                    showSortMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("By Minutes") },
-                                onClick = {
-                                    sortBy = SortBy.DURATION
-                                    showSortMenu = false
-                                }
+                        if (showSortMenu) {
+                            SelectionBottomSheet(
+                                title = "Sort by",
+                                options = statsSortOptions(),
+                                selected = sortBy,
+                                onSelect = statsViewModel::selectSort,
+                                onDismiss = { showSortMenu = false }
                             )
                         }
                     }
                     Box {
-                        IconButton(onClick = { showMenu = true }) {
+                        IconButton(onClick = { showRangeMenu = true }) {
                             Icon(Icons.Rounded.History, contentDescription = "Time Range")
                         }
-
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            StatsRange.entries.forEach { range ->
-                                DropdownMenuItem(
-                                    text = { Text(range.label) },
-                                    onClick = {
-                                        selectedRange = range
-                                        showMenu = false
-                                    }
-                                )
-                            }
+                        if (showRangeMenu) {
+                            SelectionBottomSheet(
+                                title = "Time range",
+                                options = statsRangeOptions(),
+                                selected = selectedRange,
+                                onSelect = statsViewModel::selectRange,
+                                onDismiss = { showRangeMenu = false }
+                            )
                         }
                     }
                 }
             )
         }
     ) { paddingValues ->
+        if (mostPlayed.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = AppSpacing.xLarge),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Rounded.BarChart,
+                        null,
+                        Modifier.size(64.dp),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    )
 
-    if (mostPlayed.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = AppSpacing.xLarge),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Rounded.BarChart,
-                    null,
-                    Modifier.size(64.dp),
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                )
+                    Spacer(Modifier.height(16.dp))
 
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    "No play data for this period",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                    Text(
+                        "No play data for this period",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = standardScreenPadding(top = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
-        ) {
-            items(sortedMostPlayed) { stat ->
-                SongItem(
-                    song = stat.song,
-                    isPlaying = false,
-                    onClick = {
-                        viewModel.onSongClick(
-                            sortedMostPlayed.map { it.song },
-                            sortedMostPlayed.indexOf(stat)
-                        )
-                        onNavigateToPlayer()
-                    },
-                    trailingContent = {
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "${stat.playCount} plays",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = standardScreenPadding(top = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
+            ) {
+                items(sortedMostPlayed) { stat ->
+                    SongItem(
+                        song = stat.song,
+                        isPlaying = false,
+                        onClick = {
+                            playerViewModel.onSongClick(
+                                sortedMostPlayed.map { it.song },
+                                sortedMostPlayed.indexOf(stat)
                             )
-                            Text(
-                                text = formatDuration(stat.totalMinutes),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            onNavigateToPlayer()
+                        },
+                        trailingContent = {
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "${stat.playCount} plays",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = formatDuration(stat.totalMinutes),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }
-}
-}
-
-enum class SortBy {
-    PLAY_COUNT,
-    DURATION
-}
-
-private fun getStartOfToday(): Long {
-    val cal = Calendar.getInstance()
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    return cal.timeInMillis
-}
-
-private fun getStartOfWeek(): Long {
-    val cal = Calendar.getInstance()
-    cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    return cal.timeInMillis
-}
-
-private fun getStartOfMonth(): Long {
-    val cal = Calendar.getInstance()
-    cal.set(Calendar.DAY_OF_MONTH, 1)
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    return cal.timeInMillis
-}
-
-private fun getStartOfYear(): Long {
-    val cal = Calendar.getInstance()
-    cal.set(Calendar.DAY_OF_YEAR, 1)
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
-    return cal.timeInMillis
 }
