@@ -41,7 +41,7 @@ class PlaybackService : MediaSessionService() {
         crossfadeState.fadeDurationUs = crossfadeDurationSeconds * 1_000_000L
         showNotifications = settings["showNotifications"] as? Boolean ?: true
 
-        val player = ExoPlayer.Builder(this, CrossfadeRenderersFactory(this, crossfadeState))
+        val player = ExoPlayer.Builder(this)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -50,7 +50,7 @@ class PlaybackService : MediaSessionService() {
                 /* handleAudioFocus= */ true
             )
             .setHandleAudioBecomingNoisy(true)
-            .setWakeMode(C.WAKE_MODE_NETWORK)
+            .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
 
         val playbackSpeed = (settings["playbackSpeed"] as? Float)
@@ -69,6 +69,7 @@ class PlaybackService : MediaSessionService() {
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                crossfadeState.seekPositionUs = 0L
                 crossfadeState.updateFromPlayer(player)
             }
 
@@ -84,8 +85,8 @@ class PlaybackService : MediaSessionService() {
                 reason: Int
             ) {
                 if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                    crossfadeState.seekPositionUs = newPosition.positionMs.coerceAtLeast(0L) * 1000L
                     crossfadeState.updateFromPlayer(player)
-                    crossfadeState.trackStartUs += newPosition.positionMs * 1000L
                 }
             }
         })
@@ -190,21 +191,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun CrossfadeState.updateFromPlayer(player: Player) {
-        val currentIndex = player.currentMediaItemIndex
-        if (currentIndex == C.INDEX_UNSET) return
-        val timeline = player.currentTimeline
-        if (currentIndex >= timeline.windowCount) return
-
-        var startUs = 0L
-        val window = Timeline.Window()
-        for (index in 0 until currentIndex) {
-            timeline.getWindow(index, window)
-            if (window.durationUs == C.TIME_UNSET) break
-            startUs += window.durationUs
-        }
-        trackStartUs = startUs
-
         val duration = player.duration
-        trackDurationUs = if (duration == C.TIME_UNSET) C.TIME_UNSET else duration * 1000L
+        trackDurationUs = if (duration == C.TIME_UNSET || duration <= 0L) C.TIME_UNSET else duration * 1000L
     }
 }

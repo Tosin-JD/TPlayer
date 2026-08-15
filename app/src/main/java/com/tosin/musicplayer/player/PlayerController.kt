@@ -93,6 +93,8 @@ class PlayerController(
     private val _sleepTimerRemaining = MutableStateFlow<Long?>(null)
     val sleepTimerRemaining = _sleepTimerRemaining.asStateFlow()
 
+    private var pendingPlay = false
+
     init {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
@@ -134,11 +136,21 @@ class PlayerController(
         _progress.value = controller.currentPosition.coerceAtLeast(0)
         _playbackSpeed.value = controller.playbackParameters.speed
 
-        if (playlist.isNotEmpty() && controller.mediaItemCount == 0) {
+        if (playlist.isNotEmpty()) {
+            val mediaItems = playlist.map { it.toMediaItem() }
             val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
-            controller.setMediaItems(playlist.map { it.toMediaItem() })
-            controller.prepare()
-            controller.seekTo(startIndex, _progress.value)
+            val currentMediaIds = (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId }
+            val newMediaIds = playlist.map { it.id.toString() }
+            val queueChanged = currentMediaIds != newMediaIds || controller.currentMediaItemIndex !in playlist.indices
+
+            if (queueChanged) {
+                controller.setMediaItems(mediaItems, startIndex, _progress.value.coerceAtLeast(0L))
+                controller.prepare()
+            }
+
+            if (pendingPlay) {
+                controller.play()
+            }
         }
         
         controller.addListener(object : Player.Listener {
@@ -238,9 +250,19 @@ class PlayerController(
         }
         val controller = mediaController ?: return
         val mediaItems = songs.map { it.toMediaItem() }
-        controller.setMediaItems(mediaItems)
-        controller.prepare()
-        controller.seekTo(startIndex, startPositionMs.coerceAtLeast(0L))
+        val currentMediaIds = (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId }
+        val newMediaIds = songs.map { it.id.toString() }
+        val shouldResetQueue = currentMediaIds != newMediaIds || controller.currentMediaItemIndex !in songs.indices
+        if (shouldResetQueue) {
+            controller.setMediaItems(mediaItems, startIndex, startPositionMs.coerceAtLeast(0L))
+            controller.prepare()
+        } else {
+            controller.seekTo(startIndex, startPositionMs.coerceAtLeast(0L))
+        }
+
+        if (pendingPlay) {
+            controller.play()
+        }
 
         if (autoResumeEnabled && startPositionMs <= 0L) {
             val startSongId = songs.getOrNull(startIndex)?.id
@@ -296,14 +318,31 @@ class PlayerController(
     }
 
     fun play() {
-        mediaController?.play()
+        pendingPlay = true
+        val controller = mediaController
+        if (controller != null) {
+            if (playlist.isNotEmpty() && controller.mediaItemCount == 0) {
+                val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
+                controller.setMediaItems(playlist.map { it.toMediaItem() }, startIndex, _progress.value.coerceAtLeast(0L))
+                controller.prepare()
+            } else if (controller.playbackState == Player.STATE_IDLE || controller.playbackState == Player.STATE_ENDED) {
+                if (controller.playbackState == Player.STATE_ENDED) {
+                    val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
+                    controller.seekTo(startIndex, 0L)
+                }
+                controller.prepare()
+            }
+            controller.play()
+        }
     }
 
     fun pause() {
+        pendingPlay = false
         mediaController?.pause()
     }
 
     fun stop() {
+        pendingPlay = false
         recordCurrentListen()
         persistPosition(_currentSong.value, _progress.value)
         lastPersistedSongId = null
@@ -597,9 +636,14 @@ class PlayerController(
 
 fun Song.toMediaItem(): MediaItem {
     val artworkUri = albumArtOrDefault()
+    val parsedUri = when {
+        uri.startsWith("content://") || uri.startsWith("file://") || uri.startsWith("http://") || uri.startsWith("https://") -> Uri.parse(uri)
+        uri.startsWith("/") -> Uri.fromFile(java.io.File(uri))
+        else -> Uri.parse(uri)
+    }
     return MediaItem.Builder()
         .setMediaId(id.toString())
-        .setUri(Uri.parse(uri))
+        .setUri(parsedUri)
         .setMediaMetadata(
             MediaMetadata.Builder()
                 .setTitle(title)

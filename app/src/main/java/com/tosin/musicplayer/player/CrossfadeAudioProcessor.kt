@@ -11,7 +11,6 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import java.nio.ByteBuffer
-import kotlin.math.min
 
 /**
  * Shared, thread-safe state driving [CrossfadeAudioProcessor].
@@ -22,7 +21,7 @@ import kotlin.math.min
 class CrossfadeState {
     @Volatile var enabled: Boolean = false
     @Volatile var fadeDurationUs: Long = 0L
-    @Volatile var trackStartUs: Long = 0L
+    @Volatile var seekPositionUs: Long = 0L
     @Volatile var trackDurationUs: Long = C.TIME_UNSET
 }
 
@@ -48,14 +47,13 @@ class CrossfadeAudioProcessor(
     /** Frames read from the decoder since the audio pipeline was last reset. */
     private var readFrames: Long = 0L
 
-    /** Stream frame at which the current track started. */
-    private var trackStartFrames: Long = 0L
-
     /** Length of the current track in frames; [C.TIME_UNSET] until known. */
     private var trackDurationFrames: Long = C.TIME_UNSET
 
     override fun onConfigure(inputFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         if (inputFormat.encoding != C.ENCODING_PCM_16BIT &&
+            inputFormat.encoding != C.ENCODING_PCM_24BIT &&
+            inputFormat.encoding != C.ENCODING_PCM_32BIT &&
             inputFormat.encoding != C.ENCODING_PCM_FLOAT
         ) {
             return AudioProcessor.AudioFormat.NOT_SET
@@ -64,27 +62,24 @@ class CrossfadeAudioProcessor(
         encoding = inputFormat.encoding
         channelCount = inputFormat.channelCount
         bytesPerFrame = inputFormat.bytesPerFrame
+        
+        // Validate bytesPerFrame calculation
+        if (bytesPerFrame <= 0) {
+            return AudioProcessor.AudioFormat.NOT_SET
+        }
+        
         return inputFormat
     }
 
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onFlush() {
-        trackStartFrames = toFrames(state.trackStartUs)
+        readFrames = toFrames(state.seekPositionUs)
         trackDurationFrames = toFrames(state.trackDurationUs)
-        if (readFrames < trackStartFrames) {
-            // A seek backwards or a track transition happened; re-sync the read cursor.
-            readFrames = trackStartFrames
-        } else if (trackDurationFrames > 0 && readFrames >= trackStartFrames + trackDurationFrames) {
-            // The pipeline flushed after the current track had already ended and the
-            // service hasn't published the new track start yet. Advance to the next track.
-            trackStartFrames += trackDurationFrames
-            trackDurationFrames = toFrames(state.trackDurationUs)
-            readFrames = trackStartFrames
-        }
     }
 
     override fun onReset() {
         readFrames = 0L
-        trackStartFrames = 0L
         trackDurationFrames = C.TIME_UNSET
     }
 
@@ -103,59 +98,74 @@ class CrossfadeAudioProcessor(
             return
         }
 
-        while (inputBuffer.hasRemaining()) {
+        var framesProcessed = 0
+        while (inputBuffer.hasRemaining() && framesProcessed < inputFrames) {
             syncTrackPosition()
             val gain = gainAtPosition(readFrames)
             for (channel in 0 until channelCount) {
                 when (encoding) {
                     C.ENCODING_PCM_16BIT -> outputBuffer.putShort(
-                        (inputBuffer.short * gain).toInt().toShort()
+                        (inputBuffer.short * gain).toInt().coerceIn(-32768, 32767).toShort()
                     )
-                    C.ENCODING_PCM_FLOAT -> outputBuffer.putFloat(inputBuffer.float * gain)
-                    else -> throw IllegalStateException("Unexpected PCM encoding: $encoding")
+                    C.ENCODING_PCM_FLOAT -> outputBuffer.putFloat((inputBuffer.float * gain).coerceIn(-1.0f, 1.0f))
+                    C.ENCODING_PCM_24BIT -> {
+                        val sample = (inputBuffer.get().toInt() and 0xFF) or
+                                ((inputBuffer.get().toInt() and 0xFF) shl 8) or
+                                (inputBuffer.get().toInt() shl 16)
+                        val scaled = (sample * gain).toInt()
+                        outputBuffer.put((scaled and 0xFF).toByte())
+                        outputBuffer.put(((scaled shr 8) and 0xFF).toByte())
+                        outputBuffer.put(((scaled shr 16) and 0xFF).toByte())
+                    }
+                    C.ENCODING_PCM_32BIT -> outputBuffer.putInt((inputBuffer.int * gain).toInt())
+                    else -> outputBuffer.put(inputBuffer.get())
                 }
             }
             readFrames++
+            framesProcessed++
         }
     }
 
-    /**
-     * Keeps [trackStartFrames] in sync when the decoder advances into the next media
-     * item without the audio pipeline flushing (gapless playback).
-     */
     private fun syncTrackPosition() {
-        if (trackDurationFrames > 0 && readFrames >= trackStartFrames + trackDurationFrames) {
-            trackStartFrames += trackDurationFrames
-            trackDurationFrames = toFrames(state.trackDurationUs)
+        val currentTrackDurationUs = state.trackDurationUs
+        if (currentTrackDurationUs != C.TIME_UNSET && currentTrackDurationUs > 0L) {
+            val latestDurationFrames = toFrames(currentTrackDurationUs)
+            if (trackDurationFrames != latestDurationFrames) {
+                trackDurationFrames = latestDurationFrames
+            }
         }
     }
 
     private fun gainAtPosition(positionFrames: Long): Float {
-        if (state.fadeDurationUs <= 0L || sampleRate <= 0) return 1.0f
+        if (!state.enabled || state.fadeDurationUs <= 0L || sampleRate <= 0) return 1.0f
 
-        val posInTrack = (positionFrames - trackStartFrames).coerceAtLeast(0L)
-        val totalFrames = if (trackDurationFrames != C.TIME_UNSET) {
-            trackDurationFrames.coerceAtLeast(0L)
+        val currentTrackDurationUs = state.trackDurationUs
+        val durationFrames = if (currentTrackDurationUs != C.TIME_UNSET && currentTrackDurationUs > 0L) {
+            toFrames(currentTrackDurationUs)
         } else {
-            Long.MAX_VALUE
+            trackDurationFrames
         }
 
-        var fadeFrames = (state.fadeDurationUs * sampleRate / 1_000_000L).coerceAtLeast(1L)
-        fadeFrames = fadeFrames.coerceAtMost(totalFrames / 2)
-        if (fadeFrames <= 0L) return 1.0f
+        // If duration is unknown or invalid, don't apply any gain modifications
+        if (durationFrames <= 0L || durationFrames == C.TIME_UNSET) {
+            return 1.0f
+        }
 
-        val fadeIn = if (posInTrack >= fadeFrames) {
-            1.0f
-        } else {
-            posInTrack.toFloat() / fadeFrames.toFloat()
+        val posInTrack = positionFrames.coerceAtLeast(0L)
+        val fadeFrames = (state.fadeDurationUs * sampleRate / 1_000_000L).coerceAtLeast(1L)
+
+        // Fade in at the start of the track
+        val fadeIn = if (posInTrack >= fadeFrames) 1.0f else (posInTrack.toFloat() / fadeFrames.toFloat()).coerceIn(0.0f, 1.0f)
+
+        // Fade out at the end of the track
+        val remaining = durationFrames - posInTrack
+        val fadeOut = when {
+            remaining >= fadeFrames -> 1.0f  // Still far from track end
+            remaining > 0L -> (remaining.toFloat() / fadeFrames.toFloat()).coerceIn(0.0f, 1.0f)  // In fade-out zone
+            else -> 1.0f  // Past expected track end frame bound before next transition: default to full volume to avoid silencing buffer tail
         }
-        val fadeOut = if (totalFrames == Long.MAX_VALUE) {
-            1.0f
-        } else {
-            val remaining = totalFrames - posInTrack
-            if (remaining >= fadeFrames) 1.0f else (remaining.toFloat() / fadeFrames.toFloat())
-        }
-        return min(fadeIn, fadeOut)
+
+        return (fadeIn * fadeOut).coerceIn(0.0f, 1.0f)
     }
 
     private fun toFrames(durationUs: Long): Long {

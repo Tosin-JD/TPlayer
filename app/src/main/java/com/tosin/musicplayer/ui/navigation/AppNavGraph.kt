@@ -110,7 +110,7 @@ fun AppNavGraph(
                     viewModel.stop()
                 },
                 onCollapse = {
-                    viewModel.stop()
+                    // Only collapse UI overlay if needed, do not stop audio playback
                 }
             )
         }

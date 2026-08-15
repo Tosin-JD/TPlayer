@@ -31,6 +31,8 @@ import com.tosin.musicplayer.data.repository.StatsRepository
 
 class MainActivity : ComponentActivity() {
     private lateinit var playerViewModel: PlayerViewModel
+    private lateinit var playerController: PlayerController
+    private lateinit var musicRepository: MusicRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,30 +41,29 @@ class MainActivity : ComponentActivity() {
         val statsRepository = StatsRepository(this)
         val playlistRepository = PlaylistRepository(this)
         val preferencesRepository = PreferencesRepository(this)
+        val musicLoader = MusicLoader(contentResolver)
+        playerController = PlayerController(this@MainActivity, statsRepository, preferencesRepository)
+        musicRepository = MusicRepository(musicLoader, preferencesRepository, statsRepository)
 
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val musicLoader = MusicLoader(contentResolver)
-                val playerController = PlayerController(this@MainActivity, statsRepository, preferencesRepository)
-                val repository = MusicRepository(musicLoader, preferencesRepository, statsRepository)
-
                 return when {
                     modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
                         PlayerViewModel(
-                            repository,
+                            musicRepository,
                             playerController,
                             playlistRepository,
                             preferencesRepository
                         ) as T
                     }
                     modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
-                        SettingsViewModel(preferencesRepository, repository) as T
+                        SettingsViewModel(preferencesRepository, musicRepository) as T
                     }
                     modelClass.isAssignableFrom(EqualizerViewModel::class.java) -> {
                         EqualizerViewModel(preferencesRepository) as T
                     }
                     modelClass.isAssignableFrom(StatsViewModel::class.java) -> {
-                        StatsViewModel(repository, statsRepository) as T
+                        StatsViewModel(musicRepository, statsRepository) as T
                     }
                     else -> throw IllegalArgumentException("Unknown ViewModel class")
                 }
