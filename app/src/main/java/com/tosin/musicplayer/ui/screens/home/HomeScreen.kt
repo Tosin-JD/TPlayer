@@ -55,6 +55,17 @@ fun HomeScreen(
         }
     }
     val sortState = rememberLibrarySortState()
+    val tabSortOptionsMap by settingsViewModel.tabSortOptions.collectAsState()
+
+    LaunchedEffect(tabSortOptionsMap) {
+        tabSortOptionsMap.forEach { (tabName, optionName) ->
+            val tab = LibraryTab.entries.firstOrNull { it.name == tabName }
+            val option = LibrarySortOption.entries.firstOrNull { it.name == optionName }
+            if (tab != null && option != null) {
+                sortState[tab] = option
+            }
+        }
+    }
 
     val activeTabs = remember(settingsState.tabOrder, settingsState.visibleTabs) {
         settingsState.tabOrder
@@ -145,7 +156,10 @@ fun HomeScreen(
                             tab = contentState.selectedTab,
                             onNavigateToPlayer = onNavigateToPlayer,
                             sortBy = sortState[LibraryTab.All] ?: LibrarySortOption.TitleAz,
-                            onSortChange = { sortState[LibraryTab.All] = it },
+                            onSortChange = { option ->
+                                sortState[LibraryTab.All] = option
+                                settingsViewModel.setTabSortOption(LibraryTab.All.name, option.name)
+                            },
                             availableStorageScopes = availableStorageScopes
                         )
                         else -> LibraryGroupsTab(
@@ -153,7 +167,10 @@ fun HomeScreen(
                             groups = uiState.libraryGroups,
                             settingsViewModel = settingsViewModel,
                             sortBy = sortState[contentState.selectedTab] ?: LibrarySortOption.TitleAz,
-                            onSortChange = { sortState[contentState.selectedTab] = it },
+                            onSortChange = { option ->
+                                sortState[contentState.selectedTab] = option
+                                settingsViewModel.setTabSortOption(contentState.selectedTab.name, option.name)
+                            },
                             onGroupClick = { group ->
                                 onNavigateToGroupDetail(contentState.selectedTab, group.title)
                             },

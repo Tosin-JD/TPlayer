@@ -21,8 +21,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,27 @@ fun AppNavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val playerUiState by viewModel.uiState.collectAsState()
+
+    var hasRestoredNav by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!hasRestoredNav) {
+            hasRestoredNav = true
+            val (savedRoute, _) = settingsViewModel.loadNavigationState()
+            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "search", "visualizer", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about")
+            if (savedRoute.isNotBlank() && savedRoute in validRoutes && savedRoute != "home") {
+                navController.navigate(savedRoute) {
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(currentRoute) {
+        if (!currentRoute.isNullOrBlank()) {
+            val currentTab = viewModel.homeUiState.value.selectedTab.name
+            settingsViewModel.saveNavigationState(currentRoute, currentTab)
+        }
+    }
 
     val showMiniPlayer = currentRoute != "player" && playerUiState.currentSong != null
     val fabLift by animateDpAsState(

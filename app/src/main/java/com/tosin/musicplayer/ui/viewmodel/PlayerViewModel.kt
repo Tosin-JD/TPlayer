@@ -62,6 +62,13 @@ class PlayerViewModel(
 
     init {
         viewModelScope.launch {
+            val (_, savedTab) = preferencesRepository.loadNavigationState()
+            val matchingTab = LibraryTab.entries.firstOrNull { it.name.equals(savedTab, ignoreCase = true) }
+            if (matchingTab != null) {
+                _selectedLibraryTab.value = matchingTab
+            }
+        }
+        viewModelScope.launch {
             combine(
                 playerController.currentSong,
                 playerController.isPlaying,
@@ -162,6 +169,10 @@ class PlayerViewModel(
 
     fun selectLibraryTab(tab: LibraryTab) {
         _selectedLibraryTab.value = tab
+        viewModelScope.launch {
+            val (currentRoute, _) = preferencesRepository.loadNavigationState()
+            preferencesRepository.saveNavigationState(currentRoute, tab.name)
+        }
     }
 
     private fun loadSongs() {
@@ -195,6 +206,13 @@ class PlayerViewModel(
         val settings = preferencesRepository.loadSettings()
         val rememberLastPlay = settings.boolean("rememberLastPlay", true)
         if (!rememberLastPlay) return
+        
+        // Guard: If PlaybackService is active/playing, do not interrupt active playback!
+        if (playerController.isPlaying.value || playerController.currentSong.value != null) {
+            applyPersistedPlaybackSettings(settings)
+            return
+        }
+
         val queueState = preferencesRepository.loadQueueState() ?: return
         if (queueState.songIds.isEmpty()) return
         val songMap = songs.associateBy { it.id }

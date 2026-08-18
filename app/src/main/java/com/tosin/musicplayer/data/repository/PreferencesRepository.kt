@@ -52,6 +52,52 @@ class PreferencesRepository(private val context: Context) {
         }
     }
 
+    // --- Navigation & Sort State Persistence ---
+    suspend fun saveNavigationState(route: String, tab: String) = withContext(Dispatchers.IO) {
+        try {
+            val current = loadSettings().toMutableMap()
+            current["lastClosedRoute"] = route
+            current["lastClosedLibraryTab"] = tab
+            saveSettings(current)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadNavigationState(): Pair<String, String> = withContext(Dispatchers.IO) {
+        val settings = loadSettings()
+        val route = (settings["lastClosedRoute"] as? String) ?: "home"
+        val tab = (settings["lastClosedLibraryTab"] as? String) ?: "All"
+        Pair(route, tab)
+    }
+
+    suspend fun saveTabSortOptions(sortMap: Map<String, String>) = withContext(Dispatchers.IO) {
+        try {
+            val current = loadSettings().toMutableMap()
+            val obj = JSONObject()
+            sortMap.forEach { (k, v) -> obj.put(k, v) }
+            current["perTabSortOptions"] = obj.toString()
+            saveSettings(current)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadTabSortOptions(): Map<String, String> = withContext(Dispatchers.IO) {
+        val settings = loadSettings()
+        val rawJson = settings["perTabSortOptions"] as? String ?: return@withContext emptyMap()
+        try {
+            val obj = JSONObject(rawJson)
+            val map = mutableMapOf<String, String>()
+            obj.keys().forEach { key ->
+                map[key] = obj.getString(key)
+            }
+            map
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
     // --- Queue Persistence ---
     suspend fun saveQueueState(
         songIds: List<Long>,

@@ -35,6 +35,9 @@ class SettingsViewModel(
     private val _events = MutableSharedFlow<SettingsEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
+    private val _tabSortOptions = MutableStateFlow<Map<String, String>>(emptyMap())
+    val tabSortOptions: StateFlow<Map<String, String>> = _tabSortOptions.asStateFlow()
+
     init {
         loadSavedSettings()
         loadAvailableFolders()
@@ -314,13 +317,34 @@ class SettingsViewModel(
 
     fun resetAllSettings() {
         _uiState.value = SettingsUiState()
+        _tabSortOptions.value = emptyMap()
         viewModelScope.launch {
             preferencesRepository.saveSettings(emptyMap())
         }
     }
 
+    fun setTabSortOption(tab: String, sortOption: String) {
+        viewModelScope.launch {
+            val current = _tabSortOptions.value.toMutableMap()
+            current[tab] = sortOption
+            _tabSortOptions.value = current
+            preferencesRepository.saveTabSortOptions(current)
+        }
+    }
+
+    fun saveNavigationState(route: String, tab: String) {
+        viewModelScope.launch {
+            preferencesRepository.saveNavigationState(route, tab)
+        }
+    }
+
+    suspend fun loadNavigationState(): Pair<String, String> =
+        preferencesRepository.loadNavigationState()
+
     private fun loadSavedSettings() {
         viewModelScope.launch {
+            val savedSortOptions = preferencesRepository.loadTabSortOptions()
+            _tabSortOptions.value = savedSortOptions
             val saved = preferencesRepository.loadSettings()
             _uiState.update { current ->
                 current.copy(

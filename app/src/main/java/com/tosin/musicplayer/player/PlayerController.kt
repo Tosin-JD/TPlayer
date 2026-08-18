@@ -136,7 +136,8 @@ class PlayerController(
         _progress.value = controller.currentPosition.coerceAtLeast(0)
         _playbackSpeed.value = controller.playbackParameters.speed
 
-        if (playlist.isNotEmpty()) {
+        val isServiceActive = controller.isPlaying || (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0)
+        if (playlist.isNotEmpty() && !isServiceActive) {
             val mediaItems = playlist.map { it.toMediaItem() }
             val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
             val currentMediaIds = (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId }
@@ -249,11 +250,22 @@ class PlayerController(
             _progress.value = startPositionMs
         }
         val controller = mediaController ?: return
+        val isServiceActive = controller.isPlaying || (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0)
         val mediaItems = songs.map { it.toMediaItem() }
         val currentMediaIds = (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId }
         val newMediaIds = songs.map { it.id.toString() }
-        val shouldResetQueue = currentMediaIds != newMediaIds || controller.currentMediaItemIndex !in songs.indices
-        if (shouldResetQueue) {
+        val queueChanged = currentMediaIds != newMediaIds || controller.currentMediaItemIndex !in songs.indices
+
+        if (isServiceActive && !queueChanged) {
+            val activeIndex = controller.currentMediaItemIndex
+            if (activeIndex in songs.indices) {
+                _currentIndex.value = activeIndex
+                _currentSong.value = songs[activeIndex]
+            }
+            return
+        }
+
+        if (queueChanged) {
             controller.setMediaItems(mediaItems, startIndex, startPositionMs.coerceAtLeast(0L))
             controller.prepare()
         } else {
@@ -264,7 +276,7 @@ class PlayerController(
             controller.play()
         }
 
-        if (autoResumeEnabled && startPositionMs <= 0L) {
+        if (autoResumeEnabled && startPositionMs <= 0L && !isServiceActive) {
             val startSongId = songs.getOrNull(startIndex)?.id
             if (startSongId != null) {
                 scope.launch {
