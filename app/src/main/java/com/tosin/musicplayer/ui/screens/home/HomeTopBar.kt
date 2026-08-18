@@ -1,6 +1,8 @@
 package com.tosin.musicplayer.ui.screens.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,17 +28,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.theme.AppSpacing
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeTopBar(
     selectedTab: LibraryTab,
     tabs: List<LibraryTab>,
     onTabSelected: (Int) -> Unit,
+    onTabLongClick: (LibraryTab) -> Unit = {},
     onNavigateToPlaylists: () -> Unit,
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
@@ -95,13 +99,43 @@ fun HomeTopBar(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
             tabs.forEachIndexed { index, tab ->
-                FilterChip(
-                    selected = selectedTab == tab,
-                    onClick = { onTabSelected(index) },
-                    label = { Text(tab.label) },
-                    trailingIcon = { Icon(tab.icon(), contentDescription = null, modifier = Modifier.size(18.dp)) }
-                )
+                Surface(
+                    modifier = Modifier
+                        .clip(FilterChipDefaultsShape)
+                        .combinedClickable(
+                            onClick = { onTabSelected(index) },
+                            onLongClick = { onTabLongClick(tab) }
+                        ),
+                    color = if (selectedTab == tab) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(
+                        1.dp,
+                        if (selectedTab == tab) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = tab.label,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTab == tab) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Icon(
+                            imageVector = tab.icon(),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = if (selectedTab == tab) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }
 }
+
+private val FilterChipDefaultsShape = RoundedCornerShape(8.dp)
+

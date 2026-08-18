@@ -179,7 +179,6 @@ fun PlayerScreen(
             onNavigateBack = onNavigateBack,
             onOpenSleepTimer = { showSleepTimerDialog = true },
             onOpenSpeedDialog = { showSpeedDialog = true },
-            onOpenVisualizer = onOpenVisualizer,
             onOpenEqualizer = onOpenEqualizer
         )
 

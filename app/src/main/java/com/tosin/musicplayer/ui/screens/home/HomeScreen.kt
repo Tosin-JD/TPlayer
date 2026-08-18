@@ -19,6 +19,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -103,6 +105,8 @@ fun HomeScreen(
         }
     }
 
+    var tabForBottomSheet by remember { mutableStateOf<LibraryTab?>(null) }
+
     Scaffold(
         topBar = {
             HomeTopBar(
@@ -113,12 +117,35 @@ fun HomeScreen(
                         pagerState.animateScrollToPage(index)
                     }
                 },
+                onTabLongClick = { tab ->
+                    tabForBottomSheet = tab
+                },
                 onNavigateToPlaylists = onNavigateToPlaylists,
                 onNavigateToSettings = onNavigateToSettings
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
+        tabForBottomSheet?.let { selectedTabForSheet ->
+            val indexInActive = safeActiveTabs.indexOf(selectedTabForSheet)
+            TabManagementBottomSheet(
+                tab = selectedTabForSheet,
+                tabIndex = indexInActive,
+                totalTabs = safeActiveTabs.size,
+                onMoveLeft = {
+                    settingsViewModel.moveTabLeft(selectedTabForSheet.name)
+                },
+                onMoveRight = {
+                    settingsViewModel.moveTabRight(selectedTabForSheet.name)
+                },
+                onHideTab = {
+                    settingsViewModel.hideTab(selectedTabForSheet.name)
+                },
+                onDismiss = {
+                    tabForBottomSheet = null
+                }
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -165,6 +192,7 @@ fun HomeScreen(
                         else -> LibraryGroupsTab(
                             tab = contentState.selectedTab,
                             groups = uiState.libraryGroups,
+                            playerViewModel = viewModel,
                             settingsViewModel = settingsViewModel,
                             sortBy = sortState[contentState.selectedTab] ?: LibrarySortOption.TitleAz,
                             onSortChange = { option ->

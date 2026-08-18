@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Tune
@@ -36,7 +35,6 @@ fun PlayerTopBar(
     onNavigateBack: () -> Unit,
     onOpenSleepTimer: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
-    onOpenVisualizer: () -> Unit,
     onOpenEqualizer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,14 +102,6 @@ fun PlayerTopBar(
                     }
                 )
                 Spacer(Modifier.width(AppSpacing.small))
-            }
-
-            IconButton(onClick = onOpenVisualizer) {
-                Icon(
-                    Icons.Rounded.GraphicEq,
-                    contentDescription = "Visualizer",
-                    tint = contentColor
-                )
             }
 
             IconButton(onClick = onOpenEqualizer) {

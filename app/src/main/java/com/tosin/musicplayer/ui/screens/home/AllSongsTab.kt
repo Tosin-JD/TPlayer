@@ -1,29 +1,21 @@
 package com.tosin.musicplayer.ui.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.data.models.Song
@@ -53,7 +45,6 @@ internal fun AllSongsTab(
 ) {
     val playerState by viewModel.uiState.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
-    var showCreatePlaylistDialog by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
     val storageScope = remember(settingsViewModel.uiState.collectAsState().value, availableStorageScopes) {
         val scope = settingsViewModel.getStorageScopeForTab(tab.label)
@@ -66,9 +57,7 @@ internal fun AllSongsTab(
     val visibleSongs = remember(uiState.songs, sortBy, storageScope) {
         sortSongs(uiState.songs.filter { it.matchesStorageScope(storageScope) }, sortBy)
     }
-    var actionSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    var actionInitialIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
-    var showActions by remember { mutableStateOf(false) }
+    var selectedSongForActions by remember { mutableStateOf<Song?>(null) }
 
     if (visibleSongs.isEmpty()) {
         EmptyLibraryState(
@@ -78,46 +67,20 @@ internal fun AllSongsTab(
         return
     }
 
-    if (showCreatePlaylistDialog) {
-        var playlistName by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showCreatePlaylistDialog = false },
-            title = { Text("New Playlist") },
-            text = {
-                OutlinedTextField(
-                    value = playlistName,
-                    onValueChange = { playlistName = it },
-                    label = { Text("Playlist Name") },
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (playlistName.isNotBlank()) {
-                            viewModel.createPlaylist(playlistName)
-                            showCreatePlaylistDialog = false
-                        }
-                    }
-                ) {
-                    Text("Create")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCreatePlaylistDialog = false }) { Text("Cancel") }
-            }
-        )
-    }
-
-    if (showActions) {
+    selectedSongForActions?.let { song ->
         SongActionsSheet(
-            songs = actionSongs,
-            initialSelectedIds = actionInitialIds,
+            song = song,
             playlists = playlists,
-            onDismiss = { showActions = false },
-            onAddToQueue = { viewModel.addSongsToQueue(it) },
-            onPlayNext = { viewModel.playNextSongs(it) },
-            onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) }
+            onDismiss = { selectedSongForActions = null },
+            onPlay = { target ->
+                val index = visibleSongs.indexOfFirst { it.id == target.id }
+                if (index != -1) viewModel.onSongClick(visibleSongs, index) else viewModel.onSongClick(listOf(target), 0)
+                onNavigateToPlayer()
+            },
+            onPlayNext = { target -> viewModel.playNextSongs(listOf(target)) },
+            onAddToCurrentPlaylist = { target -> viewModel.addSongsToQueue(listOf(target)) },
+            onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) },
+            onCreateNewPlaylist = { name -> viewModel.createPlaylist(name) }
         )
     }
 
@@ -131,7 +94,7 @@ internal fun AllSongsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = standardScreenPadding(top = 0.dp, bottom = 0.dp),
+        contentPadding = standardScreenPadding(top = 0.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
     ) {
         item {
@@ -163,17 +126,11 @@ internal fun AllSongsTab(
                     onNavigateToPlayer()
                 },
                 onLongClick = {
-                    actionSongs = visibleSongs
-                    actionInitialIds = setOf(song.id)
-                    showActions = true
+                    selectedSongForActions = song
                 },
                 trailingContent = {
-                    IconButton(onClick = {
-                        actionSongs = listOf(song)
-                        actionInitialIds = setOf(song.id)
-                        showActions = true
-                    }) {
-                        Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, contentDescription = "Actions", tint = MaterialTheme.colorScheme.primary)
+                    IconButton(onClick = { selectedSongForActions = song }) {
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "Song options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             )

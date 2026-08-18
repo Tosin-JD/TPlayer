@@ -1,6 +1,8 @@
 package com.tosin.musicplayer.ui.screens.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.components.CategoryActionsSheet
 import com.tosin.musicplayer.ui.components.StorageScopeSelector
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.state.LibrarySortOption
@@ -33,18 +36,22 @@ import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
+import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun LibraryGroupsTab(
     tab: LibraryTab,
     groups: List<LibraryGroup>,
+    playerViewModel: PlayerViewModel,
     settingsViewModel: SettingsViewModel,
     sortBy: LibrarySortOption,
     onSortChange: (LibrarySortOption) -> Unit,
     onGroupClick: (LibraryGroup) -> Unit,
     availableStorageScopes: List<StorageScope>
 ) {
+    val playlists by playerViewModel.playlists.collectAsState()
     val storageScope = remember(settingsViewModel.uiState.collectAsState().value, availableStorageScopes) {
         val scope = settingsViewModel.getStorageScopeForTab(tab.label)
         if (scope !in availableStorageScopes && availableStorageScopes.isNotEmpty()) {
@@ -57,6 +64,7 @@ internal fun LibraryGroupsTab(
         sortLibraryGroups(filterGroupsForStorage(groups, storageScope), sortBy)
     }
     var showSortMenu by remember { mutableStateOf(false) }
+    var selectedGroupForActions by remember { mutableStateOf<LibraryGroup?>(null) }
 
     if (groups.isEmpty()) {
         EmptyLibraryState(
@@ -74,9 +82,34 @@ internal fun LibraryGroupsTab(
         )
     }
 
+    selectedGroupForActions?.let { group ->
+        CategoryActionsSheet(
+            group = group,
+            playlists = playlists,
+            onPlayAll = { songs ->
+                if (songs.isNotEmpty()) {
+                    playerViewModel.onSongClick(songs, 0)
+                }
+            },
+            onPlayNext = { songs ->
+                playerViewModel.playNextSongs(songs)
+            },
+            onAddToCurrentPlaylist = { songs ->
+                playerViewModel.addSongsToQueue(songs)
+            },
+            onAddToPlaylist = { playlistId, songIds ->
+                playerViewModel.addSongsToPlaylist(playlistId, songIds)
+            },
+            onCreateNewPlaylist = { name ->
+                playerViewModel.createPlaylist(name)
+            },
+            onDismiss = { selectedGroupForActions = null }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = standardScreenPadding(top = 0.dp),
+        contentPadding = standardScreenPadding(top = 0.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
     ) {
         item {
@@ -98,10 +131,13 @@ internal fun LibraryGroupsTab(
 
         items(sortedGroups, key = { it.id }) { group ->
             Surface(
-                onClick = { onGroupClick(group) },
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 shape = MaterialTheme.shapes.extraLarge,
-                tonalElevation = 2.dp
+                tonalElevation = 2.dp,
+                modifier = Modifier.combinedClickable(
+                    onClick = { onGroupClick(group) },
+                    onLongClick = { selectedGroupForActions = group }
+                )
             ) {
                 Row(
                     modifier = Modifier

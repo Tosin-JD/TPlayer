@@ -113,6 +113,46 @@ class SettingsViewModel(
         }
     }
 
+    fun moveTabLeft(tabName: String) {
+        updateSettings { state ->
+            val activeTabs = state.tabOrder.filter { it in state.visibleTabs }
+            val indexInActive = activeTabs.indexOf(tabName)
+            if (indexInActive > 0) {
+                val prevTabName = activeTabs[indexInActive - 1]
+                val fullOrder = state.tabOrder.toMutableList()
+                val idx1 = fullOrder.indexOf(tabName)
+                val idx2 = fullOrder.indexOf(prevTabName)
+                if (idx1 != -1 && idx2 != -1) {
+                    fullOrder[idx1] = prevTabName
+                    fullOrder[idx2] = tabName
+                }
+                state.copy(tabOrder = fullOrder)
+            } else state
+        }
+    }
+
+    fun moveTabRight(tabName: String) {
+        updateSettings { state ->
+            val activeTabs = state.tabOrder.filter { it in state.visibleTabs }
+            val indexInActive = activeTabs.indexOf(tabName)
+            if (indexInActive != -1 && indexInActive < activeTabs.size - 1) {
+                val nextTabName = activeTabs[indexInActive + 1]
+                val fullOrder = state.tabOrder.toMutableList()
+                val idx1 = fullOrder.indexOf(tabName)
+                val idx2 = fullOrder.indexOf(nextTabName)
+                if (idx1 != -1 && idx2 != -1) {
+                    fullOrder[idx1] = nextTabName
+                    fullOrder[idx2] = tabName
+                }
+                state.copy(tabOrder = fullOrder)
+            } else state
+        }
+    }
+
+    fun hideTab(tabName: String) {
+        toggleTabVisibility(tabName)
+    }
+
     // ── General ──
     fun toggleNotifications(enabled: Boolean) {
         updateSettings { it.copy(showNotifications = enabled) }

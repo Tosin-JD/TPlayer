@@ -116,7 +116,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(Modifier.height(AppSpacing.xLarge))
+            Spacer(Modifier.height(120.dp))
         }
     }
 

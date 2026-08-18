@@ -2,7 +2,6 @@ package com.tosin.musicplayer.ui.screens.player
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.PauseCircleOutline
 import androidx.compose.material.icons.rounded.RepeatOneOn
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Timer
@@ -42,7 +42,8 @@ fun PlayerMoreOptionsSheet(
     onShowDeleteConfirm: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
-    onOpenABRepeatDialog: () -> Unit
+    onOpenABRepeatDialog: () -> Unit,
+    onStopAfterCurrentSong: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -62,11 +63,41 @@ fun PlayerMoreOptionsSheet(
                 modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
             )
 
+            // 1. Stop playing after this song (Top priority)
+            ListItem(
+                headlineContent = { Text("Stop playing after this song") },
+                supportingContent = { Text("Pause automatically when the current track finishes") },
+                leadingContent = { Icon(Icons.Rounded.PauseCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                modifier = Modifier.clickable {
+                    onDismiss()
+                    onStopAfterCurrentSong()
+                }
+            )
+
+            // 2. Sleep timer (Moved up right below Stop playing)
+            ListItem(
+                headlineContent = { Text("Sleep timer") },
+                supportingContent = {
+                    if (sleepTimerRemaining != null) {
+                        Text("${sleepTimerRemaining / 60000} mins remaining")
+                    } else {
+                        Text("Set auto-off timer")
+                    }
+                },
+                leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                modifier = Modifier.clickable {
+                    onDismiss()
+                    onOpenSleepTimerDialog()
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.small))
+
             if (currentSong != null) {
                 ListItem(
                     headlineContent = { Text("Edit tags") },
                     supportingContent = { Text("Update title, artist, album and genre") },
-                    leadingContent = { Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(Icons.Rounded.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onDismiss()
                         onOpenSongEditor(currentSong.id)
@@ -97,16 +128,6 @@ fun PlayerMoreOptionsSheet(
                         context.startActivity(Intent.createChooser(shareIntent, "Share song"))
                     }
                 )
-
-                ListItem(
-                    headlineContent = { Text("Delete permanently") },
-                    supportingContent = { Text("Remove the file from storage forever") },
-                    leadingContent = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                    modifier = Modifier.clickable {
-                        onDismiss()
-                        onShowDeleteConfirm()
-                    }
-                )
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.small))
@@ -118,22 +139,6 @@ fun PlayerMoreOptionsSheet(
                 modifier = Modifier.clickable {
                     onDismiss()
                     onOpenSpeedDialog()
-                }
-            )
-
-            ListItem(
-                headlineContent = { Text("Sleep Timer") },
-                supportingContent = {
-                    if (sleepTimerRemaining != null) {
-                        Text("${sleepTimerRemaining / 60000} mins remaining")
-                    } else {
-                        Text("Off")
-                    }
-                },
-                leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                modifier = Modifier.clickable {
-                    onDismiss()
-                    onOpenSleepTimerDialog()
                 }
             )
 
@@ -154,6 +159,18 @@ fun PlayerMoreOptionsSheet(
                     onOpenABRepeatDialog()
                 }
             )
+
+            if (currentSong != null) {
+                ListItem(
+                    headlineContent = { Text("Delete permanently", color = MaterialTheme.colorScheme.error) },
+                    supportingContent = { Text("Remove the file from storage forever") },
+                    leadingContent = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                    modifier = Modifier.clickable {
+                        onDismiss()
+                        onShowDeleteConfirm()
+                    }
+                )
+            }
         }
     }
 }

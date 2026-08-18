@@ -12,6 +12,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import com.tosin.musicplayer.ui.state.PlayerUiState
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 
 @Composable
 fun PlayerDialogContainer(
@@ -78,7 +79,13 @@ fun PlayerDialogContainer(
             onShowDeleteConfirm = onShowDeleteConfirm,
             onOpenSpeedDialog = onOpenSpeedDialog,
             onOpenSleepTimerDialog = onOpenSleepTimerDialog,
-            onOpenABRepeatDialog = onOpenABRepeatDialog
+            onOpenABRepeatDialog = onOpenABRepeatDialog,
+            onStopAfterCurrentSong = {
+                if (state.repeatMode != RepeatMode.PLAY_ONE_ONCE) {
+                    viewModel.cycleRepeatMode()
+                }
+                Toast.makeText(context, "Will stop playing after current song", Toast.LENGTH_SHORT).show()
+            }
         )
     }
 
@@ -101,7 +108,7 @@ fun PlayerDialogContainer(
             icon = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Delete permanently?") },
             text = {
-                Text("This will permanently delete \"${state.currentSong?.title}\". This cannot be reversed.")
+                Text("This will permanently delete \"${state.currentSong?.title}\" from your device storage. This action cannot be reversed.")
             },
             confirmButton = {
                 TextButton(
@@ -109,7 +116,7 @@ fun PlayerDialogContainer(
                         val song = state.currentSong
                         if (song != null) {
                             viewModel.deleteSong(song) { success ->
-                                val msg = if (success) "Song deleted" else "Unable to delete song"
+                                val msg = if (success) "Song deleted permanently" else "Unable to delete file from storage"
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
                         }

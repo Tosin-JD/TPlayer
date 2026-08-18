@@ -60,19 +60,19 @@ fun CurrentPlaylistScreen(
         }
     }
 
-    var actionSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    var actionInitialIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    var selectedSongForActions by remember { mutableStateOf<Song?>(null) }
     var showActions by remember { mutableStateOf(false) }
 
-    if (showActions) {
+    selectedSongForActions?.let { song ->
         SongActionsSheet(
-            songs = actionSongs,
-            initialSelectedIds = actionInitialIds,
+            song = song,
             playlists = playlists,
-            onDismiss = { showActions = false },
-            onAddToQueue = { viewModel.addSongsToQueue(it) },
-            onPlayNext = { viewModel.playNextSongs(it) },
-            onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) }
+            onDismiss = { showActions = false; selectedSongForActions = null },
+            onPlay = { target -> onPlaySong(target) },
+            onPlayNext = { target -> viewModel.playNextSongs(listOf(target)) },
+            onAddToCurrentPlaylist = { target -> viewModel.addSongsToQueue(listOf(target)) },
+            onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) },
+            onCreateNewPlaylist = { name -> viewModel.createPlaylist(name) }
         )
     }
 
@@ -151,8 +151,7 @@ fun CurrentPlaylistScreen(
                     },
                     onLongClick = {
                         if (!isEditMode) {
-                            actionSongs = queue
-                            actionInitialIds = setOf(song.id)
+                            selectedSongForActions = song
                             showActions = true
                         }
                     },
