@@ -208,7 +208,7 @@ private fun SettingsCategoryCard(
                     .size(52.dp)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.large,
-                        backgroundColor = MaterialTheme.colorScheme.primaryContainer
+                        backgroundColor = MaterialTheme.colorScheme.surface
                     ),
                 contentAlignment = Alignment.Center
             ) {

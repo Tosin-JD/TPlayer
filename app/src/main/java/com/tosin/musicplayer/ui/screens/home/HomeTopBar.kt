@@ -123,7 +123,7 @@ fun HomeTopBar(
                     modifier = Modifier
                         .customAppSurface(
                             shape = RoundedCornerShape(4.dp),
-                            backgroundColor = if (selectedTab == tab) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                            backgroundColor = if (selectedTab == tab) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surface
                         )
                         .combinedClickable(
                             onClick = { onTabSelected(index) },
@@ -138,14 +138,14 @@ fun HomeTopBar(
                             text = tab.label,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedTab == tab) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            color = if (selectedTab == tab) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             imageVector = tab.icon(),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
-                            tint = if (selectedTab == tab) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (selectedTab == tab) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
