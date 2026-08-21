@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Sync
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.ui.state.FolderEntry
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.icons.AppIcons
 
 enum class ScanAction {
@@ -144,16 +145,18 @@ fun ExcludedFolderBottomSheet(
                 Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xSmall)) {
                     availableFolders.forEach { folder ->
                         val selected = excludedFolders.contains(folder.path)
-                        Card(
-                            onClick = { onToggleExcludedFolder(folder.path) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (selected) {
-                                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerLow
-                                }
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .customAppSurface(
+                                    shape = MaterialTheme.shapes.medium,
+                                    backgroundColor = if (selected) {
+                                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainerLow
+                                    }
+                                )
+                                .clickable { onToggleExcludedFolder(folder.path) }
                         ) {
                             ListItem(
                                 headlineContent = { Text(folder.label, fontWeight = FontWeight.SemiBold) },

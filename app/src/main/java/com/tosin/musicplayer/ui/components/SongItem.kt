@@ -6,6 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -13,6 +14,7 @@ import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 
 @Composable
 fun SongItem(
@@ -31,22 +33,26 @@ fun SongItem(
         label = "song-item-container"
     )
 
-    Surface(
-        color = containerColor,
-        shape = MaterialTheme.shapes.large,
-        tonalElevation = if (isPlaying) 4.dp else 1.dp,
-        modifier = Modifier.fillMaxWidth()
+    // Use Box + customAppSurface instead of Surface to avoid double-rendering
+    // customAppSurface handles: background fill, clip, border, shadow, glow
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .customAppSurface(
+                shape = MaterialTheme.shapes.large,
+                backgroundColor = containerColor
+            )
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { onLongClick?.invoke() }
+            )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = { onLongClick?.invoke() }
-                )
                 .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = song.albumArt.orDefaultAlbumArt(),

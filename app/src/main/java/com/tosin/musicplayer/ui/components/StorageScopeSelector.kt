@@ -148,7 +148,7 @@ private fun StorageScopeOption(
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(4.dp),
         color = bgColor,
         border = BorderStroke(1.5.dp, borderColor),
         modifier = Modifier.fillMaxWidth()

@@ -116,7 +116,7 @@ fun VisualizerScreen(
 
                 Card(
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    shape = RoundedCornerShape(32.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme
                             .surfaceContainerHighest.copy(alpha = 0.55f))

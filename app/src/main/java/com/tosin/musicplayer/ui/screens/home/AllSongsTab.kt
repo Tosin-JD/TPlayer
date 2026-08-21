@@ -105,16 +105,11 @@ internal fun AllSongsTab(
                 title = "All songs",
                 subtitle = "${visibleSongs.size} songs",
                 onSortClick = { showSortMenu = true },
-                sortLabel = sortBy.label
+                sortLabel = sortBy.label,
+                storageScope = if (availableStorageScopes.size > 1) storageScope else null,
+                onStorageSelected = if (availableStorageScopes.size > 1) {{ scope -> settingsViewModel.setStorageScopeForTab(tab.label, scope) }} else null,
+                availableStorageScopes = availableStorageScopes
             )
-            if (availableStorageScopes.size > 1) {
-                StorageScopeSelector(
-                    selected = storageScope,
-                    onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                    modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
-                    availableScopes = availableStorageScopes
-                )
-            }
         }
 
         itemsIndexed(

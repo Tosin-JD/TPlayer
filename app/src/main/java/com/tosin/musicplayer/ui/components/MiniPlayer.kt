@@ -42,10 +42,10 @@ fun MiniPlayer(
     Card(
         onClick = { onExpand() },
         shape = RoundedCornerShape(
-            topStart = 28.dp,
-            topEnd = 28.dp,
-            bottomStart = 16.dp,
-            bottomEnd = 16.dp
+            topStart = 4.dp,
+            topEnd = 4.dp,
+            bottomStart = 4.dp,
+            bottomEnd = 4.dp
         ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
@@ -83,7 +83,7 @@ fun MiniPlayer(
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(4.dp)),
                 contentScale = ContentScale.Crop
             )
 

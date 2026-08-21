@@ -3,15 +3,12 @@ package com.tosin.musicplayer.ui.icons
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * Centralized icon mapping from semantic names to Material Icons Rounded.
- * All UI code references these properties instead of the library directly.
- * To swap to Phosphor Icons later, only this file needs to change.
+ * Centralized icon mapping using Google Material Icons Rounded.
  */
 object AppIcons {
     // ── Navigation & Playback ──
@@ -20,7 +17,9 @@ object AppIcons {
     val Stop: ImageVector get() = Icons.Rounded.Stop
     val SkipPrevious: ImageVector get() = Icons.Rounded.SkipPrevious
     val SkipNext: ImageVector get() = Icons.Rounded.SkipNext
+    val Forward5: ImageVector get() = Icons.Rounded.Forward5
     val Forward10: ImageVector get() = Icons.Rounded.Forward10
+    val Replay5: ImageVector get() = Icons.Rounded.Replay5
     val Replay10: ImageVector get() = Icons.Rounded.Replay10
 
     // ── Shuffle & Repeat ──
@@ -28,13 +27,13 @@ object AppIcons {
     val ShuffleOn: ImageVector get() = Icons.Rounded.ShuffleOn
     val Repeat: ImageVector get() = Icons.Rounded.Repeat
     val RepeatOne: ImageVector get() = Icons.Rounded.RepeatOne
-    val RepeatOneOn: ImageVector get() = Icons.Rounded.RepeatOneOn
+    val RepeatOneOn: ImageVector get() = Icons.Rounded.RepeatOne
     val LooksOne: ImageVector get() = Icons.Rounded.LooksOne
 
     // ── Music & Media ──
     val MusicNote: ImageVector get() = Icons.Rounded.MusicNote
     val Album: ImageVector get() = Icons.Rounded.Album
-    val Lyrics: ImageVector get() = Icons.Rounded.Lyrics
+    val Lyrics: ImageVector get() = Icons.Rounded.Speaker
     val Queue: ImageVector get() = Icons.Rounded.QueueMusic
     val Equalizer: ImageVector get() = Icons.Rounded.Equalizer
     val LibraryMusic: ImageVector get() = Icons.Rounded.LibraryMusic
@@ -111,6 +110,6 @@ object AppIcons {
     val FavoriteBorder: ImageVector get() = Icons.Rounded.FavoriteBorder
 
     // ── Misc ──
-    val PlaylistPlay: ImageVector get() = Icons.AutoMirrored.Rounded.PlaylistPlay
+    val PlaylistPlay: ImageVector get() = Icons.Rounded.PlaylistPlay
     val VolumeOff: ImageVector get() = Icons.AutoMirrored.Rounded.VolumeOff
 }

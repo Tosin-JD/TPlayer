@@ -30,5 +30,9 @@ enum class ThemeStyle(
     BRUTALISM(
         displayName = "Brutalism",
         description = "Raw, unpolished anti-design with thick black borders, zero corners, high-contrast colors, and bold oversized typography."
+    ),
+    NEO_BRUTALISM(
+        displayName = "Neo-Brutalism",
+        description = "Playful brutalism with rounded shapes, thick black borders, colorful offset shadows, and bold chunky typography."
     )
 }

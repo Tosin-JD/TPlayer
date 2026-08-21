@@ -124,8 +124,8 @@ data class ThemeParameters(
                 cornerRadiusScale = 0.4f, // Sharp industrial chamfered geometry
                 borderStrokeWidth = 1.5.dp,
                 borderColor = neonCyan.copy(alpha = 0.7f),
-                surfaceBlur = 8.dp,       // Glass HUD aesthetic
-                surfaceAlpha = 0.85f,
+                surfaceBlur = 0.dp,       // No blur — text stays crisp
+                surfaceAlpha = 1.0f,       // Fully opaque for readability
                 shadowElevation = 0.dp,
                 glowRadius = 10.dp,       // Radiant neon aura
                 glowColor = neonPink.copy(alpha = 0.6f),
@@ -309,6 +309,65 @@ data class ThemeParameters(
         }
 
         /**
+         * Neo-Brutalism default token factory — playful thick borders + colorful offset shadows
+         */
+        fun neoBrutalismDefault(isDark: Boolean = true): ThemeParameters {
+            val shadowPink = Color(0xFFFF6B9D)
+            val neonYellow = Color(0xFFFFE156)
+            return if (isDark) {
+                ThemeParameters(
+                    primaryColor = Color(0xFFFF6B9D),
+                    secondaryColor = Color(0xFF7B61FF),
+                    tertiaryColor = Color(0xFFFFE156),
+                    backgroundColor = Color(0xFF1A1A2E),
+                    surfaceColor = Color(0xFF222240),
+                    surfaceVariantColor = Color(0xFF2D2D50),
+                    onPrimaryColor = Color.Black,
+                    onSurfaceColor = Color(0xFFF0F0FF),
+                    onBackgroundColor = Color(0xFFF0F0FF),
+                    cornerRadiusScale = 0.8f,
+                    borderStrokeWidth = 3.dp,
+                    borderColor = Color.White,
+                    surfaceBlur = 0.dp,
+                    surfaceAlpha = 1.0f,
+                    shadowElevation = 6.dp,
+                    shadowColor = shadowPink,
+                    highlightColor = Color.Transparent,
+                    glowRadius = 0.dp,
+                    glowColor = Color.Transparent,
+                    fontScale = 1.05f,
+                    useSystemFont = true,
+                    isDark = true
+                )
+            } else {
+                ThemeParameters(
+                    primaryColor = Color(0xFFE84393),
+                    secondaryColor = Color(0xFF6C5CE7),
+                    tertiaryColor = Color(0xFFFFE156),
+                    backgroundColor = Color(0xFFFFF5F5),
+                    surfaceColor = Color.White,
+                    surfaceVariantColor = Color(0xFFF0E6FF),
+                    onPrimaryColor = Color.White,
+                    onSurfaceColor = Color(0xFF2D3436),
+                    onBackgroundColor = Color(0xFF2D3436),
+                    cornerRadiusScale = 0.8f,
+                    borderStrokeWidth = 3.dp,
+                    borderColor = Color.Black,
+                    surfaceBlur = 0.dp,
+                    surfaceAlpha = 1.0f,
+                    shadowElevation = 6.dp,
+                    shadowColor = neonYellow,
+                    highlightColor = Color.Transparent,
+                    glowRadius = 0.dp,
+                    glowColor = Color.Transparent,
+                    fontScale = 1.05f,
+                    useSystemFont = true,
+                    isDark = false
+                )
+            }
+        }
+
+        /**
          * Retro Monochrome / Neo-Brutalist default token factory
          */
         fun retroMonoDefault(isDark: Boolean = true): ThemeParameters {
@@ -378,6 +437,7 @@ data class ThemeState(
             ThemeStyle.CLAYMORPHISM -> ThemeParameters.claymorphismDefault()
             ThemeStyle.RETRO_MONO -> ThemeParameters.retroMonoDefault()
             ThemeStyle.BRUTALISM -> ThemeParameters.brutalismDefault()
+            ThemeStyle.NEO_BRUTALISM -> ThemeParameters.neoBrutalismDefault()
         }
     }
 ) {

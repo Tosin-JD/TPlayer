@@ -63,6 +63,6 @@ class ThemeDataStoreRepositoryTest {
     fun loadThemeState_whenFileDoesNotExist_returnsDefaultState() = runTest {
         val loaded = repository.loadThemeState()
         assertEquals(ThemeStyle.MATERIAL_EXPRESSIVE, loaded.activeStyle)
-        assertEquals(6, loaded.styleConfigs.size)
+        assertEquals(ThemeStyle.entries.size, loaded.styleConfigs.size)
     }
 }

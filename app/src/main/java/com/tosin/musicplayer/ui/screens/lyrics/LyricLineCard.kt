@@ -61,10 +61,10 @@ fun LyricLineCard(
     Card(
         modifier = Modifier.fillMaxWidth().animateContentSize(),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(4.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(AppSpacing.medium).clip(RoundedCornerShape(24.dp)),
+            modifier = Modifier.fillMaxWidth().padding(AppSpacing.medium).clip(RoundedCornerShape(4.dp)),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AssistChip(

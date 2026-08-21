@@ -31,52 +31,73 @@ fun UniversalAppTheme(
     val animatedSurfaceVariant by animateColorAsState(currentParams.surfaceVariantColor, tween(300), label = "surfaceVariant")
 
     // ── Material 3 ColorScheme Bridge ──
+    // Derive secondary/primary containers from theme tokens
+    // Use higher alpha so FABs, chips, and icon containers are opaque and icons are visible
+    val secondaryContainerColor = animatedSecondary.copy(alpha = 0.30f)
+    val onSecondaryContainerColor = animatedSecondary
+    val primaryContainerColor = animatedPrimary.copy(alpha = 0.30f)
+    val onPrimaryContainerColor = animatedPrimary
+    val surfaceContainerLowest = animatedBackground
+    val surfaceContainerLow = animatedSurface  // Fully opaque
+
     val m3ColorScheme: ColorScheme = if (currentParams.isDark) {
         darkColorScheme(
             primary = animatedPrimary,
             onPrimary = currentParams.onPrimaryColor,
+            primaryContainer = primaryContainerColor,
+            onPrimaryContainer = onPrimaryContainerColor,
             secondary = animatedSecondary,
             onSecondary = currentParams.onPrimaryColor,
+            secondaryContainer = secondaryContainerColor,
+            onSecondaryContainer = onSecondaryContainerColor,
             tertiary = currentParams.tertiaryColor,
             background = animatedBackground,
             onBackground = currentParams.onBackgroundColor,
             surface = animatedSurface,
             onSurface = currentParams.onSurfaceColor,
             surfaceVariant = animatedSurfaceVariant,
-            onSurfaceVariant = currentParams.onSurfaceColor.copy(alpha = 0.7f),
-            outline = if (currentParams.borderStrokeWidth > 0.dp) currentParams.borderColor else currentParams.onSurfaceColor.copy(alpha = 0.2f),
+            onSurfaceVariant = currentParams.onSurfaceColor.copy(alpha = 0.85f),
+            surfaceContainerLowest = surfaceContainerLowest,
+            surfaceContainerLow = surfaceContainerLow,
             surfaceContainer = animatedSurfaceVariant,
             surfaceContainerHigh = animatedSurfaceVariant,
-            surfaceContainerHighest = animatedSurfaceVariant
+            surfaceContainerHighest = animatedSurfaceVariant,
+            outline = if (currentParams.borderStrokeWidth > 0.dp) currentParams.borderColor else currentParams.onSurfaceColor.copy(alpha = 0.2f)
         )
     } else {
         lightColorScheme(
             primary = animatedPrimary,
             onPrimary = currentParams.onPrimaryColor,
+            primaryContainer = primaryContainerColor,
+            onPrimaryContainer = onPrimaryContainerColor,
             secondary = animatedSecondary,
             onSecondary = currentParams.onPrimaryColor,
+            secondaryContainer = secondaryContainerColor,
+            onSecondaryContainer = onSecondaryContainerColor,
             tertiary = currentParams.tertiaryColor,
             background = animatedBackground,
             onBackground = currentParams.onBackgroundColor,
             surface = animatedSurface,
             onSurface = currentParams.onSurfaceColor,
             surfaceVariant = animatedSurfaceVariant,
-            onSurfaceVariant = currentParams.onSurfaceColor.copy(alpha = 0.7f),
-            outline = if (currentParams.borderStrokeWidth > 0.dp) currentParams.borderColor else currentParams.onSurfaceColor.copy(alpha = 0.2f),
+            onSurfaceVariant = currentParams.onSurfaceColor.copy(alpha = 0.85f),
+            surfaceContainerLowest = surfaceContainerLowest,
+            surfaceContainerLow = surfaceContainerLow,
             surfaceContainer = animatedSurfaceVariant,
             surfaceContainerHigh = animatedSurfaceVariant,
-            surfaceContainerHighest = animatedSurfaceVariant
+            surfaceContainerHighest = animatedSurfaceVariant,
+            outline = if (currentParams.borderStrokeWidth > 0.dp) currentParams.borderColor else currentParams.onSurfaceColor.copy(alpha = 0.2f)
         )
     }
 
     // ── Dynamic Shape Scaling ──
     val scale = currentParams.cornerRadiusScale
     val dynamicShapes = Shapes(
-        extraSmall = RoundedCornerShape((4f * scale).dp),
-        small = RoundedCornerShape((8f * scale).dp),
-        medium = RoundedCornerShape((16f * scale).dp),
-        large = RoundedCornerShape((24f * scale).dp),
-        extraLarge = RoundedCornerShape((32f * scale).dp)
+        extraSmall = RoundedCornerShape((2f * scale).dp),
+        small = RoundedCornerShape((2f * scale).dp),
+        medium = RoundedCornerShape((3f * scale).dp),
+        large = RoundedCornerShape((4f * scale).dp),
+        extraLarge = RoundedCornerShape((4f * scale).dp)
     )
 
     // ── Dynamic Typography Bridge ──

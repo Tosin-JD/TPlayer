@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -133,7 +132,7 @@ fun ThemeStudioScreen(
                             modifier = Modifier
                                 .width(140.dp)
                                 .customAppSurface(
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = RoundedCornerShape(4.dp),
                                     backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                                     onClick = { viewModel.selectStyle(style) }
                                 )
@@ -351,7 +350,7 @@ private fun LiveThemePreviewSandbox(
         modifier = Modifier
             .fillMaxWidth()
             .customAppSurface(
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(4.dp)
             )
             .padding(18.dp)
     ) {
@@ -365,7 +364,7 @@ private fun LiveThemePreviewSandbox(
                     modifier = Modifier
                         .size(52.dp)
                         .customAppSurface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(4.dp),
                             backgroundColor = MaterialTheme.colorScheme.primary
                         ),
                     contentAlignment = Alignment.Center
@@ -446,7 +445,7 @@ private fun StudioSectionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
@@ -491,12 +490,12 @@ private fun ColorPickerRow(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(CircleShape)
+                        .clip(MaterialTheme.shapes.small)
                         .background(color)
                         .border(
                             width = if (isSelected) 3.dp else 1.dp,
                             color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Gray.copy(alpha = 0.5f),
-                            shape = CircleShape
+                            shape = MaterialTheme.shapes.small
                         )
                         .clickable { onColorSelected(color) },
                     contentAlignment = Alignment.Center

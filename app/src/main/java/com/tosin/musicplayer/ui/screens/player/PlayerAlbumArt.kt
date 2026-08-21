@@ -10,9 +10,8 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -27,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import kotlin.math.abs
 
 @Composable
@@ -56,10 +56,13 @@ fun PlayerAlbumArt(
         label = "albumArtTransition",
         modifier = modifier
     ) { targetSong ->
-        Card(
+        Box(
             modifier = Modifier
                 .size(albumArtSize)
                 .aspectRatio(1f)
+                .customAppSurface(
+                    shape = RoundedCornerShape(4.dp)
+                )
                 .graphicsLayer {
                     translationX = albumDragOffsetX
                     val dragFraction = (albumDragOffsetX / albumDragRangePx).coerceIn(-1f, 1f)
@@ -93,9 +96,7 @@ fun PlayerAlbumArt(
                             albumDragOffsetX = 0f
                         }
                     )
-                },
-            shape = RoundedCornerShape(28.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                }
         ) {
             AsyncImage(
                 model = targetSong?.albumArt.orDefaultAlbumArt(),

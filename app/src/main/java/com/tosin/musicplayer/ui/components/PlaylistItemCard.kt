@@ -48,7 +48,7 @@ fun PlaylistItemCard(
     dragModifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = if (isDragging) {
@@ -64,7 +64,7 @@ fun PlaylistItemCard(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(4.dp))
             .then(dragModifier)
             .combinedClickable(
                 onClick = onItemClick,
@@ -97,7 +97,7 @@ fun PlaylistItemCard(
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(14.dp)),
+                    .clip(RoundedCornerShape(4.dp)),
                 contentScale = ContentScale.Crop
             )
 

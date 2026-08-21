@@ -11,10 +11,14 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -27,7 +31,7 @@ import androidx.compose.ui.unit.dp
  * to render style-authentic lighting, shadows, borders, glows, and blur.
  */
 fun Modifier.customAppSurface(
-    shape: Shape = RoundedCornerShape(16.dp),
+    shape: Shape = RoundedCornerShape(4.dp),
     backgroundColor: Color? = null,
     onClick: (() -> Unit)? = null
 ): Modifier = composed {
@@ -74,7 +78,7 @@ fun Modifier.customAppSurface(
         ThemeStyle.RETRO_MONO -> {
             if (params.shadowElevation > 0.dp) {
                 modifier = modifier.drawBehind {
-                    drawRetroHardShadow(
+                    drawOffsetHardShadow(
                         shadowColor = params.shadowColor,
                         elevation = params.shadowElevation,
                         shape = scaledShape
@@ -85,7 +89,18 @@ fun Modifier.customAppSurface(
         ThemeStyle.BRUTALISM -> {
             if (params.shadowElevation > 0.dp) {
                 modifier = modifier.drawBehind {
-                    drawBrutalistHardShadow(
+                    drawOffsetHardShadow(
+                        shadowColor = params.shadowColor,
+                        elevation = params.shadowElevation,
+                        shape = scaledShape
+                    )
+                }
+            }
+        }
+        ThemeStyle.NEO_BRUTALISM -> {
+            if (params.shadowElevation > 0.dp) {
+                modifier = modifier.drawBehind {
+                    drawOffsetHardShadow(
                         shadowColor = params.shadowColor,
                         elevation = params.shadowElevation,
                         shape = scaledShape
@@ -150,6 +165,48 @@ fun Modifier.customAppSurface(
     modifier
 }
 
+// ── Shape Helpers ──
+
+/**
+ * Extracts the corner radius in pixels from a shape.
+ * Returns 0f for non-RoundedCornerShape (sharp edges).
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.extractCornerRadiusPx(shape: Shape): Float {
+    if (shape is RoundedCornerShape) {
+        // Use the topStart radius as a representative value
+        return shape.topStart.toPx(size, this)
+    }
+    return 0f
+}
+
+/**
+ * Creates a Path from a shape's outline for use in shadow drawing.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.shapeToPath(shape: Shape): Path {
+    val path = Path()
+    val outline = shape.createOutline(size, layoutDirection, this)
+    when (outline) {
+        is androidx.compose.ui.graphics.Outline.Rounded -> {
+            path.addRoundRect(
+                RoundRect(
+                    left = 0f,
+                    top = 0f,
+                    right = size.width,
+                    bottom = size.height,
+                    cornerRadius = outline.roundRect.topLeftCornerRadius
+                )
+            )
+        }
+        is androidx.compose.ui.graphics.Outline.Rectangle -> {
+            path.addRect(outline.rect)
+        }
+        is androidx.compose.ui.graphics.Outline.Generic -> {
+            path.addPath(outline.path)
+        }
+    }
+    return path
+}
+
 // ── Private Shader & Drawing Routines ──
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNeonGlow(
@@ -160,6 +217,8 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNeonGlow(
     val radiusPx = glowRadius.toPx()
     if (radiusPx <= 0f) return
 
+    val cornerPx = extractCornerRadiusPx(shape)
+
     drawIntoCanvas { canvas ->
         val paint = Paint().asFrameworkPaint().apply {
             color = glowColor.toArgb()
@@ -168,7 +227,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNeonGlow(
         }
         canvas.nativeCanvas.drawRoundRect(
             0f, 0f, size.width, size.height,
-            16f, 16f,
+            cornerPx, cornerPx,
             paint
         )
     }
@@ -182,6 +241,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNeumorphicOuter
 ) {
     val offsetPx = elevation.toPx()
     val blurPx = (elevation * 1.5f).toPx().coerceAtLeast(1f)
+    val cornerPx = extractCornerRadiusPx(shape)
 
     drawIntoCanvas { canvas ->
         // Bottom-Right Dark Shadow
@@ -192,7 +252,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNeumorphicOuter
         }
         canvas.nativeCanvas.drawRoundRect(
             offsetPx, offsetPx, size.width + offsetPx, size.height + offsetPx,
-            24f, 24f,
+            cornerPx, cornerPx,
             darkPaint
         )
 
@@ -204,7 +264,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNeumorphicOuter
         }
         canvas.nativeCanvas.drawRoundRect(
             -offsetPx, -offsetPx, size.width - offsetPx, size.height - offsetPx,
-            24f, 24f,
+            cornerPx, cornerPx,
             lightPaint
         )
     }
@@ -217,6 +277,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawClaymorphicDrop
 ) {
     val offsetPx = elevation.toPx()
     val blurPx = (elevation * 1.8f).toPx().coerceAtLeast(1f)
+    val cornerPx = extractCornerRadiusPx(shape)
 
     drawIntoCanvas { canvas ->
         val paint = Paint().asFrameworkPaint().apply {
@@ -226,7 +287,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawClaymorphicDrop
         }
         canvas.nativeCanvas.drawRoundRect(
             0f, offsetPx, size.width, size.height + offsetPx,
-            32f, 32f,
+            cornerPx, cornerPx,
             paint
         )
     }
@@ -238,6 +299,8 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawClayInnerHighli
     shape: Shape
 ) {
     val strokePx = strokeWidth.toPx()
+    val cornerPx = extractCornerRadiusPx(shape)
+
     drawIntoCanvas { canvas ->
         val paint = Paint().apply {
             color = highlightColor
@@ -250,38 +313,42 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawClayInnerHighli
             top = strokePx / 2,
             right = size.width - strokePx / 2,
             bottom = size.height - strokePx / 2,
-            radiusX = 32f,
-            radiusY = 32f,
+            radiusX = cornerPx,
+            radiusY = cornerPx,
             paint = paint
         )
     }
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRetroHardShadow(
+/**
+ * Unified hard offset shadow — respects the shape's corner radius.
+ * When cornerRadius = 0 (Brutalism/RetroMono), draws sharp rectangles.
+ * When cornerRadius > 0 (Neo-Brutalism), draws rounded rectangles.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawOffsetHardShadow(
     shadowColor: Color,
     elevation: Dp,
     shape: Shape
 ) {
     val offsetPx = elevation.toPx()
-    // Solid, unblurred offset box
-    drawRect(
-        color = shadowColor,
-        topLeft = Offset(offsetPx, offsetPx),
-        size = size
-    )
-}
+    val cornerPx = extractCornerRadiusPx(shape)
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBrutalistHardShadow(
-    shadowColor: Color,
-    elevation: Dp,
-    shape: Shape
-) {
-    val offsetPx = elevation.toPx()
-    drawRect(
-        color = shadowColor,
-        topLeft = Offset(offsetPx, offsetPx),
-        size = size
-    )
+    drawIntoCanvas { canvas ->
+        val paint = Paint().apply {
+            color = shadowColor
+            style = PaintingStyle.Fill
+            isAntiAlias = true
+        }
+        canvas.drawRoundRect(
+            left = offsetPx,
+            top = offsetPx,
+            right = size.width + offsetPx,
+            bottom = size.height + offsetPx,
+            radiusX = cornerPx,
+            radiusY = cornerPx,
+            paint = paint
+        )
+    }
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMaterialElevationShadow(
@@ -292,6 +359,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMaterialElevati
     val offsetPx = elevation.toPx()
     val blurPx = (elevation * 1.2f).toPx()
     if (blurPx <= 0f) return
+    val cornerPx = extractCornerRadiusPx(shape)
 
     drawIntoCanvas { canvas ->
         val paint = Paint().asFrameworkPaint().apply {
@@ -301,7 +369,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMaterialElevati
         }
         canvas.nativeCanvas.drawRoundRect(
             0f, offsetPx / 2, size.width, size.height + offsetPx / 2,
-            24f, 24f,
+            cornerPx, cornerPx,
             paint
         )
     }

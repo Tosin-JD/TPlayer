@@ -458,8 +458,8 @@ class PlayerViewModel(
     fun cancelSleepTimer() = playerController.cancelSleepTimer()
 
     // --- Fast Forward / Rewind ---
-    fun fastForward(stepMs: Long = 10_000) = playerController.fastForward(stepMs)
-    fun rewind(stepMs: Long = 10_000) = playerController.rewind(stepMs)
+    fun fastForward(stepMs: Long = 5_000) = playerController.fastForward(stepMs)
+    fun rewind(stepMs: Long = 5_000) = playerController.rewind(stepMs)
 
     // --- Playlists ---
     fun createPlaylist(name: String) {

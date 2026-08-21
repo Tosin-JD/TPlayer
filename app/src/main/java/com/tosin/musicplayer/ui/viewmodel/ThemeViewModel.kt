@@ -60,6 +60,7 @@ class ThemeViewModel(
             ThemeStyle.CLAYMORPHISM -> ThemeParameters.claymorphismDefault()
             ThemeStyle.RETRO_MONO -> ThemeParameters.retroMonoDefault()
             ThemeStyle.BRUTALISM -> ThemeParameters.brutalismDefault()
+            ThemeStyle.NEO_BRUTALISM -> ThemeParameters.neoBrutalismDefault()
         }
         updateActiveParams { defaultParams }
     }

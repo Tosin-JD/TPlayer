@@ -85,7 +85,7 @@ fun LyricsEditorScreen(
 
             Surface(
                 tonalElevation = 2.dp,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = AppSpacing.medium)
@@ -130,7 +130,7 @@ fun LyricsEditorScreen(
                             ) {
                                 itemsIndexed(syncedLines) { index, line ->
                                     Surface(
-                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
                                         tonalElevation = 1.dp
                                     ) {
                                         Column(

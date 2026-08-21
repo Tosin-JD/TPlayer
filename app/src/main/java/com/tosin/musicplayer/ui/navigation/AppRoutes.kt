@@ -60,6 +60,9 @@ fun AppRoutes(
                 },
                 onNavigateToPlaylists = {
                     navController.navigate("playlists")
+                },
+                onNavigateToFavorites = {
+                    navController.navigate("favorites")
                 }
             )
         }
@@ -238,6 +241,7 @@ fun AppRoutes(
         composable("settings/appearance") {
             AppearanceSettingsScreen(
                 viewModel = settingsViewModel,
+                themeViewModel = themeViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToThemeStudio = { navController.navigate("settings/theme_studio") }
             )

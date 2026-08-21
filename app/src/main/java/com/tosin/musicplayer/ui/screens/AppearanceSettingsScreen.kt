@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -25,13 +25,16 @@ import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AccentColors
 import com.tosin.musicplayer.ui.theme.AppThemePreset
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.ThemeStyle
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.viewmodel.ThemeViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppearanceSettingsScreen(
     viewModel: SettingsViewModel,
+    themeViewModel: ThemeViewModel? = null,
     onNavigateBack: () -> Unit,
     onNavigateToThemeStudio: () -> Unit = {}
 ) {
@@ -78,6 +81,41 @@ fun AppearanceSettingsScreen(
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
+
+            // ── Design Paradigm ──
+            if (themeViewModel != null) {
+                val themeState by themeViewModel.themeState.collectAsState()
+                Text(
+                    text = "Design Paradigm",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.small)
+                )
+                Text(
+                    text = "Choose a base visual style. Each paradigm changes shapes, shadows, borders, and typography.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = AppSpacing.large)
+                )
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                ) {
+                    ThemeStyle.entries.forEach { style ->
+                        val isSelected = style == themeState.activeStyle
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { themeViewModel.selectStyle(style) },
+                            label = { Text(style.displayName) }
+                        )
+                    }
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
+            }
 
             // ── Theme ──
             SettingsSubHeader("Theme")

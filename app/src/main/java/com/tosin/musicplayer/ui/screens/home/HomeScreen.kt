@@ -38,7 +38,8 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToGroupDetail: (LibraryTab, String) -> Unit,
     onNavigateToSearch: () -> Unit = {},
-    onNavigateToPlaylists: () -> Unit = {}
+    onNavigateToPlaylists: () -> Unit = {},
+    onNavigateToFavorites: () -> Unit = {}
 ) {
     val uiState by viewModel.homeUiState.collectAsState()
     val settingsState by settingsViewModel.uiState.collectAsState()
@@ -118,6 +119,7 @@ fun HomeScreen(
                     tabForBottomSheet = tab
                 },
                 onNavigateToPlaylists = onNavigateToPlaylists,
+                onNavigateToFavorites = onNavigateToFavorites,
                 onNavigateToSettings = onNavigateToSettings
             )
         },

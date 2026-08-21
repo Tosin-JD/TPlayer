@@ -217,8 +217,16 @@ fun PlayerScreen(
 
         Text(
             text = state.currentSong?.artist ?: "Unknown Artist",
-            style = MaterialTheme.typography.bodyMedium,
-            color = contentColor.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.titleSmall,
+            color = contentColor.copy(alpha = 0.6f),
+            maxLines = 1,
+            modifier = Modifier.basicMarquee()
+        )
+
+        Text(
+            text = state.currentSong?.album ?: "Unknown Album",
+            style = MaterialTheme.typography.bodySmall,
+            color = contentColor.copy(alpha = 0.4f),
             maxLines = 1,
             modifier = Modifier.basicMarquee()
         )
@@ -278,6 +286,7 @@ fun PlayerScreen(
                 viewModel.previous()
             },
             onRewind = { viewModel.rewind() },
+            onStop = { viewModel.stop() },
             onPlayPause = {
                 if (state.isPlaying) viewModel.pause() else viewModel.play()
             },

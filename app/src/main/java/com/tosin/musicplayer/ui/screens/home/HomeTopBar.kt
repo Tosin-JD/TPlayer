@@ -1,7 +1,7 @@
 package com.tosin.musicplayer.ui.screens.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -9,20 +9,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.QueueMusic
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -44,6 +44,7 @@ fun HomeTopBar(
     onTabSelected: (Int) -> Unit,
     onTabLongClick: (LibraryTab) -> Unit = {},
     onNavigateToPlaylists: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -71,14 +72,14 @@ fun HomeTopBar(
 
                     Spacer(Modifier.width(12.dp))
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "ALPHA",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -87,9 +88,16 @@ fun HomeTopBar(
                 }
             },
             actions = {
+                IconButton(onClick = onNavigateToFavorites) {
+                    Icon(
+                        imageVector = AppIcons.Favorite,
+                        contentDescription = "Favorites",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 IconButton(onClick = onNavigateToPlaylists) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
+                        imageVector = AppIcons.Queue,
                         contentDescription = "Playlists",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -112,19 +120,17 @@ fun HomeTopBar(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
             tabs.forEachIndexed { index, tab ->
-                Surface(
+                Box(
                     modifier = Modifier
                         .clip(FilterChipDefaultsShape)
+                        .customAppSurface(
+                            shape = RoundedCornerShape(4.dp),
+                            backgroundColor = if (selectedTab == tab) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                        )
                         .combinedClickable(
                             onClick = { onTabSelected(index) },
                             onLongClick = { onTabLongClick(tab) }
-                        ),
-                    color = if (selectedTab == tab) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(
-                        1.dp,
-                        if (selectedTab == tab) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
+                        )
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -134,14 +140,14 @@ fun HomeTopBar(
                             text = tab.label,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal,
-                            color = if (selectedTab == tab) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                            color = if (selectedTab == tab) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             imageVector = tab.icon(),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
-                            tint = if (selectedTab == tab) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (selectedTab == tab) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -150,5 +156,5 @@ fun HomeTopBar(
     }
 }
 
-private val FilterChipDefaultsShape = RoundedCornerShape(8.dp)
+private val FilterChipDefaultsShape = RoundedCornerShape(4.dp)
 

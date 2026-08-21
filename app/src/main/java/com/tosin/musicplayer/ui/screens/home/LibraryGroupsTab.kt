@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -35,6 +34,7 @@ import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
@@ -124,27 +124,25 @@ internal fun LibraryGroupsTab(
                 title = tab.label,
                 subtitle = "${sortedGroups.size} ${if (sortedGroups.size == 1) "section" else "sections"}",
                 onSortClick = { showSortMenu = true },
-                sortLabel = sortBy.label
+                sortLabel = sortBy.label,
+                storageScope = if (availableStorageScopes.size > 1) storageScope else null,
+                onStorageSelected = if (availableStorageScopes.size > 1) {{ scope -> settingsViewModel.setStorageScopeForTab(tab.label, scope) }} else null,
+                availableStorageScopes = availableStorageScopes
             )
-            if (availableStorageScopes.size > 1) {
-                StorageScopeSelector(
-                    selected = storageScope,
-                    onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                    modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
-                    availableScopes = availableStorageScopes
-                )
-            }
         }
 
         items(sortedGroups, key = { it.id }) { group ->
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = MaterialTheme.shapes.extraLarge,
-                tonalElevation = 2.dp,
-                modifier = Modifier.combinedClickable(
-                    onClick = { onGroupClick(group) },
-                    onLongClick = { selectedGroupForActions = group }
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .customAppSurface(
+                        shape = MaterialTheme.shapes.extraLarge,
+                        backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    )
+                    .combinedClickable(
+                        onClick = { onGroupClick(group) },
+                        onLongClick = { selectedGroupForActions = group }
+                    )
             ) {
                 Row(
                     modifier = Modifier
@@ -153,18 +151,20 @@ internal fun LibraryGroupsTab(
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.size(52.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .customAppSurface(
+                                shape = MaterialTheme.shapes.large,
+                                backgroundColor = MaterialTheme.colorScheme.surface
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = tab.icon(),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
+                        Icon(
+                            imageVector = tab.icon(),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
                     Column(modifier = Modifier.weight(1f)) {

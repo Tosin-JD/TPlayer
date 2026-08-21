@@ -6,17 +6,19 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,8 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.draw.clip
 import com.tosin.musicplayer.ui.components.MiniPlayer
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
@@ -98,11 +102,39 @@ fun AppNavGraph(
                             .navigationBarsPadding()
                             .padding(bottom = fabLift)
                     ) {
-                        FloatingActionButton(onClick = { navController.navigate("stats") }) {
-                            Icon(AppIcons.BarChart, contentDescription = "Open Stats")
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .customAppSurface(
+                                    shape = MaterialTheme.shapes.small,
+                                    backgroundColor = MaterialTheme.colorScheme.surface
+                                )
+                                .clickable { navController.navigate("stats") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                AppIcons.BarChart,
+                                contentDescription = "Open Stats",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
-                        FloatingActionButton(onClick = { navController.navigate("search") }) {
-                            Icon(AppIcons.Search, contentDescription = "Open Search")
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(MaterialTheme.shapes.small)
+                                .customAppSurface(
+                                    shape = MaterialTheme.shapes.small,
+                                    backgroundColor = MaterialTheme.colorScheme.surface
+                                )
+                                .clickable { navController.navigate("search") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                AppIcons.Search,
+                                contentDescription = "Open Search",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }

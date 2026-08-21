@@ -18,14 +18,14 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -40,7 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
 
@@ -82,6 +84,7 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
+            Spacer(Modifier.height(12.dp))
             SettingsCategoryCard(
                 icon = AppIcons.Settings,
                 title = "General",
@@ -113,14 +116,16 @@ fun SettingsScreen(
             Spacer(Modifier.weight(1f))
 
             // Reset All Settings card
-            Surface(
-                onClick = { showResetDialog = true },
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.large),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.errorContainer,
-                tonalElevation = 0.dp
+                    .padding(horizontal = AppSpacing.large)
+                    .clip(MaterialTheme.shapes.large)
+                    .customAppSurface(
+                        shape = MaterialTheme.shapes.large,
+                        backgroundColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                    .clickable { showResetDialog = true }
             ) {
                 Row(
                     modifier = Modifier
@@ -181,14 +186,15 @@ private fun SettingsCategoryCard(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppSpacing.large),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.dp
+            .padding(horizontal = AppSpacing.large)
+            .customAppSurface(
+                shape = MaterialTheme.shapes.large,
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow
+            )
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
@@ -197,19 +203,21 @@ private fun SettingsCategoryCard(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = MaterialTheme.shapes.large,
-                modifier = Modifier.size(52.dp)
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .customAppSurface(
+                        shape = MaterialTheme.shapes.large,
+                        backgroundColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(28.dp)
+                )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
