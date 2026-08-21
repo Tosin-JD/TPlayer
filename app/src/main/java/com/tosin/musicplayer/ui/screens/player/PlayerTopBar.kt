@@ -23,6 +23,7 @@ import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 @Composable
 fun PlayerTopBar(
     contentColor: Color,
+    playerBackgroundColor: Color,
     sleepTimerRemaining: Long?,
     playbackSpeed: Float,
     isFavorite: Boolean,
@@ -43,7 +44,7 @@ fun PlayerTopBar(
                 .size(48.dp)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
-                    backgroundColor = Color.Black.copy(alpha = 0.15f)
+                    backgroundColor = playerBackgroundColor
                 )
                 .clickable(onClick = onNavigateBack),
             contentAlignment = Alignment.Center
@@ -73,7 +74,7 @@ fun PlayerTopBar(
                     modifier = Modifier
                         .customAppSurface(
                             shape = MaterialTheme.shapes.small,
-                            backgroundColor = Color.Black.copy(alpha = 0.15f)
+                            backgroundColor = playerBackgroundColor
                         )
                         .clickable(onClick = onOpenSleepTimer)
                 ) {
@@ -103,7 +104,7 @@ fun PlayerTopBar(
                     modifier = Modifier
                         .customAppSurface(
                             shape = MaterialTheme.shapes.small,
-                            backgroundColor = Color.Black.copy(alpha = 0.15f)
+                            backgroundColor = playerBackgroundColor
                         )
                         .clickable(onClick = onOpenSpeedDialog)
                 ) {
@@ -122,9 +123,9 @@ fun PlayerTopBar(
                     .size(40.dp)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
-                        backgroundColor = Color.Black.copy(alpha = 0.15f)
-                    )
-                    .clickable(onClick = onOpenEqualizer),
+                    backgroundColor = playerBackgroundColor
+                )
+                .clickable(onClick = onOpenEqualizer),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -140,7 +141,7 @@ fun PlayerTopBar(
                     .size(40.dp)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
-                        backgroundColor = if (isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.15f)
+                        backgroundColor = playerBackgroundColor
                     )
                     .clickable(onClick = onToggleFavorite),
                 contentAlignment = Alignment.Center
@@ -148,7 +149,7 @@ fun PlayerTopBar(
                 Icon(
                     imageVector = if (isFavorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
                     contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else contentColor
                 )
             }
         }

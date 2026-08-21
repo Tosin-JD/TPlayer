@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.draw.clip
 import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
@@ -122,7 +121,6 @@ fun HomeTopBar(
             tabs.forEachIndexed { index, tab ->
                 Box(
                     modifier = Modifier
-                        .clip(FilterChipDefaultsShape)
                         .customAppSurface(
                             shape = RoundedCornerShape(4.dp),
                             backgroundColor = if (selectedTab == tab) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface

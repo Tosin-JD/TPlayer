@@ -63,7 +63,6 @@ import com.tosin.musicplayer.ui.icons.AppIcons
 fun LyricsScreen(
     viewModel: PlayerViewModel,
     onNavigateBack: () -> Unit,
-    onOpenVisualizer: () -> Unit = {},
     onOpenLyricsEditor: (Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -171,9 +170,6 @@ fun LyricsScreen(
                         }
                         IconButton(onClick = { showAppearanceDialog = true }) {
                             Icon(AppIcons.FormatSize, contentDescription = "Lyrics appearance", tint = Color.White)
-                        }
-                        IconButton(onClick = onOpenVisualizer) {
-                            Icon(AppIcons.GraphicEq, contentDescription = "Open visualizer", tint = Color.White)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

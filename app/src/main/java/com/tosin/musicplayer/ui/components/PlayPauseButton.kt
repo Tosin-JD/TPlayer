@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -26,6 +27,7 @@ import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 @Composable
 fun PlayPauseButton(
     isPlaying: Boolean,
+    playerBackgroundColor: Color,
     onClick: () -> Unit
 ) {
     val transition = updateTransition(targetState = isPlaying, label = "playPause")
@@ -43,7 +45,7 @@ fun PlayPauseButton(
             }
             .customAppSurface(
                 shape = MaterialTheme.shapes.large,
-                backgroundColor = MaterialTheme.colorScheme.surface
+                backgroundColor = playerBackgroundColor
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

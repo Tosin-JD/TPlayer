@@ -189,7 +189,6 @@ fun AppRoutes(
             LyricsScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onOpenVisualizer = { navController.navigate("visualizer") },
                 onOpenLyricsEditor = { songId ->
                     navController.navigate("lyricsEditor/$songId")
                 }
@@ -206,13 +205,6 @@ fun AppRoutes(
                 onNavigateToPlayer = {
                     navController.navigate("player")
                 }
-            )
-        }
-
-        composable("visualizer") {
-            VisualizerScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
             )
         }
 

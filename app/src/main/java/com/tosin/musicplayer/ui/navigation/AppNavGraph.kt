@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.draw.clip
 import com.tosin.musicplayer.ui.components.MiniPlayer
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
@@ -64,7 +63,7 @@ fun AppNavGraph(
         if (!hasRestoredNav) {
             hasRestoredNav = true
             val (savedRoute, _) = settingsViewModel.loadNavigationState()
-            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "favorites", "search", "visualizer", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about", "settings/theme_studio")
+            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "favorites", "search", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about", "settings/theme_studio")
             if (savedRoute.isNotBlank() && savedRoute in validRoutes && savedRoute != "home") {
                 navController.navigate(savedRoute) {
                     launchSingleTop = true
@@ -87,7 +86,7 @@ fun AppNavGraph(
     )
 
     when (currentRoute) {
-        "player", "visualizer", "lyrics" -> Unit
+        "player", "lyrics" -> Unit
         else -> StatusBarColorEffect(MaterialTheme.colorScheme.surface)
     }
 
@@ -105,7 +104,6 @@ fun AppNavGraph(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(MaterialTheme.shapes.small)
                                 .customAppSurface(
                                     shape = MaterialTheme.shapes.small,
                                     backgroundColor = MaterialTheme.colorScheme.surface
@@ -122,7 +120,6 @@ fun AppNavGraph(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(MaterialTheme.shapes.small)
                                 .customAppSurface(
                                     shape = MaterialTheme.shapes.small,
                                     backgroundColor = MaterialTheme.colorScheme.surface

@@ -199,6 +199,7 @@ fun PlayerScreen(
 
         PlayerTopBar(
             contentColor = contentColor,
+            playerBackgroundColor = bgColor,
             sleepTimerRemaining = state.sleepTimerRemaining,
             playbackSpeed = state.playbackSpeed,
             isFavorite = isFav,
@@ -303,6 +304,7 @@ fun PlayerScreen(
         PlayerMainControls(
             isPlaying = state.isPlaying,
             contentColor = contentColor,
+            playerBackgroundColor = bgColor,
             onPrevious = {
                 slideDirection = -1
                 viewModel.previous()
@@ -327,6 +329,7 @@ fun PlayerScreen(
             lyricsVisible = state.lyricsVisible,
             repeatMode = state.repeatMode,
             contentColor = contentColor,
+            playerBackgroundColor = bgColor,
             bottomButtonSize = bottomButtonSize,
             bottomIconSize = bottomIconSize,
             onToggleShuffle = { viewModel.toggleShuffle() },

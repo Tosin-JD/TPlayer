@@ -26,6 +26,7 @@ import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 fun PlayerMainControls(
     isPlaying: Boolean,
     contentColor: Color,
+    playerBackgroundColor: Color,
     onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -47,7 +48,7 @@ fun PlayerMainControls(
                     .size(72.dp)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
-                        backgroundColor = Color.Black.copy(alpha = 0.15f)
+                        backgroundColor = playerBackgroundColor
                     )
                     .clickable(onClick = onPrevious),
                 contentAlignment = Alignment.Center
@@ -63,6 +64,7 @@ fun PlayerMainControls(
             // Play/Pause
             PlayPauseButton(
                 isPlaying = isPlaying,
+                playerBackgroundColor = playerBackgroundColor,
                 onClick = onPlayPause
             )
 
@@ -72,7 +74,7 @@ fun PlayerMainControls(
                     .size(72.dp)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
-                        backgroundColor = Color.Black.copy(alpha = 0.15f)
+                        backgroundColor = playerBackgroundColor
                     )
                     .clickable(onClick = onNext),
                 contentAlignment = Alignment.Center
@@ -94,6 +96,7 @@ fun PlayerBottomBar(
     lyricsVisible: Boolean,
     repeatMode: RepeatMode,
     contentColor: Color,
+    playerBackgroundColor: Color,
     bottomButtonSize: Dp,
     bottomIconSize: Dp,
     onToggleShuffle: () -> Unit,
@@ -116,7 +119,7 @@ fun PlayerBottomBar(
                 .size(bottomButtonSize)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
-                    backgroundColor = if (shuffleEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
+                    backgroundColor = playerBackgroundColor
                 )
                 .clickable(onClick = onToggleShuffle),
             contentAlignment = Alignment.Center
@@ -135,7 +138,7 @@ fun PlayerBottomBar(
                 .size(bottomButtonSize)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
-                    backgroundColor = if (lyricsVisible) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
+                    backgroundColor = playerBackgroundColor
                 )
                 .clickable(onClick = onOpenLyrics),
             contentAlignment = Alignment.Center
@@ -154,7 +157,7 @@ fun PlayerBottomBar(
                 .size(bottomButtonSize)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
-                    backgroundColor = Color.Black.copy(alpha = 0.12f)
+                    backgroundColor = playerBackgroundColor
                 )
                 .clickable(onClick = onOpenPlaylist),
             contentAlignment = Alignment.Center
@@ -186,7 +189,7 @@ fun PlayerBottomBar(
                 .size(bottomButtonSize)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
-                    backgroundColor = if (repeatActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
+                    backgroundColor = playerBackgroundColor
                 )
                 .clickable {
                     val nextMode = when (repeatMode) {
@@ -220,7 +223,7 @@ fun PlayerBottomBar(
                 .size(bottomButtonSize)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
-                    backgroundColor = Color.Black.copy(alpha = 0.12f)
+                    backgroundColor = playerBackgroundColor
                 )
                 .clickable(onClick = onOpenMoreOptions),
             contentAlignment = Alignment.Center
