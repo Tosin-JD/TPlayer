@@ -1,6 +1,5 @@
 package com.tosin.musicplayer.ui.screens.player
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,9 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerTopBar(
@@ -38,10 +37,9 @@ fun PlayerTopBar(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Back button
+        // 1. Back button (Left side)
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -61,7 +59,15 @@ fun PlayerTopBar(
             )
         }
 
-        Row(modifier = Modifier.weight(1f)) {
+        // 2. Flexible Spacer pushes all action icons to the far right
+        Spacer(modifier = Modifier.weight(1f))
+
+        // 3. Action Buttons Group (Right side)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
+        ) {
+            // Sleep Timer Badge
             if (sleepTimerRemaining != null) {
                 val remaining = sleepTimerRemaining / 1000
                 val mins = remaining / 60
@@ -93,9 +99,9 @@ fun PlayerTopBar(
                         )
                     }
                 }
-                Spacer(Modifier.width(AppSpacing.small))
             }
 
+            // Playback Speed Badge
             if (playbackSpeed != 1.0f) {
                 Box(
                     modifier = Modifier
@@ -113,10 +119,9 @@ fun PlayerTopBar(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     )
                 }
-                Spacer(Modifier.width(AppSpacing.small))
             }
 
-            // Equalizer
+            // Equalizer Button
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -134,25 +139,25 @@ fun PlayerTopBar(
                     tint = contentColor
                 )
             }
-        }
 
-        // Favorite
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(MaterialTheme.shapes.small)
-                .customAppSurface(
-                    shape = MaterialTheme.shapes.small,
-                    backgroundColor = if (isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.15f)
+            // Favorite Button
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .customAppSurface(
+                        shape = MaterialTheme.shapes.small,
+                        backgroundColor = if (isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.15f)
+                    )
+                    .clickable(onClick = onToggleFavorite),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
                 )
-                .clickable(onClick = onToggleFavorite),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = if (isFavorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
-                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                tint = if (isFavorite) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
-            )
+            }
         }
     }
 }

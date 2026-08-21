@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,10 +29,7 @@ fun PlayerMainControls(
     isPlaying: Boolean,
     contentColor: Color,
     onPrevious: () -> Unit,
-    onRewind: () -> Unit,
-    onStop: () -> Unit,
     onPlayPause: () -> Unit,
-    onFastForward: () -> Unit,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -91,75 +86,6 @@ fun PlayerMainControls(
                     contentDescription = "Next",
                     modifier = Modifier.size(48.dp),
                     tint = contentColor
-                )
-            }
-        }
-
-        Spacer(Modifier.height(4.dp))
-
-        // Row 2: Rewind 5s, Stop, Fast Forward 5s — MEDIUM
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Rewind 5s
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .customAppSurface(
-                        shape = MaterialTheme.shapes.small,
-                        backgroundColor = Color.Black.copy(alpha = 0.12f)
-                    )
-                    .clickable(onClick = onRewind),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = AppIcons.Replay5,
-                    contentDescription = "Rewind 5s",
-                    modifier = Modifier.size(28.dp),
-                    tint = contentColor.copy(alpha = 0.7f)
-                )
-            }
-
-            // Stop
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .customAppSurface(
-                        shape = MaterialTheme.shapes.small,
-                        backgroundColor = Color.Black.copy(alpha = 0.12f)
-                    )
-                    .clickable(onClick = onStop),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = AppIcons.Stop,
-                    contentDescription = "Stop",
-                    modifier = Modifier.size(28.dp),
-                    tint = contentColor.copy(alpha = 0.7f)
-                )
-            }
-
-            // Forward 5s
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .customAppSurface(
-                        shape = MaterialTheme.shapes.small,
-                        backgroundColor = Color.Black.copy(alpha = 0.12f)
-                    )
-                    .clickable(onClick = onFastForward),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = AppIcons.Forward5,
-                    contentDescription = "Forward 5s",
-                    modifier = Modifier.size(28.dp),
-                    tint = contentColor.copy(alpha = 0.7f)
                 )
             }
         }

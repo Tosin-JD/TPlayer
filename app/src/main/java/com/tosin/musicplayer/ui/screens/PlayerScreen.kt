@@ -285,19 +285,20 @@ fun PlayerScreen(
                 slideDirection = -1
                 viewModel.previous()
             },
-            onRewind = { viewModel.rewind() },
-            onStop = { viewModel.stop() },
             onPlayPause = {
                 if (state.isPlaying) viewModel.pause() else viewModel.play()
             },
-            onFastForward = { viewModel.fastForward() },
             onNext = {
                 slideDirection = 1
                 viewModel.next()
             }
         )
 
-        Spacer(Modifier.weight(1f))
+        Spacer(
+            modifier = Modifier
+                .heightIn(min = AppSpacing.medium)
+                .weight(1f)
+        )
 
         PlayerBottomBar(
             shuffleEnabled = state.shuffleEnabled,
