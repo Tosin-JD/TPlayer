@@ -286,7 +286,6 @@ fun PlayerScreen(
             bottomIconSize = bottomIconSize,
             onToggleShuffle = { viewModel.toggleShuffle() },
             onOpenLyrics = onOpenLyrics,
-            onOpenVisualizer = onOpenVisualizer,
             onOpenPlaylist = onOpenPlaylist,
             onCycleRepeatMode = { viewModel.cycleRepeatMode() },
             onOpenMoreOptions = { showMoreOptionsSheet = true }

@@ -48,6 +48,12 @@ class MusicLoader(
         const val COLUMN_SIZE = "_size"
         const val COLUMN_YEAR = "year"
         const val COLUMN_TRACK = "track"
+
+        val SUPPORTED_AUDIO_EXTENSIONS = setOf(
+            "mp3", "aac", "m4a", "m4v", "mp4", "opus", "flac",
+            "ogg", "wav", "wma", "amr", "aiff", "alac"
+        )
+        const val MIN_DURATION_MS = 10_000L
     }
 
     suspend fun loadSongs(
@@ -68,6 +74,7 @@ class MusicLoader(
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.ALBUM_ID,
+            MediaStore.Audio.Media.MIME_TYPE,
             COLUMN_DATE_ADDED,
             COLUMN_SIZE,
             COLUMN_YEAR,
@@ -76,7 +83,8 @@ class MusicLoader(
             MediaStore.Audio.Media.DATA
         )
 
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
+        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 OR " +
+            "${MediaStore.Audio.Media.MIME_TYPE} LIKE 'audio/%'"
 
         runCatching {
             contentResolver.query(
@@ -94,6 +102,7 @@ class MusicLoader(
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+            val mimeTypeColumn = cursor.getColumnIndex(MediaStore.Audio.Media.MIME_TYPE)
             val dateAddedColumn = cursor.getColumnIndex(COLUMN_DATE_ADDED)
             val sizeColumn = cursor.getColumnIndex(COLUMN_SIZE)
             val yearColumn = cursor.getColumnIndex(COLUMN_YEAR)
@@ -112,8 +121,16 @@ class MusicLoader(
                 val album = cursor.getString(albumColumn).orEmpty()
                 val duration = cursor.getLong(durationColumn)
                 val albumId = cursor.getLong(albumIdColumn)
+                val mimeType = if (mimeTypeColumn >= 0) cursor.getString(mimeTypeColumn) else null
                 val folder = if (folderColumn >= 0) cursor.getString(folderColumn) else null
                 val absolutePath = if (dataColumn >= 0) cursor.getString(dataColumn) else null
+
+                // Filter: skip very short audio (ringtones/notifications) and unsupported formats
+                if (duration < MIN_DURATION_MS) continue
+                val extension = absolutePath?.substringAfterLast('.', "")?.lowercase()
+                val isSupportedFormat = extension != null && extension in SUPPORTED_AUDIO_EXTENSIONS
+                val isAudioMime = mimeType?.startsWith("audio/") == true
+                if (!isSupportedFormat && !isAudioMime) continue
                 val normalizedFolder = extractFolderName(folder)
                 if (!normalizedFolder.isNullOrBlank()) {
                     discoveredFolders.add(normalizedFolder)

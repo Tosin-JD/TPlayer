@@ -6,8 +6,10 @@ import com.tosin.musicplayer.data.local.ScanProgress
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
 import com.tosin.musicplayer.ui.state.FolderEntry
+import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.SettingsUiState
 import com.tosin.musicplayer.ui.state.StorageScope
+import org.json.JSONArray
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -103,11 +105,15 @@ class SettingsViewModel(
     fun toggleTabVisibility(tab: String) {
         updateSettings { state ->
             val visible = state.visibleTabs.toMutableList()
-            if (tab in visible) {
+            val existingIndex = visible.indexOfFirst { it.equals(tab, ignoreCase = true) }
+            if (existingIndex != -1) {
                 // Don't allow hiding all tabs
-                if (visible.size > 1) visible.remove(tab)
+                if (visible.size > 1) {
+                    visible.removeAt(existingIndex)
+                }
             } else {
-                visible.add(tab)
+                val canonicalName = LibraryTab.entries.firstOrNull { it.name.equals(tab, ignoreCase = true) }?.name ?: tab
+                visible.add(canonicalName)
             }
             state.copy(visibleTabs = visible)
         }
@@ -115,16 +121,19 @@ class SettingsViewModel(
 
     fun moveTabLeft(tabName: String) {
         updateSettings { state ->
-            val activeTabs = state.tabOrder.filter { it in state.visibleTabs }
-            val indexInActive = activeTabs.indexOf(tabName)
+            val activeTabs = state.tabOrder.filter { tab ->
+                state.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+            }
+            val indexInActive = activeTabs.indexOfFirst { it.equals(tabName, ignoreCase = true) }
             if (indexInActive > 0) {
                 val prevTabName = activeTabs[indexInActive - 1]
                 val fullOrder = state.tabOrder.toMutableList()
-                val idx1 = fullOrder.indexOf(tabName)
-                val idx2 = fullOrder.indexOf(prevTabName)
+                val idx1 = fullOrder.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+                val idx2 = fullOrder.indexOfFirst { it.equals(prevTabName, ignoreCase = true) }
                 if (idx1 != -1 && idx2 != -1) {
-                    fullOrder[idx1] = prevTabName
-                    fullOrder[idx2] = tabName
+                    val item = fullOrder.removeAt(idx1)
+                    val insertIdx = fullOrder.indexOfFirst { it.equals(prevTabName, ignoreCase = true) }
+                    fullOrder.add(insertIdx, item)
                 }
                 state.copy(tabOrder = fullOrder)
             } else state
@@ -133,16 +142,19 @@ class SettingsViewModel(
 
     fun moveTabRight(tabName: String) {
         updateSettings { state ->
-            val activeTabs = state.tabOrder.filter { it in state.visibleTabs }
-            val indexInActive = activeTabs.indexOf(tabName)
+            val activeTabs = state.tabOrder.filter { tab ->
+                state.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+            }
+            val indexInActive = activeTabs.indexOfFirst { it.equals(tabName, ignoreCase = true) }
             if (indexInActive != -1 && indexInActive < activeTabs.size - 1) {
                 val nextTabName = activeTabs[indexInActive + 1]
                 val fullOrder = state.tabOrder.toMutableList()
-                val idx1 = fullOrder.indexOf(tabName)
-                val idx2 = fullOrder.indexOf(nextTabName)
+                val idx1 = fullOrder.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+                val idx2 = fullOrder.indexOfFirst { it.equals(nextTabName, ignoreCase = true) }
                 if (idx1 != -1 && idx2 != -1) {
-                    fullOrder[idx1] = nextTabName
-                    fullOrder[idx2] = tabName
+                    val item = fullOrder.removeAt(idx1)
+                    val insertIdx = fullOrder.indexOfFirst { it.equals(nextTabName, ignoreCase = true) }
+                    fullOrder.add(insertIdx + 1, item)
                 }
                 state.copy(tabOrder = fullOrder)
             } else state
@@ -150,7 +162,14 @@ class SettingsViewModel(
     }
 
     fun hideTab(tabName: String) {
-        toggleTabVisibility(tabName)
+        updateSettings { state ->
+            val visible = state.visibleTabs.toMutableList()
+            val existingIndex = visible.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+            if (existingIndex != -1 && visible.size > 1) {
+                visible.removeAt(existingIndex)
+            }
+            state.copy(visibleTabs = visible)
+        }
     }
 
     // ── General ──
@@ -386,7 +405,21 @@ class SettingsViewModel(
             val savedSortOptions = preferencesRepository.loadTabSortOptions()
             _tabSortOptions.value = savedSortOptions
             val saved = preferencesRepository.loadSettings()
+            val allTabNames = LibraryTab.entries.map { it.name }
             _uiState.update { current ->
+                val rawTabOrder = saved.stringList("tabOrder", current.tabOrder)
+                val rawVisibleTabs = saved.stringList("visibleTabs", current.visibleTabs)
+
+                val validTabOrder = (rawTabOrder.filter { name -> allTabNames.any { it.equals(name, ignoreCase = true) } } + allTabNames)
+                    .map { name -> allTabNames.first { it.equals(name, ignoreCase = true) } }
+                    .distinct()
+
+                val validVisibleTabs = rawVisibleTabs
+                    .filter { name -> allTabNames.any { it.equals(name, ignoreCase = true) } }
+                    .map { name -> allTabNames.first { it.equals(name, ignoreCase = true) } }
+                    .distinct()
+                val finalVisibleTabs = if (validVisibleTabs.isEmpty()) listOf(validTabOrder.first()) else validVisibleTabs
+
                 current.copy(
                     isDarkMode = saved.boolean("isDarkMode", current.isDarkMode),
                     showNotifications = saved.boolean("showNotifications", current.showNotifications),
@@ -407,8 +440,8 @@ class SettingsViewModel(
                     autoResumeEnabled = saved.boolean("autoResumeEnabled", current.autoResumeEnabled),
                     pauseOnZeroVolume = saved.boolean("pauseOnZeroVolume", current.pauseOnZeroVolume),
                     accentColorIndex = saved.int("accentColorIndex", current.accentColorIndex),
-                    tabOrder = saved.stringList("tabOrder", current.tabOrder),
-                    visibleTabs = saved.stringList("visibleTabs", current.visibleTabs),
+                    tabOrder = validTabOrder,
+                    visibleTabs = finalVisibleTabs,
                     excludedFolders = saved.stringList("excludedFolders", current.excludedFolders)
                 )
             }
@@ -469,8 +502,24 @@ class SettingsViewModel(
     private fun Map<String, Any>.string(key: String, default: String): String =
         (this[key] as? String) ?: default
 
-    private fun Map<String, Any>.stringList(key: String, default: List<String>): List<String> =
-        (this[key] as? List<*>)?.mapNotNull { it as? String } ?: default
+    private fun Map<String, Any>.stringList(key: String, default: List<String>): List<String> {
+        val raw = this[key] ?: return default
+        return when (raw) {
+            is List<*> -> raw.mapNotNull { it?.toString() }
+            is JSONArray -> List(raw.length()) { i -> raw.optString(i) }
+            is String -> {
+                if (raw.startsWith("[") && raw.endsWith("]")) {
+                    raw.substring(1, raw.length - 1)
+                        .split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                } else {
+                    default
+                }
+            }
+            else -> default
+        }
+    }
 
     private fun SettingsUiState.toMap(): Map<String, Any> = mapOf(
         "isDarkMode" to isDarkMode,

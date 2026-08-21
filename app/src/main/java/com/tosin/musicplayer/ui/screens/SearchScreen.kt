@@ -1,9 +1,10 @@
 package com.tosin.musicplayer.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.components.SongActionsSheet
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
@@ -40,6 +42,26 @@ fun SearchScreen(
     val results = remember(query) { viewModel.searchSongs(query) }
     val focusRequester = remember { FocusRequester() }
     val uiState by viewModel.uiState.collectAsState()
+    val playlists by viewModel.playlists.collectAsState()
+
+    var selectedSongForActions by remember { mutableStateOf<Song?>(null) }
+
+    selectedSongForActions?.let { song ->
+        SongActionsSheet(
+            song = song,
+            playlists = playlists,
+            onDismiss = { selectedSongForActions = null },
+            onPlay = { target ->
+                val index = results.indexOfFirst { it.id == target.id }
+                if (index != -1) viewModel.onSongClick(results, index) else viewModel.onSongClick(listOf(target), 0)
+                onNavigateToPlayer()
+            },
+            onPlayNext = { target -> viewModel.playNextSongs(listOf(target)) },
+            onAddToCurrentPlaylist = { target -> viewModel.addSongsToQueue(listOf(target)) },
+            onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) },
+            onCreateNewPlaylist = { name -> viewModel.createPlaylist(name) }
+        )
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -178,6 +200,9 @@ fun SearchScreen(
                         onClick = {
                             viewModel.onSongClick(results, results.indexOf(song))
                             onNavigateToPlayer()
+                        },
+                        onLongClick = {
+                            selectedSongForActions = song
                         }
                     )
                 }
@@ -186,18 +211,23 @@ fun SearchScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SearchResultItem(
     song: Song,
     isPlaying: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Surface(
-        onClick = onClick,
         color = if (isPlaying) MaterialTheme.colorScheme.secondaryContainer
                 else MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.large,
-        tonalElevation = if (isPlaying) 4.dp else 1.dp
+        tonalElevation = if (isPlaying) 4.dp else 1.dp,
+        modifier = Modifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
     ) {
         Row(
             modifier = Modifier

@@ -180,6 +180,8 @@ fun AppearanceSettingsScreen(
 
             Column(modifier = Modifier.padding(horizontal = AppSpacing.large)) {
                 uiState.tabOrder.forEachIndexed { index, tab ->
+                    val isChecked = uiState.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+                    val isLastVisible = isChecked && uiState.visibleTabs.size == 1
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -187,10 +189,15 @@ fun AppearanceSettingsScreen(
                             .padding(vertical = 4.dp)
                     ) {
                         Checkbox(
-                            checked = uiState.visibleTabs.contains(tab),
+                            checked = isChecked,
+                            enabled = !isLastVisible,
                             onCheckedChange = { viewModel.toggleTabVisibility(tab) }
                         )
-                        Text(tab, modifier = Modifier.weight(1f))
+                        Text(
+                            text = tab,
+                            modifier = Modifier.weight(1f),
+                            color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        )
                         IconButton(
                             onClick = { if (index > 0) viewModel.reorderTab(index, index - 1) },
                             enabled = index > 0

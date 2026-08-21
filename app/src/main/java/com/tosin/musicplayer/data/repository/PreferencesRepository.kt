@@ -27,7 +27,19 @@ class PreferencesRepository(private val context: Context) {
         try {
             val obj = JSONObject()
             settings.forEach { (key, value) ->
-                obj.put(key, value)
+                when (value) {
+                    is Collection<*> -> {
+                        val arr = JSONArray()
+                        value.forEach { arr.put(it) }
+                        obj.put(key, arr)
+                    }
+                    is Array<*> -> {
+                        val arr = JSONArray()
+                        value.forEach { arr.put(it) }
+                        obj.put(key, arr)
+                    }
+                    else -> obj.put(key, value)
+                }
             }
             prefsFile.writeText(obj.toString())
         } catch (e: Exception) {

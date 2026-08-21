@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.rounded.Forward10
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LooksOne
 import androidx.compose.material.icons.rounded.Lyrics
 import androidx.compose.material.icons.rounded.MoreVert
@@ -114,7 +113,6 @@ fun PlayerBottomBar(
     bottomIconSize: Dp,
     onToggleShuffle: () -> Unit,
     onOpenLyrics: () -> Unit,
-    onOpenVisualizer: () -> Unit,
     onOpenPlaylist: () -> Unit,
     onCycleRepeatMode: () -> Unit,
     onOpenMoreOptions: () -> Unit,
@@ -147,18 +145,6 @@ fun PlayerBottomBar(
                 imageVector = Icons.Rounded.Lyrics,
                 contentDescription = "Lyrics",
                 tint = if (lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
-                modifier = Modifier.size(bottomIconSize)
-            )
-        }
-
-        IconButton(
-            onClick = onOpenVisualizer,
-            modifier = Modifier.size(bottomButtonSize)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.GraphicEq,
-                contentDescription = "Visualizer",
-                tint = contentColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(bottomIconSize)
             )
         }
