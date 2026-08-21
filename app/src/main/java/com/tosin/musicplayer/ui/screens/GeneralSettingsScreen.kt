@@ -1,7 +1,9 @@
 package com.tosin.musicplayer.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -20,6 +22,7 @@ import com.tosin.musicplayer.ui.screens.settings.ScanDialog
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.state.hasRemovableStorage
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.viewmodel.SettingsEvent
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
@@ -104,11 +107,12 @@ fun GeneralSettingsScreen(
                 Spacer(Modifier.height(AppSpacing.small))
 
                 SettingsSubHeader("Notifications")
-                ListItem(
-                    headlineContent = { Text("Media Notifications") },
-                    supportingContent = { Text("Show playback controls in notification") },
-                    leadingContent = { Icon(AppIcons.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    trailingContent = {
+
+                ThemedSettingsItem(
+                    icon = AppIcons.Notifications,
+                    title = "Media Notifications",
+                    subtitle = "Show playback controls in notification",
+                    trailing = {
                         Switch(checked = uiState.showNotifications, onCheckedChange = { viewModel.toggleNotifications(it) })
                     }
                 )
@@ -116,35 +120,37 @@ fun GeneralSettingsScreen(
                 HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
 
                 SettingsSubHeader("Library")
-                ListItem(
-                    headlineContent = { Text("Scan for Changes") },
-                    supportingContent = { Text("Check for new or removed songs") },
-                    leadingContent = { Icon(AppIcons.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    trailingContent = {
+
+                ThemedSettingsItem(
+                    icon = AppIcons.Sync,
+                    title = "Scan for Changes",
+                    subtitle = "Check for new or removed songs",
+                    trailing = {
                         FilledTonalButton(onClick = { pendingScanAction = ScanAction.CHANGES; showScanDialog = true }) { Text("Scan") }
                     }
                 )
 
-                ListItem(
-                    headlineContent = { Text("Full Scan") },
-                    supportingContent = { Text("Re-scan entire music library") },
-                    leadingContent = { Icon(AppIcons.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    trailingContent = {
+                ThemedSettingsItem(
+                    icon = AppIcons.FolderOpen,
+                    title = "Full Scan",
+                    subtitle = "Re-scan entire music library",
+                    trailing = {
                         FilledTonalButton(onClick = { pendingScanAction = ScanAction.FULL; showScanDialog = true }) { Text("Full Scan") }
                     }
                 )
 
-                ListItem(
-                    headlineContent = { Text("Last Library Scan") },
-                    supportingContent = { Text(uiState.lastScanDate) },
-                    leadingContent = { Icon(AppIcons.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+                ThemedSettingsItem(
+                    icon = AppIcons.Schedule,
+                    title = "Last Library Scan",
+                    subtitle = uiState.lastScanDate
                 )
 
                 SettingsSubHeader("Storage Source")
-                ListItem(
-                    headlineContent = { Text("Default Library Storage") },
-                    supportingContent = { Text("Choose which device the library should read from by default") },
-                    leadingContent = { Icon(AppIcons.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+
+                ThemedSettingsItem(
+                    icon = AppIcons.Storage,
+                    title = "Default Library Storage",
+                    subtitle = "Choose which device the library should read from by default"
                 )
                 StorageScopeSelector(
                     selected = StorageScope.entries.firstOrNull { it.name == uiState.storageScopeAll } ?: StorageScope.Both,
@@ -153,23 +159,22 @@ fun GeneralSettingsScreen(
                     availableScopes = availableStorageScopes
                 )
 
-                ListItem(
-                    headlineContent = { Text("Remember Last Play") },
-                    supportingContent = { Text("Resume the last song and playback position when the app opens again") },
-                    leadingContent = { Icon(AppIcons.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    trailingContent = {
+                ThemedSettingsItem(
+                    icon = AppIcons.History,
+                    title = "Remember Last Play",
+                    subtitle = "Resume the last song and playback position when the app opens again",
+                    trailing = {
                         Switch(checked = uiState.rememberLastPlay, onCheckedChange = { viewModel.toggleRememberLastPlay(it) })
                     }
                 )
 
                 SettingsSubHeader("Excluded Folders")
-                ListItem(
-                    headlineContent = { Text("Manage excluded folders") },
-                    supportingContent = {
-                        Text(if (uiState.excludedFolders.isEmpty()) "All folders are currently included" else "${uiState.excludedFolders.size} folder(s) excluded")
-                    },
-                    leadingContent = { Icon(AppIcons.FolderOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                    trailingContent = {
+
+                ThemedSettingsItem(
+                    icon = AppIcons.FolderOff,
+                    title = "Manage excluded folders",
+                    subtitle = if (uiState.excludedFolders.isEmpty()) "All folders are currently included" else "${uiState.excludedFolders.size} folder(s) excluded",
+                    trailing = {
                         FilledTonalButton(onClick = { showFolderPicker = true }) { Text("Choose") }
                     }
                 )
@@ -222,6 +227,71 @@ fun GeneralSettingsScreen(
             },
             dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel") } }
         )
+    }
+}
+
+/**
+ * A themed settings item that uses [customAppSurface] so shapes, shadows, and borders
+ * adapt to the active design paradigm (neobrutalism, brutalism, neumorphism, claymorphism, etc.).
+ *
+ * The icon sits in a square whose background matches the page background color.
+ */
+@Composable
+private fun ThemedSettingsItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    trailing: @Composable (() -> Unit)? = null
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = AppSpacing.large)
+            .customAppSurface(
+                shape = MaterialTheme.shapes.medium,
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon square — background matches the page background
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .customAppSurface(
+                        shape = MaterialTheme.shapes.small,
+                        backgroundColor = MaterialTheme.colorScheme.surface
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            trailing?.invoke()
+        }
     }
 }
 
