@@ -230,55 +230,6 @@ fun AppearanceSettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
 
-            // ── Layout ──
-            SettingsSubHeader("Layout")
-
-            // Reorder tabs
-            ListItem(
-                headlineContent = { Text("Home Screen Tabs") },
-                supportingContent = { Text("Reorder and toggle tabs on the home screen") },
-                leadingContent = {
-                    Icon(AppIcons.ViewList, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-            )
-
-            Column(modifier = Modifier.padding(horizontal = AppSpacing.large)) {
-                uiState.tabOrder.forEachIndexed { index, tab ->
-                    val isChecked = uiState.visibleTabs.any { it.equals(tab, ignoreCase = true) }
-                    val isLastVisible = isChecked && uiState.visibleTabs.size == 1
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Checkbox(
-                            checked = isChecked,
-                            enabled = !isLastVisible,
-                            onCheckedChange = { viewModel.toggleTabVisibility(tab) }
-                        )
-                        Text(
-                            text = tab,
-                            modifier = Modifier.weight(1f),
-                            color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        )
-                        IconButton(
-                            onClick = { if (index > 0) viewModel.reorderTab(index, index - 1) },
-                            enabled = index > 0
-                        ) {
-                            Icon(AppIcons.ArrowUp, contentDescription = "Move Up")
-                        }
-                        IconButton(
-                            onClick = { if (index < uiState.tabOrder.size - 1) viewModel.reorderTab(index, index + 1) },
-                            enabled = index < uiState.tabOrder.size - 1
-                        ) {
-                            Icon(AppIcons.ArrowDown, contentDescription = "Move Down")
-                        }
-                    }
-                }
-            }
-
-
             Spacer(Modifier.weight(1f))
 
             // Reset Appearance Settings

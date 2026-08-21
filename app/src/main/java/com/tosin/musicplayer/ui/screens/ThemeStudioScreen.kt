@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Checkbox
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,8 +56,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.engine.ThemeStyle
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
+import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.viewmodel.ThemeViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
 
@@ -63,6 +67,7 @@ import com.tosin.musicplayer.ui.icons.AppIcons
 @Composable
 fun ThemeStudioScreen(
     viewModel: ThemeViewModel,
+    settingsViewModel: SettingsViewModel? = null,
     onNavigateBack: () -> Unit
 ) {
     val themeState by viewModel.themeState.collectAsState()
@@ -71,6 +76,11 @@ fun ThemeStudioScreen(
 
     var showResetDialog by remember { mutableStateOf(false) }
     var showApplyAllDialog by remember { mutableStateOf(false) }
+
+    val settingsUiState = settingsViewModel?.let { vm ->
+        val state by vm.uiState.collectAsState()
+        state
+    }
 
     Scaffold(
         topBar = {
@@ -277,7 +287,52 @@ fun ThemeStudioScreen(
                 }
             }
 
-            // ── 7. Global Actions ──
+            // ── 7. Layout (Home Screen Tabs) ──
+            if (settingsViewModel != null && settingsUiState != null) {
+                item {
+                    StudioSectionCard(title = "Home Screen Tabs") {
+                        Text(
+                            text = "Reorder and toggle tabs on the home screen",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        settingsUiState!!.tabOrder.forEachIndexed { index, tab ->
+                            val isChecked = settingsUiState!!.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+                            val isLastVisible = isChecked && settingsUiState!!.visibleTabs.size == 1
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Checkbox(
+                                    checked = isChecked,
+                                    enabled = !isLastVisible,
+                                    onCheckedChange = { settingsViewModel.toggleTabVisibility(tab) }
+                                )
+                                Text(
+                                    text = tab,
+                                    modifier = Modifier.weight(1f),
+                                    color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
+                                IconButton(
+                                    onClick = { if (index > 0) settingsViewModel.reorderTab(index, index - 1) },
+                                    enabled = index > 0
+                                ) {
+                                    Icon(AppIcons.ArrowUp, contentDescription = "Move Up")
+                                }
+                                IconButton(
+                                    onClick = { if (index < settingsUiState!!.tabOrder.size - 1) settingsViewModel.reorderTab(index, index + 1) },
+                                    enabled = index < settingsUiState!!.tabOrder.size - 1
+                                ) {
+                                    Icon(AppIcons.ArrowDown, contentDescription = "Move Down")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── 8. Global Actions ──
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

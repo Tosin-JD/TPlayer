@@ -239,6 +239,7 @@ fun AppRoutes(
             if (themeViewModel != null) {
                 ThemeStudioScreen(
                     viewModel = themeViewModel,
+                    settingsViewModel = settingsViewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
