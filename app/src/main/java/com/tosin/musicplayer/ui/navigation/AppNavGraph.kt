@@ -63,7 +63,7 @@ fun AppNavGraph(
         if (!hasRestoredNav) {
             hasRestoredNav = true
             val (savedRoute, _) = settingsViewModel.loadNavigationState()
-            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "favorites", "search", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about", "settings/theme_studio")
+            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "favorites", "search", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about")
             if (savedRoute.isNotBlank() && savedRoute in validRoutes && savedRoute != "home") {
                 navController.navigate(savedRoute) {
                     launchSingleTop = true

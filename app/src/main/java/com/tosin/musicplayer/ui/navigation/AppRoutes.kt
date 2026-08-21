@@ -227,15 +227,6 @@ fun AppRoutes(
         }
 
         composable("settings/appearance") {
-            AppearanceSettingsScreen(
-                viewModel = settingsViewModel,
-                themeViewModel = themeViewModel,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToThemeStudio = { navController.navigate("settings/theme_studio") }
-            )
-        }
-
-        composable("settings/theme_studio") {
             if (themeViewModel != null) {
                 ThemeStudioScreen(
                     viewModel = themeViewModel,
