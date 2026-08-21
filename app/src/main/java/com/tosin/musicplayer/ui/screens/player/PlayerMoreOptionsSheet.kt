@@ -38,6 +38,7 @@ fun PlayerMoreOptionsSheet(
     abRepeatA: Long?,
     abRepeatB: Long?,
     isFavorite: Boolean,
+    playerBackgroundColor: androidx.compose.ui.graphics.Color,
     onDismiss: () -> Unit,
     onOpenSongEditor: (Long) -> Unit,
     onSetAsRingtone: (Song) -> Unit,
@@ -52,7 +53,7 @@ fun PlayerMoreOptionsSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer
+        containerColor = playerBackgroundColor
     ) {
         Column(
             modifier = Modifier

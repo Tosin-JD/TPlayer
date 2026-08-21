@@ -25,6 +25,7 @@ fun PlayerDialogContainer(
     showMoreOptionsSheet: Boolean,
     showABRepeatDialog: Boolean,
     showDeleteConfirm: Boolean,
+    playerBackgroundColor: androidx.compose.ui.graphics.Color,
     onDismissSpeed: () -> Unit,
     onDismissSleep: () -> Unit,
     onDismissMoreOptions: () -> Unit,
@@ -70,6 +71,7 @@ fun PlayerDialogContainer(
             abRepeatA = state.abRepeatA,
             abRepeatB = state.abRepeatB,
             isFavorite = state.currentSong?.id?.let { viewModel.isFavorite(it) } == true,
+            playerBackgroundColor = playerBackgroundColor,
             onDismiss = onDismissMoreOptions,
             onOpenSongEditor = onOpenSongEditor,
             onSetAsRingtone = { song ->

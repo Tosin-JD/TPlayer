@@ -155,6 +155,7 @@ fun PlayerScreen(
         showMoreOptionsSheet = showMoreOptionsSheet,
         showABRepeatDialog = showABRepeatDialog,
         showDeleteConfirm = showDeleteConfirm,
+        playerBackgroundColor = bgColor,
         onDismissSpeed = { showSpeedDialog = false },
         onDismissSleep = { showSleepTimerDialog = false },
         onDismissMoreOptions = { showMoreOptionsSheet = false },
