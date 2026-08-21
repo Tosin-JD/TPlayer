@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.PlayPauseButton
 import com.tosin.musicplayer.ui.viewmodel.RepeatMode
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerMainControls(
@@ -53,7 +54,7 @@ fun PlayerMainControls(
             modifier = Modifier.size(56.dp)
         ) {
             Icon(
-                imageVector = Icons.Rounded.SkipPrevious,
+                imageVector = AppIcons.SkipPrevious,
                 contentDescription = "Previous",
                 modifier = Modifier.size(36.dp),
                 tint = contentColor
@@ -65,7 +66,7 @@ fun PlayerMainControls(
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
-                imageVector = Icons.Rounded.Replay10,
+                imageVector = AppIcons.Replay10,
                 contentDescription = "Rewind 10s",
                 modifier = Modifier.size(28.dp),
                 tint = contentColor
@@ -82,7 +83,7 @@ fun PlayerMainControls(
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
-                imageVector = Icons.Rounded.Forward10,
+                imageVector = AppIcons.Forward10,
                 contentDescription = "Forward 10s",
                 modifier = Modifier.size(28.dp),
                 tint = contentColor
@@ -94,7 +95,7 @@ fun PlayerMainControls(
             modifier = Modifier.size(56.dp)
         ) {
             Icon(
-                imageVector = Icons.Rounded.SkipNext,
+                imageVector = AppIcons.SkipNext,
                 contentDescription = "Next",
                 modifier = Modifier.size(36.dp),
                 tint = contentColor
@@ -130,7 +131,7 @@ fun PlayerBottomBar(
             modifier = Modifier.size(bottomButtonSize)
         ) {
             Icon(
-                imageVector = if (shuffleEnabled) Icons.Rounded.ShuffleOn else Icons.Rounded.Shuffle,
+                imageVector = if (shuffleEnabled) AppIcons.ShuffleOn else AppIcons.Shuffle,
                 contentDescription = "Shuffle",
                 tint = if (shuffleEnabled) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(bottomIconSize)
@@ -142,7 +143,7 @@ fun PlayerBottomBar(
             modifier = Modifier.size(bottomButtonSize)
         ) {
             Icon(
-                imageVector = Icons.Rounded.Lyrics,
+                imageVector = AppIcons.Lyrics,
                 contentDescription = "Lyrics",
                 tint = if (lyricsVisible) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(bottomIconSize)
@@ -154,7 +155,7 @@ fun PlayerBottomBar(
             modifier = Modifier.size(bottomButtonSize)
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.PlaylistPlay,
+                imageVector = AppIcons.PlaylistPlay,
                 contentDescription = "Playlist",
                 tint = contentColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(bottomIconSize)
@@ -162,10 +163,10 @@ fun PlayerBottomBar(
         }
 
         val repeatIcon = when (repeatMode) {
-            RepeatMode.PLAY_ALL_ONCE -> Icons.AutoMirrored.Rounded.ArrowForward
-            RepeatMode.PLAY_ONE_ONCE -> Icons.Rounded.LooksOne
-            RepeatMode.REPEAT_ALL -> Icons.Rounded.Repeat
-            RepeatMode.REPEAT_ONE -> Icons.Rounded.RepeatOne
+            RepeatMode.PLAY_ALL_ONCE -> AppIcons.ArrowForward
+            RepeatMode.PLAY_ONE_ONCE -> AppIcons.LooksOne
+            RepeatMode.REPEAT_ALL -> AppIcons.Repeat
+            RepeatMode.REPEAT_ONE -> AppIcons.RepeatOne
         }
         val repeatTint = if (repeatMode != RepeatMode.PLAY_ALL_ONCE) {
             MaterialTheme.colorScheme.primary
@@ -205,7 +206,7 @@ fun PlayerBottomBar(
             modifier = Modifier.size(bottomButtonSize)
         ) {
             Icon(
-                imageVector = Icons.Rounded.MoreVert,
+                imageVector = AppIcons.MoreVert,
                 contentDescription = "More Options",
                 tint = contentColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(bottomIconSize)

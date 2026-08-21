@@ -25,6 +25,7 @@ import coil.compose.AsyncImage
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun MiniPlayer(
@@ -106,7 +107,7 @@ fun MiniPlayer(
             }
 
             IconButton(onClick = { viewModel.previous() }) {
-                Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous")
+                Icon(AppIcons.SkipPrevious, contentDescription = "Previous")
             }
 
             IconButton(
@@ -119,13 +120,13 @@ fun MiniPlayer(
                 )
             ) {
                 Icon(
-                    imageVector = if (uiState.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                    imageVector = if (uiState.isPlaying) AppIcons.Pause else AppIcons.Play,
                     contentDescription = if (uiState.isPlaying) "Pause" else "Play"
                 )
             }
 
             IconButton(onClick = { viewModel.next() }) {
-                Icon(Icons.Rounded.SkipNext, contentDescription = "Next")
+                Icon(AppIcons.SkipNext, contentDescription = "Next")
             }
 
             IconButton(
@@ -135,7 +136,7 @@ fun MiniPlayer(
                     contentColor = MaterialTheme.colorScheme.onErrorContainer
                 )
             ) {
-                Icon(Icons.Rounded.Stop, contentDescription = "Stop")
+                Icon(AppIcons.Stop, contentDescription = "Stop")
             }
         }
     }

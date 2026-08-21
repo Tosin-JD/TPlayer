@@ -38,6 +38,8 @@ import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.viewmodel.StatsViewModel
+import com.tosin.musicplayer.ui.viewmodel.ThemeViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun AppNavGraph(
@@ -45,7 +47,8 @@ fun AppNavGraph(
     settingsViewModel: SettingsViewModel,
     equalizerViewModel: EqualizerViewModel,
     statsViewModel: StatsViewModel,
-    onRequestAudioPermission: () -> Unit
+    onRequestAudioPermission: () -> Unit,
+    themeViewModel: ThemeViewModel? = null
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -57,7 +60,7 @@ fun AppNavGraph(
         if (!hasRestoredNav) {
             hasRestoredNav = true
             val (savedRoute, _) = settingsViewModel.loadNavigationState()
-            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "search", "visualizer", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about")
+            val validRoutes = setOf("home", "player", "settings", "stats", "playlists", "favorites", "search", "visualizer", "lyrics", "equalizer", "currentPlaylist", "settings/general", "settings/appearance", "settings/playback", "settings/about", "settings/theme_studio")
             if (savedRoute.isNotBlank() && savedRoute in validRoutes && savedRoute != "home") {
                 navController.navigate(savedRoute) {
                     launchSingleTop = true
@@ -96,10 +99,10 @@ fun AppNavGraph(
                             .padding(bottom = fabLift)
                     ) {
                         FloatingActionButton(onClick = { navController.navigate("stats") }) {
-                            Icon(Icons.Rounded.BarChart, contentDescription = "Open Stats")
+                            Icon(AppIcons.BarChart, contentDescription = "Open Stats")
                         }
                         FloatingActionButton(onClick = { navController.navigate("search") }) {
-                            Icon(Icons.Rounded.Search, contentDescription = "Open Search")
+                            Icon(AppIcons.Search, contentDescription = "Open Search")
                         }
                     }
                 }
@@ -112,6 +115,7 @@ fun AppNavGraph(
                 equalizerViewModel = equalizerViewModel,
                 statsViewModel = statsViewModel,
                 onRequestAudioPermission = onRequestAudioPermission,
+                themeViewModel = themeViewModel,
                 modifier = Modifier.padding(paddingValues)
             )
         }

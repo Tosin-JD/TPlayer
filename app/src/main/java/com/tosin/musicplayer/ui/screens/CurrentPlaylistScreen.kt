@@ -30,6 +30,7 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import kotlin.math.roundToInt
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,13 +86,13 @@ fun CurrentPlaylistScreen(
                 title = { Text("Current Playlist", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     IconButton(onClick = { isEditMode = !isEditMode }) {
                         Icon(
-                            imageVector = if (isEditMode) Icons.Rounded.Check else Icons.Rounded.Edit,
+                            imageVector = if (isEditMode) AppIcons.Check else AppIcons.Edit,
                             contentDescription = if (isEditMode) "Done" else "Edit Order",
                             tint = MaterialTheme.colorScheme.primary
                         )

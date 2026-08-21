@@ -13,6 +13,11 @@ enum class StorageScope(val label: String) {
 }
 
 fun Song.isInternalStorage(): Boolean {
+    // Primary check: use volumeName if available (reliable on Android 10+)
+    if (volumeName != null) {
+        return volumeName == "external_primary" || volumeName == "internal"
+    }
+    // Fallback: path-based detection for older Android versions
     val path = folderPath?.lowercase().orEmpty()
     return path.isBlank() ||
         !path.contains("/storage/") ||
@@ -21,11 +26,16 @@ fun Song.isInternalStorage(): Boolean {
 }
 
 fun Song.isSdCardStorage(): Boolean {
+    // Primary check: use volumeName if available
+    if (volumeName != null) {
+        return volumeName != "external_primary" && volumeName != "internal"
+    }
+    // Fallback: path-based detection
     val path = folderPath?.lowercase().orEmpty()
     return path.contains("/storage/") &&
         !path.contains("/storage/emulated") &&
         !path.contains("/storage/self") &&
-        !path.isBlank()
+        path.isNotBlank()
 }
 
 fun Song.matchesStorageScope(scope: StorageScope): Boolean {

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -95,7 +96,7 @@ fun HomeTopBar(
                 }
                 IconButton(onClick = onNavigateToSettings) {
                     Icon(
-                        imageVector = Icons.Rounded.Settings,
+                        imageVector = AppIcons.Settings,
                         contentDescription = "Settings",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

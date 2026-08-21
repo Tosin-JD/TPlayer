@@ -45,6 +45,7 @@ import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,7 +131,7 @@ fun LibraryGroupDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -168,7 +169,7 @@ fun LibraryGroupDetailScreen(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(AppSpacing.xSmall))
                         Text("Play All")
                     }
@@ -182,7 +183,7 @@ fun LibraryGroupDetailScreen(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Rounded.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(AppIcons.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(AppSpacing.xSmall))
                         Text("Shuffle")
                     }
@@ -206,7 +207,7 @@ fun LibraryGroupDetailScreen(
                     trailingContent = {
                         IconButton(onClick = { selectedSongForActions = song }) {
                             Icon(
-                                Icons.Rounded.MoreVert,
+                                AppIcons.MoreVert,
                                 contentDescription = "Song options",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )

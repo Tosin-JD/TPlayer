@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,7 @@ fun <T> SelectionBottomSheet(
                     trailingContent = {
                         if (isSelected) {
                             Icon(
-                                imageVector = Icons.Rounded.Check,
+                                imageVector = AppIcons.Check,
                                 contentDescription = "Selected",
                                 tint = MaterialTheme.colorScheme.primary
                             )

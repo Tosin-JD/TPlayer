@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +42,7 @@ fun LyricsEditorScreen(
                 title = { Text("Edit Lyrics", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Close")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Close")
                     }
                 },
                 actions = {
@@ -57,7 +58,7 @@ fun LyricsEditorScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Rounded.Check, contentDescription = "Save")
+                        Icon(AppIcons.Check, contentDescription = "Save")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
@@ -165,7 +166,7 @@ fun LyricsEditorScreen(
                                                         }
                                                     }
                                                 ) {
-                                                    Icon(Icons.Rounded.DeleteOutline, contentDescription = "Delete line")
+                                                    Icon(AppIcons.DeleteOutline, contentDescription = "Delete line")
                                                 }
                                             }
                                             OutlinedTextField(
@@ -177,7 +178,7 @@ fun LyricsEditorScreen(
                                                 },
                                                 modifier = Modifier.fillMaxWidth(),
                                                 leadingIcon = {
-                                                    Icon(Icons.Rounded.Timer, contentDescription = null)
+                                                    Icon(AppIcons.Timer, contentDescription = null)
                                                 }
                                             )
                                         }
@@ -193,7 +194,7 @@ fun LyricsEditorScreen(
                                             .fillMaxWidth()
                                             .padding(vertical = AppSpacing.xSmall)
                                     ) {
-                                        Icon(Icons.Rounded.Add, contentDescription = null)
+                                        Icon(AppIcons.Add, contentDescription = null)
                                         Spacer(Modifier.width(AppSpacing.xSmall))
                                         Text("Add line")
                                     }

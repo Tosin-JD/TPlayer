@@ -41,6 +41,7 @@ import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.ui.components.menu.ActionMenuBottomSheet
 import com.tosin.musicplayer.ui.components.menu.ActionMenuOption
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,13 +106,13 @@ internal fun PlaylistCard(
 
             if (songCount > 0) {
                 FilledTonalIconButton(onClick = onPlay) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Play")
+                    Icon(AppIcons.Play, contentDescription = "Play")
                 }
             }
 
             Box {
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
+                    Icon(AppIcons.MoreVert, contentDescription = "Options")
                 }
             }
         }
@@ -123,12 +124,12 @@ internal fun PlaylistCard(
             options = listOf(
                 ActionMenuOption(
                     label = "Rename",
-                    icon = Icons.Rounded.Edit,
+                    icon = AppIcons.Edit,
                     onClick = onRename
                 ),
                 ActionMenuOption(
                     label = "Delete",
-                    icon = Icons.Rounded.Delete,
+                    icon = AppIcons.Delete,
                     destructive = true,
                     onClick = onDelete
                 )

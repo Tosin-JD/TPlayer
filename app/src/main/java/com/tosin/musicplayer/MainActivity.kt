@@ -28,6 +28,9 @@ import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import com.tosin.musicplayer.ui.viewmodel.StatsViewModel
 import com.tosin.musicplayer.data.repository.StatsRepository
+import com.tosin.musicplayer.data.repository.ThemeDataStoreRepository
+import com.tosin.musicplayer.ui.theme.engine.UniversalAppTheme
+import com.tosin.musicplayer.ui.viewmodel.ThemeViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var playerViewModel: PlayerViewModel
@@ -41,9 +44,10 @@ class MainActivity : ComponentActivity() {
         val statsRepository = StatsRepository(this)
         val playlistRepository = PlaylistRepository(this)
         val preferencesRepository = PreferencesRepository(this)
+        val themeDataStoreRepository = ThemeDataStoreRepository(this)
         val musicLoader = MusicLoader(contentResolver)
         playerController = PlayerController(this@MainActivity, statsRepository, preferencesRepository)
-        musicRepository = MusicRepository(musicLoader, preferencesRepository, statsRepository)
+        musicRepository = MusicRepository(musicLoader, preferencesRepository, statsRepository, this)
 
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -65,6 +69,9 @@ class MainActivity : ComponentActivity() {
                     modelClass.isAssignableFrom(StatsViewModel::class.java) -> {
                         StatsViewModel(musicRepository, statsRepository) as T
                     }
+                    modelClass.isAssignableFrom(ThemeViewModel::class.java) -> {
+                        ThemeViewModel(themeDataStoreRepository) as T
+                    }
                     else -> throw IllegalArgumentException("Unknown ViewModel class")
                 }
             }
@@ -74,6 +81,7 @@ class MainActivity : ComponentActivity() {
         val settingsViewModel = ViewModelProvider(this, factory)[SettingsViewModel::class.java]
         val equalizerViewModel = ViewModelProvider(this, factory)[EqualizerViewModel::class.java]
         val statsViewModel = ViewModelProvider(this, factory)[StatsViewModel::class.java]
+        val themeViewModel = ViewModelProvider(this, factory)[ThemeViewModel::class.java]
 
         val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
@@ -95,6 +103,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val settingsUiState by settingsViewModel.uiState.collectAsState()
+            val themeState by themeViewModel.themeState.collectAsState()
+
             androidx.compose.runtime.LaunchedEffect(settingsUiState.pauseOnZeroVolume) {
                 playerViewModel.setPauseOnZeroVolumeEnabled(settingsUiState.pauseOnZeroVolume)
             }
@@ -106,17 +116,15 @@ class MainActivity : ComponentActivity() {
                 playerViewModel.refreshLibrary()
             }
 
-            TPlayerTheme(
-                darkTheme = settingsUiState.isDarkMode,
-                dynamicColor = settingsUiState.useDynamicColor,
-                themePreset = AppThemePreset.fromStored(settingsUiState.themePreset),
-                accentColorIndex = settingsUiState.accentColorIndex
+            UniversalAppTheme(
+                state = themeState
             ) {
                 AppNavGraph(
                     viewModel = playerViewModel,
                     settingsViewModel = settingsViewModel,
                     equalizerViewModel = equalizerViewModel,
                     statsViewModel = statsViewModel,
+                    themeViewModel = themeViewModel,
                     onRequestAudioPermission = { permissionLauncher.launch(audioPermission) }
                 )
             }

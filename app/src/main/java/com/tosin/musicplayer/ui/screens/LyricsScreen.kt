@@ -56,6 +56,7 @@ import com.tosin.musicplayer.ui.screens.lyrics.LyricsTextAlign
 import com.tosin.musicplayer.ui.screens.lyrics.parseLyricLines
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,18 +162,18 @@ fun LyricsScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            Icon(AppIcons.ArrowBack, contentDescription = "Back", tint = Color.White)
                         }
                     },
                     actions = {
                         IconButton(onClick = { song?.id?.let(onOpenLyricsEditor) }) {
-                            Icon(Icons.Rounded.TextFields, contentDescription = "Edit lyrics", tint = Color.White)
+                            Icon(AppIcons.TextFields, contentDescription = "Edit lyrics", tint = Color.White)
                         }
                         IconButton(onClick = { showAppearanceDialog = true }) {
-                            Icon(Icons.Rounded.FormatSize, contentDescription = "Lyrics appearance", tint = Color.White)
+                            Icon(AppIcons.FormatSize, contentDescription = "Lyrics appearance", tint = Color.White)
                         }
                         IconButton(onClick = onOpenVisualizer) {
-                            Icon(Icons.Rounded.GraphicEq, contentDescription = "Open visualizer", tint = Color.White)
+                            Icon(AppIcons.GraphicEq, contentDescription = "Open visualizer", tint = Color.White)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)

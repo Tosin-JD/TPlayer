@@ -47,6 +47,7 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.visualizer.VisualizerType
 import com.tosin.musicplayer.ui.visualizer.viewmodel.VisualizerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,12 +144,12 @@ private fun VisualizerTopBar(
         title = { Text("Visualizer", fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back")
+                Icon(AppIcons.ArrowBack, "Back")
             }
         },
         actions = {
             IconButton(onClick = onTogglePlay, enabled = songExists) {
-                Icon(if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                Icon(if (playing) AppIcons.Pause else AppIcons.Play,
                     if (playing) "Pause" else "Play",
                     tint = MaterialTheme.colorScheme.primary)
             }

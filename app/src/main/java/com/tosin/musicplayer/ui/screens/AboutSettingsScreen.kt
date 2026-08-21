@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,11 +26,15 @@ fun AboutSettingsScreen(
                 title = { Text("About", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -43,7 +48,7 @@ fun AboutSettingsScreen(
                 headlineContent = { Text("TPlayer") },
                 supportingContent = { Text("Version 1.0 • Alpha") },
                 leadingContent = {
-                    Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 }
             )
             

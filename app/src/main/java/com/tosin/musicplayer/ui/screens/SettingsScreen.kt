@@ -1,14 +1,40 @@
 package com.tosin.musicplayer.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -16,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,19 +60,21 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
-
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // Only respect top and bottom scaffold bars to prevent horizontal squeeze
                 .padding(
                     top = paddingValues.calculateTopPadding(),
                     bottom = paddingValues.calculateBottomPadding()
@@ -54,28 +83,28 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
             SettingsCategoryCard(
-                icon = Icons.Rounded.Settings,
+                icon = AppIcons.Settings,
                 title = "General",
                 subtitle = "Notifications, library scanning",
                 onClick = onNavigateToGeneral
             )
 
             SettingsCategoryCard(
-                icon = Icons.Rounded.Palette,
+                icon = AppIcons.Palette,
                 title = "Appearance",
                 subtitle = "Theme, colors, tab layout",
                 onClick = onNavigateToAppearance
             )
 
             SettingsCategoryCard(
-                icon = Icons.Rounded.PlayCircle,
+                icon = AppIcons.PlayCircle,
                 title = "Playback",
                 subtitle = "Crossfade, gapless, speed, sleep timer",
                 onClick = onNavigateToPlayback
             )
 
             SettingsCategoryCard(
-                icon = Icons.Rounded.Info,
+                icon = AppIcons.Info,
                 title = "About",
                 subtitle = "Version, library info",
                 onClick = onNavigateToAbout
@@ -83,25 +112,25 @@ fun SettingsScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // Reset All Settings card (Edge-to-Edge)
-            Card(
+            // Reset All Settings card
+            Surface(
                 onClick = { showResetDialog = true },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large),
                 shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                color = MaterialTheme.colorScheme.errorContainer,
+                tonalElevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = AppSpacing.medium, horizontal = AppSpacing.large),
+                        .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        Icons.Rounded.RestartAlt,
+                        AppIcons.RestartAlt,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(24.dp)
@@ -109,21 +138,21 @@ fun SettingsScreen(
                     Spacer(Modifier.width(AppSpacing.small))
                     Text(
                         "Reset All Settings",
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
             }
 
-            Spacer(Modifier.height(120.dp))
+            Spacer(Modifier.height(AppSpacing.xLarge))
         }
     }
 
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            icon = { Icon(Icons.Rounded.Warning, contentDescription = null) },
+            icon = { Icon(AppIcons.Warning, contentDescription = null) },
             title = { Text("Reset All Settings?") },
             text = { Text("This will reset all settings across General, Appearance, and Playback to their default values. This action cannot be undone.") },
             confirmButton = {
@@ -152,30 +181,36 @@ private fun SettingsCategoryCard(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = AppSpacing.large),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppSpacing.large),
+                .padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.medium),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(Modifier.width(AppSpacing.medium))
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.size(52.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title,
@@ -184,12 +219,12 @@ private fun SettingsCategoryCard(
                 )
                 Text(
                     subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Icon(
-                Icons.AutoMirrored.Rounded.ArrowForward,
+                AppIcons.ArrowForward,
                 contentDescription = "Open $title settings",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)

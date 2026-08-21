@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 internal data class HomeContentState(
     val selectedTab: LibraryTab,
@@ -59,7 +60,7 @@ internal fun LibrarySummary(
         }
         FilledTonalIconButton(onClick = onSortClick) {
             Icon(
-                imageVector = Icons.Rounded.Sort,
+                imageVector = AppIcons.Sort,
                 contentDescription = "Sort by $sortLabel"
             )
         }
@@ -123,7 +124,7 @@ internal fun EmptyLibraryState(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Rounded.LibraryMusic,
+                        imageVector = AppIcons.LibraryMusic,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )

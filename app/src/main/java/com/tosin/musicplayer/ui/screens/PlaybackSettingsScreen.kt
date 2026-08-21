@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,11 +33,15 @@ fun PlaybackSettingsScreen(
                 title = { Text("Playback", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -50,7 +55,7 @@ fun PlaybackSettingsScreen(
                 headlineContent = { Text("Gapless Playback") },
                 supportingContent = { Text("Seamless transitions between tracks") },
                 leadingContent = {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -64,7 +69,7 @@ fun PlaybackSettingsScreen(
                 headlineContent = { Text("Crossfade") },
                 supportingContent = { Text("Smooth fade between tracks") },
                 leadingContent = {
-                    Icon(Icons.Rounded.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -79,14 +84,14 @@ fun PlaybackSettingsScreen(
                     headlineContent = { Text("Crossfade Duration") },
                     supportingContent = { Text("${uiState.crossfadeDuration} seconds") },
                     leadingContent = {
-                        Icon(Icons.Rounded.Timelapse, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        Icon(AppIcons.Timelapse, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                     },
                     trailingContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = {
                                 if (uiState.crossfadeDuration > 1) viewModel.setCrossfadeDuration(uiState.crossfadeDuration - 1)
                             }) {
-                                Icon(Icons.Rounded.Remove, contentDescription = "Decrease")
+                                Icon(AppIcons.Remove, contentDescription = "Decrease")
                             }
                             Text(
                                 "${uiState.crossfadeDuration}s",
@@ -95,7 +100,7 @@ fun PlaybackSettingsScreen(
                             IconButton(onClick = {
                                 if (uiState.crossfadeDuration < 12) viewModel.setCrossfadeDuration(uiState.crossfadeDuration + 1)
                             }) {
-                                Icon(Icons.Rounded.Add, contentDescription = "Increase")
+                                Icon(AppIcons.Add, contentDescription = "Increase")
                             }
                         }
                     },
@@ -107,7 +112,7 @@ fun PlaybackSettingsScreen(
                 headlineContent = { Text("Auto-Resume") },
                 supportingContent = { Text("Remember playback position for each track") },
                 leadingContent = {
-                    Icon(Icons.Rounded.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -121,7 +126,7 @@ fun PlaybackSettingsScreen(
                 headlineContent = { Text("Remember Last Play") },
                 supportingContent = { Text("Resume the last song and its exact position when the app opens") },
                 leadingContent = {
-                    Icon(Icons.Rounded.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -135,7 +140,7 @@ fun PlaybackSettingsScreen(
                 headlineContent = { Text("Pause on 0 Volume") },
                 supportingContent = { Text("Pause playback when device volume is muted or zero") },
                 leadingContent = {
-                    Icon(Icons.AutoMirrored.Rounded.VolumeOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.VolumeOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -159,7 +164,7 @@ fun PlaybackSettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            icon = { Icon(Icons.Rounded.RestartAlt, contentDescription = null) },
+            icon = { Icon(AppIcons.RestartAlt, contentDescription = null) },
             title = { Text("Reset Playback Settings?") },
             text = { Text("This will reset gapless, crossfade, and resume settings to their defaults.") },
             confirmButton = {

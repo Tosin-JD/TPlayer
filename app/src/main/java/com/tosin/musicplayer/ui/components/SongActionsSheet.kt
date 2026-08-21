@@ -31,18 +31,21 @@ import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongActionsSheet(
     song: Song,
     playlists: List<Playlist>,
+    isFavorite: Boolean = false,
     onDismiss: () -> Unit,
     onPlay: (Song) -> Unit,
     onPlayNext: (Song) -> Unit,
     onAddToCurrentPlaylist: (Song) -> Unit,
     onAddToPlaylist: (String, List<Long>) -> Unit,
     onCreateNewPlaylist: (String) -> Unit,
+    onToggleFavorite: ((Song) -> Unit)? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -93,7 +96,7 @@ fun SongActionsSheet(
 
                 ListItem(
                     headlineContent = { Text("Play") },
-                    leadingContent = { Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Play, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onPlay(song)
                         onDismiss()
@@ -102,16 +105,33 @@ fun SongActionsSheet(
 
                 ListItem(
                     headlineContent = { Text("Play next") },
-                    leadingContent = { Icon(Icons.Rounded.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onPlayNext(song)
                         onDismiss()
                     }
                 )
 
+                if (onToggleFavorite != null) {
+                    ListItem(
+                        headlineContent = { Text(if (isFavorite) "Remove from favorites" else "Add to favorites") },
+                        leadingContent = {
+                            Icon(
+                                if (isFavorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            onToggleFavorite(song)
+                            onDismiss()
+                        }
+                    )
+                }
+
                 ListItem(
                     headlineContent = { Text("Add to current playlist") },
-                    leadingContent = { Icon(Icons.Rounded.QueueMusic, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Queue, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onAddToCurrentPlaylist(song)
                         onDismiss()
@@ -131,7 +151,7 @@ fun SongActionsSheet(
 
                     ListItem(
                         headlineContent = { Text("Remove from playlist", color = MaterialTheme.colorScheme.error) },
-                        leadingContent = { Icon(Icons.Rounded.RemoveCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                        leadingContent = { Icon(AppIcons.RemoveCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                         modifier = Modifier.clickable {
                             onRemoveFromPlaylist()
                             onDismiss()

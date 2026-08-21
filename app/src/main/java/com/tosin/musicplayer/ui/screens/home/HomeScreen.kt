@@ -78,22 +78,15 @@ fun HomeScreen(
     val pagerState = rememberPagerState(pageCount = { safeActiveTabs.size })
     val coroutineScope = rememberCoroutineScope()
 
-    // Sync pager with selected tab or when tab order/visibility changes
+    // If selected tab was removed (e.g. hidden), fall back to current pager page
     LaunchedEffect(uiState.selectedTab, safeActiveTabs) {
-        val targetIndex = safeActiveTabs.indexOf(uiState.selectedTab)
-        if (targetIndex != -1) {
-            if (pagerState.currentPage != targetIndex && !pagerState.isScrollInProgress) {
-                pagerState.scrollToPage(targetIndex)
-            }
-        } else {
-            // Selected tab is no longer active (e.g. was hidden)
+        if (uiState.selectedTab !in safeActiveTabs) {
             val fallbackIndex = pagerState.currentPage.coerceIn(0, safeActiveTabs.size - 1)
-            val fallbackTab = safeActiveTabs[fallbackIndex]
-            viewModel.selectLibraryTab(fallbackTab)
+            viewModel.selectLibraryTab(safeActiveTabs[fallbackIndex])
         }
     }
 
-    // Sync selected tab with pager when user scrolls
+    // Sync selected tab with pager when user scrolls (swipe)
     LaunchedEffect(pagerState, safeActiveTabs) {
         snapshotFlow { pagerState.settledPage }
             .collect { settledPage ->
@@ -178,6 +171,18 @@ fun HomeScreen(
                         onSortChange = { option ->
                             sortState[LibraryTab.All] = option
                             settingsViewModel.setTabSortOption(LibraryTab.All.name, option.name)
+                        },
+                        availableStorageScopes = availableStorageScopes
+                    )
+                    tab == LibraryTab.Favorites -> FavoritesTab(
+                        viewModel = viewModel,
+                        settingsViewModel = settingsViewModel,
+                        tab = tab,
+                        onNavigateToPlayer = onNavigateToPlayer,
+                        sortBy = sortState[LibraryTab.Favorites] ?: LibrarySortOption.DateAdded,
+                        onSortChange = { option ->
+                            sortState[LibraryTab.Favorites] = option
+                            settingsViewModel.setTabSortOption(LibraryTab.Favorites.name, option.name)
                         },
                         availableStorageScopes = availableStorageScopes
                     )

@@ -40,6 +40,7 @@ import com.tosin.musicplayer.ui.screens.equalizer.EqualizerNoticeCard
 import com.tosin.musicplayer.ui.screens.equalizer.PresetsSection
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +70,7 @@ fun EqualizerScreen(
                 title = { Text("Equalizer", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -78,7 +79,7 @@ fun EqualizerScreen(
                         enabled = uiState.isAvailable
                     ) {
                         Icon(
-                            Icons.Rounded.RestartAlt,
+                            AppIcons.RestartAlt,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )

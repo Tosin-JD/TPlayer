@@ -19,6 +19,7 @@ import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,12 +83,12 @@ fun PlaylistScreen(
                 title = { Text("Playlists", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     IconButton(onClick = { showCreateDialog = true }) {
-                        Icon(Icons.Rounded.Add, contentDescription = "Create Playlist")
+                        Icon(AppIcons.Add, contentDescription = "Create Playlist")
                     }
                 }
             )
@@ -95,7 +96,7 @@ fun PlaylistScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showCreateDialog = true },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                icon = { Icon(AppIcons.Add, contentDescription = null) },
                 text = { Text("New Playlist") },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer

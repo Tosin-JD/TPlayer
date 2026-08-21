@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import com.tosin.musicplayer.ui.state.PlayerUiState
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.RepeatMode
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerDialogContainer(
@@ -68,6 +69,7 @@ fun PlayerDialogContainer(
             sleepTimerRemaining = state.sleepTimerRemaining,
             abRepeatA = state.abRepeatA,
             abRepeatB = state.abRepeatB,
+            isFavorite = state.currentSong?.id?.let { viewModel.isFavorite(it) } == true,
             onDismiss = onDismissMoreOptions,
             onOpenSongEditor = onOpenSongEditor,
             onSetAsRingtone = { song ->
@@ -85,6 +87,9 @@ fun PlayerDialogContainer(
                     viewModel.cycleRepeatMode()
                 }
                 Toast.makeText(context, "Will stop playing after current song", Toast.LENGTH_SHORT).show()
+            },
+            onToggleFavorite = {
+                state.currentSong?.id?.let { viewModel.toggleFavorite(it) }
             }
         )
     }
@@ -105,7 +110,7 @@ fun PlayerDialogContainer(
     if (showDeleteConfirm && state.currentSong != null) {
         AlertDialog(
             onDismissRequest = onDismissDeleteConfirm,
-            icon = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(AppIcons.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             title = { Text("Delete permanently?") },
             text = {
                 Text("This will permanently delete \"${state.currentSong?.title}\" from your device storage. This action cannot be reversed.")

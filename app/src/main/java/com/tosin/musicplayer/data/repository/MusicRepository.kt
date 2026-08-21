@@ -1,10 +1,12 @@
 package com.tosin.musicplayer.data.repository
 
+import android.content.Context
 import com.tosin.musicplayer.data.local.MusicLoader
 import com.tosin.musicplayer.data.local.ScanProgress
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.data.models.SongMetadataOverride
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
@@ -13,7 +15,8 @@ import kotlinx.coroutines.withContext
 class MusicRepository(
     private val musicLoader: MusicLoader,
     private val preferencesRepository: PreferencesRepository,
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
+    private val context: Context? = null
 ) {
 
     suspend fun deleteSong(songUriString: String): Boolean {
@@ -31,7 +34,16 @@ class MusicRepository(
             send(cachedSongs)
         }
 
+        // Trigger SD card indexing in background
         launch(Dispatchers.IO) {
+            context?.let { ctx ->
+                musicLoader.triggerMediaStoreIndexing(ctx)
+            }
+        }
+
+        // Re-scan after a short delay to pick up newly indexed SD card content
+        launch(Dispatchers.IO) {
+            delay(3000) // Give MediaStore time to index
             val freshSongs = refreshLibraryFromDevice()
             if (!hasCachedSongs || freshSongs != cachedSongs) {
                 send(freshSongs)

@@ -1,12 +1,9 @@
 package com.tosin.musicplayer.ui.screens.player
 
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -23,19 +20,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerTopBar(
-    currentSong: Song?,
     contentColor: Color,
     sleepTimerRemaining: Long?,
     playbackSpeed: Float,
+    isFavorite: Boolean,
     onNavigateBack: () -> Unit,
     onOpenSleepTimer: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
     onOpenEqualizer: () -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -45,31 +43,14 @@ fun PlayerTopBar(
     ) {
         IconButton(onClick = onNavigateBack) {
             Icon(
-                imageVector = Icons.Rounded.KeyboardArrowDown,
+                imageVector = AppIcons.KeyboardArrowDown,
                 contentDescription = "Back to Library",
                 tint = contentColor,
                 modifier = Modifier.size(32.dp)
             )
         }
 
-        Column(modifier = Modifier.weight(1f).padding(horizontal = AppSpacing.small)) {
-            Text(
-                text = currentSong?.title ?: "No Song Playing",
-                style = MaterialTheme.typography.titleMedium,
-                color = contentColor,
-                maxLines = 1,
-                modifier = Modifier.basicMarquee()
-            )
-            Text(
-                text = currentSong?.artist ?: "Unknown Artist",
-                style = MaterialTheme.typography.bodySmall,
-                color = contentColor.copy(alpha = 0.7f),
-                maxLines = 1,
-                modifier = Modifier.basicMarquee()
-            )
-        }
-
-        Row {
+        Row(modifier = Modifier.weight(1f)) {
             if (sleepTimerRemaining != null) {
                 val remaining = sleepTimerRemaining / 1000
                 val mins = remaining / 60
@@ -84,7 +65,7 @@ fun PlayerTopBar(
                     },
                     leadingIcon = {
                         Icon(
-                            Icons.Rounded.Timer,
+                            AppIcons.Timer,
                             contentDescription = "Sleep Timer",
                             tint = contentColor,
                             modifier = Modifier.size(16.dp)
@@ -106,11 +87,19 @@ fun PlayerTopBar(
 
             IconButton(onClick = onOpenEqualizer) {
                 Icon(
-                    Icons.Rounded.Tune,
+                    AppIcons.Tune,
                     contentDescription = "Equalizer",
                     tint = contentColor
                 )
             }
+        }
+
+        IconButton(onClick = onToggleFavorite) {
+            Icon(
+                imageVector = if (isFavorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
+                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else contentColor.copy(alpha = 0.6f)
+            )
         }
     }
 }

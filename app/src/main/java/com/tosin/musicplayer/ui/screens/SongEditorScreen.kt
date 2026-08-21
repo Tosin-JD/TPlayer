@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun SongEditorScreen(
                 title = { Text("Edit Tags", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Close")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Close")
                     }
                 },
                 actions = {
@@ -63,7 +64,7 @@ fun SongEditorScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Rounded.Check, contentDescription = "Save")
+                        Icon(AppIcons.Check, contentDescription = "Save")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)

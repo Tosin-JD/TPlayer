@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.ui.state.FolderEntry
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 enum class ScanAction {
     CHANGES,
@@ -49,7 +50,7 @@ fun ScanDialog(
         onDismissRequest = {
             if (!isScanning) onDismiss()
         },
-        icon = { Icon(Icons.Rounded.Sync, contentDescription = null) },
+        icon = { Icon(AppIcons.Sync, contentDescription = null) },
         title = {
             Text(if (pendingScanAction == ScanAction.FULL) "Full scan library" else "Scan for changes")
         },
@@ -159,7 +160,7 @@ fun ExcludedFolderBottomSheet(
                                 supportingContent = { Text(folder.path, maxLines = 1) },
                                 leadingContent = {
                                     Icon(
-                                        Icons.Rounded.Folder,
+                                        AppIcons.Folder,
                                         contentDescription = null,
                                         tint = if (selected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                                     )

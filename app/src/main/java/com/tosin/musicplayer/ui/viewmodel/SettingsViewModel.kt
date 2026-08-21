@@ -410,7 +410,8 @@ class SettingsViewModel(
                 val rawTabOrder = saved.stringList("tabOrder", current.tabOrder)
                 val rawVisibleTabs = saved.stringList("visibleTabs", current.visibleTabs)
 
-                val validTabOrder = (rawTabOrder.filter { name -> allTabNames.any { it.equals(name, ignoreCase = true) } } + allTabNames)
+                val validTabOrder = rawTabOrder
+                    .filter { name -> allTabNames.any { it.equals(name, ignoreCase = true) } }
                     .map { name -> allTabNames.first { it.equals(name, ignoreCase = true) } }
                     .distinct()
 

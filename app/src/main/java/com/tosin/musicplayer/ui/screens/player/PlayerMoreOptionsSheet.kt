@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +37,7 @@ fun PlayerMoreOptionsSheet(
     sleepTimerRemaining: Long?,
     abRepeatA: Long?,
     abRepeatB: Long?,
+    isFavorite: Boolean,
     onDismiss: () -> Unit,
     onOpenSongEditor: (Long) -> Unit,
     onSetAsRingtone: (Song) -> Unit,
@@ -43,7 +45,8 @@ fun PlayerMoreOptionsSheet(
     onOpenSpeedDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
     onOpenABRepeatDialog: () -> Unit,
-    onStopAfterCurrentSong: () -> Unit
+    onStopAfterCurrentSong: () -> Unit,
+    onToggleFavorite: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -63,18 +66,35 @@ fun PlayerMoreOptionsSheet(
                 modifier = Modifier.padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium)
             )
 
-            // 1. Stop playing after this song (Top priority)
+            // 1. Favorite / Love toggle
+            ListItem(
+                headlineContent = { Text(if (isFavorite) "Remove from favorites" else "Add to favorites") },
+                supportingContent = { Text(if (isFavorite) "This song is in your favorites" else "Love this song") },
+                leadingContent = {
+                    Icon(
+                        if (isFavorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                modifier = Modifier.clickable {
+                    onDismiss()
+                    onToggleFavorite()
+                }
+            )
+
+            // 2. Stop playing after this song
             ListItem(
                 headlineContent = { Text("Stop playing after this song") },
                 supportingContent = { Text("Pause automatically when the current track finishes") },
-                leadingContent = { Icon(Icons.Rounded.PauseCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                leadingContent = { Icon(AppIcons.PauseCircleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.clickable {
                     onDismiss()
                     onStopAfterCurrentSong()
                 }
             )
 
-            // 2. Sleep timer (Moved up right below Stop playing)
+            // 3. Sleep timer
             ListItem(
                 headlineContent = { Text("Sleep timer") },
                 supportingContent = {
@@ -84,7 +104,7 @@ fun PlayerMoreOptionsSheet(
                         Text("Set auto-off timer")
                     }
                 },
-                leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                leadingContent = { Icon(AppIcons.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.clickable {
                     onDismiss()
                     onOpenSleepTimerDialog()
@@ -97,7 +117,7 @@ fun PlayerMoreOptionsSheet(
                 ListItem(
                     headlineContent = { Text("Edit tags") },
                     supportingContent = { Text("Update title, artist, album and genre") },
-                    leadingContent = { Icon(Icons.Rounded.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onDismiss()
                         onOpenSongEditor(currentSong.id)
@@ -107,7 +127,7 @@ fun PlayerMoreOptionsSheet(
                 ListItem(
                     headlineContent = { Text("Set as ringtone") },
                     supportingContent = { Text("Make this song your default ringtone") },
-                    leadingContent = { Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onDismiss()
                         onSetAsRingtone(currentSong)
@@ -117,7 +137,7 @@ fun PlayerMoreOptionsSheet(
                 ListItem(
                     headlineContent = { Text("Share song") },
                     supportingContent = { Text("Send the audio file to another app") },
-                    leadingContent = { Icon(Icons.AutoMirrored.Rounded.PlaylistPlay, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.PlaylistPlay, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onDismiss()
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -135,7 +155,7 @@ fun PlayerMoreOptionsSheet(
             ListItem(
                 headlineContent = { Text("Playback Speed") },
                 supportingContent = { Text("${playbackSpeed}x") },
-                leadingContent = { Icon(Icons.Rounded.Speed, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                leadingContent = { Icon(AppIcons.Speed, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.clickable {
                     onDismiss()
                     onOpenSpeedDialog()
@@ -153,7 +173,7 @@ fun PlayerMoreOptionsSheet(
                         Text("Off")
                     }
                 },
-                leadingContent = { Icon(Icons.Rounded.RepeatOneOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                leadingContent = { Icon(AppIcons.RepeatOneOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 modifier = Modifier.clickable {
                     onDismiss()
                     onOpenABRepeatDialog()
@@ -164,7 +184,7 @@ fun PlayerMoreOptionsSheet(
                 ListItem(
                     headlineContent = { Text("Delete permanently", color = MaterialTheme.colorScheme.error) },
                     supportingContent = { Text("Remove the file from storage forever") },
-                    leadingContent = { Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                    leadingContent = { Icon(AppIcons.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
                     modifier = Modifier.clickable {
                         onDismiss()
                         onShowDeleteConfirm()

@@ -23,6 +23,7 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.StatsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 fun formatDuration(minutes: Long): String {
     val safeMinutes = minutes.coerceAtLeast(0L)
@@ -64,13 +65,13 @@ fun StatsScreen(
                 title = { Text("Most Played", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateToHome) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back to Home")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back to Home")
                     }
                 },
                 actions = {
                     Box {
                         IconButton(onClick = { showSortMenu = true }) {
-                            Icon(Icons.Rounded.FilterList, contentDescription = "Sort By")
+                            Icon(AppIcons.FilterList, contentDescription = "Sort By")
                         }
                         if (showSortMenu) {
                             SelectionBottomSheet(
@@ -84,7 +85,7 @@ fun StatsScreen(
                     }
                     Box {
                         IconButton(onClick = { showRangeMenu = true }) {
-                            Icon(Icons.Rounded.History, contentDescription = "Time Range")
+                            Icon(AppIcons.History, contentDescription = "Time Range")
                         }
                         if (showRangeMenu) {
                             SelectionBottomSheet(
@@ -110,7 +111,7 @@ fun StatsScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Rounded.BarChart,
+                        AppIcons.BarChart,
                         null,
                         Modifier.size(64.dp),
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)

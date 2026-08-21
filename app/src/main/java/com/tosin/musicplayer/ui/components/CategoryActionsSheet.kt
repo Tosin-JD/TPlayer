@@ -29,6 +29,7 @@ import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,7 @@ fun CategoryActionsSheet(
     onAddToCurrentPlaylist: (List<Song>) -> Unit,
     onAddToPlaylist: (String, List<Long>) -> Unit,
     onCreateNewPlaylist: (String) -> Unit,
+    onAddAllToFavorites: ((List<Song>) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -88,7 +90,7 @@ fun CategoryActionsSheet(
 
                 ListItem(
                     headlineContent = { Text("Play category") },
-                    leadingContent = { Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Play, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onPlayAll(group.songs)
                         onDismiss()
@@ -97,16 +99,29 @@ fun CategoryActionsSheet(
 
                 ListItem(
                     headlineContent = { Text("Play next") },
-                    leadingContent = { Icon(Icons.Rounded.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onPlayNext(group.songs)
                         onDismiss()
                     }
                 )
 
+                if (onAddAllToFavorites != null) {
+                    ListItem(
+                        headlineContent = { Text("Add all to favorites") },
+                        leadingContent = {
+                            Icon(AppIcons.FavoriteBorder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        },
+                        modifier = Modifier.clickable {
+                            onAddAllToFavorites(group.songs)
+                            onDismiss()
+                        }
+                    )
+                }
+
                 ListItem(
                     headlineContent = { Text("Add to current playlist") },
-                    leadingContent = { Icon(Icons.Rounded.QueueMusic, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Queue, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable {
                         onAddToCurrentPlaylist(group.songs)
                         onDismiss()

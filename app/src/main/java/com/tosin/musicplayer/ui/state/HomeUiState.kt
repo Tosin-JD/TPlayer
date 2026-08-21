@@ -4,20 +4,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tosin.musicplayer.data.models.Song
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 enum class LibraryTab(val label: String) {
     All("All"),
+    Favorites("Favorites"),
     Album("Album"),
     Genre("Genre"),
     Folder("Folder"),
     Artist("Artist");
 
     fun icon(): ImageVector = when (this) {
-        All -> Icons.Rounded.MusicNote
-        Album -> Icons.Rounded.Album
-        Genre -> Icons.Rounded.Label
-        Folder -> Icons.Rounded.Folder
-        Artist -> Icons.Rounded.Person
+        All -> AppIcons.MusicNote
+        Favorites -> AppIcons.Favorite
+        Album -> AppIcons.Album
+        Genre -> AppIcons.Label
+        Folder -> AppIcons.Folder
+        Artist -> AppIcons.Person
     }
 }
 
@@ -53,6 +56,7 @@ data class HomeUiState(
     val libraryGroups: List<LibraryGroup> = emptyList(),
     val tabOrder: List<LibraryTab> = listOf(
         LibraryTab.All,
+        LibraryTab.Favorites,
         LibraryTab.Album,
         LibraryTab.Artist,
         LibraryTab.Genre,

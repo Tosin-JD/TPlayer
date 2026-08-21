@@ -39,6 +39,7 @@ import com.tosin.musicplayer.ui.components.SongItem
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,7 +97,7 @@ fun PlaylistDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -107,7 +108,7 @@ fun PlaylistDetailScreen(
                                 onNavigateToPlayer()
                             }
                         }) {
-                            Icon(Icons.Rounded.PlayArrow, contentDescription = "Play All")
+                            Icon(AppIcons.Play, contentDescription = "Play All")
                         }
                     }
                 }
@@ -124,7 +125,7 @@ fun PlaylistDetailScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Rounded.MusicNote,
+                        AppIcons.MusicNote,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
@@ -163,7 +164,7 @@ fun PlaylistDetailScreen(
                         },
                         trailingContent = {
                             IconButton(onClick = { selectedSongForActions = song }) {
-                                Icon(Icons.Rounded.MoreVert, contentDescription = "Song options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(AppIcons.MoreVert, contentDescription = "Song options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     )

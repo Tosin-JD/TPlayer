@@ -22,6 +22,7 @@ import com.tosin.musicplayer.ui.state.hasRemovableStorage
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsEvent
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,11 +65,15 @@ fun GeneralSettingsScreen(
                 title = { Text("General", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -102,7 +107,7 @@ fun GeneralSettingsScreen(
                 ListItem(
                     headlineContent = { Text("Media Notifications") },
                     supportingContent = { Text("Show playback controls in notification") },
-                    leadingContent = { Icon(Icons.Rounded.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
                         Switch(checked = uiState.showNotifications, onCheckedChange = { viewModel.toggleNotifications(it) })
                     }
@@ -114,7 +119,7 @@ fun GeneralSettingsScreen(
                 ListItem(
                     headlineContent = { Text("Scan for Changes") },
                     supportingContent = { Text("Check for new or removed songs") },
-                    leadingContent = { Icon(Icons.Rounded.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.Sync, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
                         FilledTonalButton(onClick = { pendingScanAction = ScanAction.CHANGES; showScanDialog = true }) { Text("Scan") }
                     }
@@ -123,7 +128,7 @@ fun GeneralSettingsScreen(
                 ListItem(
                     headlineContent = { Text("Full Scan") },
                     supportingContent = { Text("Re-scan entire music library") },
-                    leadingContent = { Icon(Icons.Rounded.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.FolderOpen, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
                         FilledTonalButton(onClick = { pendingScanAction = ScanAction.FULL; showScanDialog = true }) { Text("Full Scan") }
                     }
@@ -132,14 +137,14 @@ fun GeneralSettingsScreen(
                 ListItem(
                     headlineContent = { Text("Last Library Scan") },
                     supportingContent = { Text(uiState.lastScanDate) },
-                    leadingContent = { Icon(Icons.Rounded.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    leadingContent = { Icon(AppIcons.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
                 )
 
                 SettingsSubHeader("Storage Source")
                 ListItem(
                     headlineContent = { Text("Default Library Storage") },
                     supportingContent = { Text("Choose which device the library should read from by default") },
-                    leadingContent = { Icon(Icons.Rounded.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                    leadingContent = { Icon(AppIcons.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
                 )
                 StorageScopeSelector(
                     selected = StorageScope.entries.firstOrNull { it.name == uiState.storageScopeAll } ?: StorageScope.Both,
@@ -151,7 +156,7 @@ fun GeneralSettingsScreen(
                 ListItem(
                     headlineContent = { Text("Remember Last Play") },
                     supportingContent = { Text("Resume the last song and playback position when the app opens again") },
-                    leadingContent = { Icon(Icons.Rounded.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
                         Switch(checked = uiState.rememberLastPlay, onCheckedChange = { viewModel.toggleRememberLastPlay(it) })
                     }
@@ -163,7 +168,7 @@ fun GeneralSettingsScreen(
                     supportingContent = {
                         Text(if (uiState.excludedFolders.isEmpty()) "All folders are currently included" else "${uiState.excludedFolders.size} folder(s) excluded")
                     },
-                    leadingContent = { Icon(Icons.Rounded.FolderOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    leadingContent = { Icon(AppIcons.FolderOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
                         FilledTonalButton(onClick = { showFolderPicker = true }) { Text("Choose") }
                     }
@@ -207,7 +212,7 @@ fun GeneralSettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            icon = { Icon(Icons.Rounded.RestartAlt, contentDescription = null) },
+            icon = { Icon(AppIcons.RestartAlt, contentDescription = null) },
             title = { Text("Reset General Settings?") },
             text = { Text("This will reset notification and scanning settings to their defaults.") },
             confirmButton = {
@@ -238,7 +243,7 @@ internal fun ResetSettingsButton(label: String, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.large, vertical = AppSpacing.medium),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
     ) {
-        Icon(Icons.Rounded.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+        Icon(AppIcons.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(AppSpacing.small))
         Text(label, fontWeight = FontWeight.Medium)
     }

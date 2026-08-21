@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -84,7 +85,7 @@ fun PlaylistItemCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.DragHandle,
+                        imageVector = AppIcons.DragHandle,
                         contentDescription = "Drag to reorder",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -125,7 +126,7 @@ fun PlaylistItemCard(
 
             if (!isEditMode && isCurrentlyPlaying) {
                 Icon(
-                    imageVector = Icons.Rounded.Equalizer,
+                    imageVector = AppIcons.Equalizer,
                     contentDescription = "Now playing",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)

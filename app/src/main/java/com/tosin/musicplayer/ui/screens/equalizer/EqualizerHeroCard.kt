@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun EqualizerHeroCard(
@@ -69,7 +70,7 @@ fun EqualizerHeroCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.GraphicEq,
+                        imageVector = AppIcons.GraphicEq,
                         contentDescription = null,
                         tint = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
                     )
@@ -129,7 +130,7 @@ fun EqualizerNoticeCard() {
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
         ) {
             Icon(
-                imageVector = Icons.Rounded.WarningAmber,
+                imageVector = AppIcons.WarningAmber,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onErrorContainer
             )

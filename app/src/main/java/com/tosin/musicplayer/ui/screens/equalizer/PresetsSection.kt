@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.state.EqualizerPresetUi
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun SectionHeader(
@@ -78,7 +79,7 @@ fun PresetsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
         SectionHeader(
-            icon = Icons.Rounded.Waves,
+            icon = AppIcons.Waves,
             title = "Presets",
             subtitle = "Pick a sound profile, then fine tune it if you want."
         )
@@ -130,7 +131,7 @@ private fun PresetCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = if (selected) Icons.Rounded.AutoAwesome else Icons.Rounded.MusicNote,
+                    imageVector = if (selected) AppIcons.AutoAwesome else AppIcons.MusicNote,
                     contentDescription = null,
                     tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
                 )

@@ -28,6 +28,7 @@ import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.screens.player.*
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerScreen(
@@ -40,6 +41,7 @@ fun PlayerScreen(
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
 
     val context = LocalContext.current
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -171,15 +173,18 @@ fun PlayerScreen(
             },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val isFav = state.currentSong?.id?.let { it in favoriteIds } == true
+
         PlayerTopBar(
-            currentSong = state.currentSong,
             contentColor = contentColor,
             sleepTimerRemaining = state.sleepTimerRemaining,
             playbackSpeed = state.playbackSpeed,
+            isFavorite = isFav,
             onNavigateBack = onNavigateBack,
             onOpenSleepTimer = { showSleepTimerDialog = true },
             onOpenSpeedDialog = { showSpeedDialog = true },
-            onOpenEqualizer = onOpenEqualizer
+            onOpenEqualizer = onOpenEqualizer,
+            onToggleFavorite = { state.currentSong?.id?.let { viewModel.toggleFavorite(it) } }
         )
 
         Spacer(Modifier.height(AppSpacing.large))
@@ -203,9 +208,17 @@ fun PlayerScreen(
         Spacer(Modifier.height(AppSpacing.sectionSpacing))
 
         Text(
+            text = state.currentSong?.title ?: "No Song Playing",
+            style = MaterialTheme.typography.headlineMedium,
+            color = contentColor,
+            maxLines = 1,
+            modifier = Modifier.basicMarquee()
+        )
+
+        Text(
             text = state.currentSong?.artist ?: "Unknown Artist",
-            style = MaterialTheme.typography.headlineSmall,
-            color = contentColor.copy(alpha = 0.8f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = contentColor.copy(alpha = 0.5f),
             maxLines = 1,
             modifier = Modifier.basicMarquee()
         )
@@ -226,7 +239,7 @@ fun PlayerScreen(
                         Text("A-B: $a → $b", color = contentColor)
                     },
                     trailingIcon = {
-                        Icon(Icons.Rounded.Close, "Clear A-B", tint = contentColor, modifier = Modifier.size(16.dp))
+                        Icon(AppIcons.Close, "Clear A-B", tint = contentColor, modifier = Modifier.size(16.dp))
                     }
                 )
             }

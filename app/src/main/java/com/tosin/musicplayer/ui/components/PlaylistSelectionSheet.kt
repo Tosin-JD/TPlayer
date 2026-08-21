@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.tosin.musicplayer.data.models.Playlist
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +77,7 @@ fun PlaylistSelectionSheet(
                 onClick = { showCreateDialog = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null)
+                Icon(AppIcons.Add, contentDescription = null)
                 Text("Create New Playlist")
             }
 

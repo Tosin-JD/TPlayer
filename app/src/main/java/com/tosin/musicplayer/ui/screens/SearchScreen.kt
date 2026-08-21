@@ -30,6 +30,7 @@ import com.tosin.musicplayer.ui.components.SongActionsSheet
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +82,7 @@ fun SearchScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Rounded.Search,
+                                AppIcons.Search,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -112,7 +113,7 @@ fun SearchScreen(
                             )
                             if (query.isNotEmpty()) {
                                 IconButton(onClick = { query = "" }) {
-                                    Icon(Icons.Rounded.Close, contentDescription = "Clear")
+                                    Icon(AppIcons.Close, contentDescription = "Clear")
                                 }
                             }
                         }
@@ -120,7 +121,7 @@ fun SearchScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -136,7 +137,7 @@ fun SearchScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Rounded.Search,
+                        AppIcons.Search,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
@@ -159,7 +160,7 @@ fun SearchScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Rounded.SearchOff,
+                        AppIcons.SearchOff,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -262,7 +263,7 @@ private fun SearchResultItem(
             }
             if (isPlaying) {
                 Icon(
-                    Icons.Rounded.Equalizer,
+                    AppIcons.Equalizer,
                     contentDescription = "Playing",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)

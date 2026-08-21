@@ -50,6 +50,9 @@ class PlayerViewModel(
     private val _lyricsVisible = MutableStateFlow(false)
     val lyricsVisible = _lyricsVisible.asStateFlow()
 
+    private val _favoriteIds = MutableStateFlow<Set<Long>>(emptySet())
+    val favoriteIds: StateFlow<Set<Long>> = _favoriteIds.asStateFlow()
+
     private val _tabOrder = MutableStateFlow(listOf(
         LibraryTab.All,
         LibraryTab.Album,
@@ -61,6 +64,9 @@ class PlayerViewModel(
     val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists
 
     init {
+        viewModelScope.launch {
+            _favoriteIds.value = preferencesRepository.loadFavoriteIds()
+        }
         viewModelScope.launch {
             val (_, savedTab) = preferencesRepository.loadNavigationState()
             val matchingTab = LibraryTab.entries.firstOrNull { it.name.equals(savedTab, ignoreCase = true) }
@@ -261,12 +267,34 @@ class PlayerViewModel(
         }
     }
 
+    // --- Favorites ---
+    fun toggleFavorite(songId: Long) {
+        val current = _favoriteIds.value.toMutableSet()
+        if (current.contains(songId)) {
+            current.remove(songId)
+        } else {
+            current.add(songId)
+        }
+        _favoriteIds.value = current
+        viewModelScope.launch {
+            preferencesRepository.saveFavoriteIds(current)
+        }
+    }
+
+    fun isFavorite(songId: Long): Boolean = _favoriteIds.value.contains(songId)
+
+    fun getFavoriteSongs(): List<Song> {
+        val allSongs = _songs.value
+        return allSongs.filter { _favoriteIds.value.contains(it.id) }
+    }
+
     private fun buildLibraryGroups(
         songs: List<Song>,
         selectedTab: LibraryTab
     ): List<LibraryGroup> {
         val groupedSongs = when (selectedTab) {
             LibraryTab.All -> return emptyList()
+            LibraryTab.Favorites -> return emptyList()
             LibraryTab.Album -> songs.groupBy { it.album.ifBlank { "Unknown album" } }
             LibraryTab.Genre -> songs.groupBy { it.genre?.ifBlank { "Unknown genre" } ?: "Unknown genre" }
             LibraryTab.Folder -> songs.groupBy { it.folder?.ifBlank { "Unknown folder" } ?: "Unknown folder" }
@@ -290,6 +318,7 @@ class PlayerViewModel(
     private fun groupSubtitle(tab: LibraryTab, songs: List<Song>): String {
         return when (tab) {
             LibraryTab.All -> songsLabel(songs.size)
+            LibraryTab.Favorites -> songsLabel(songs.size)
             LibraryTab.Album -> {
                 val artists = songs.map { it.artist }.distinct().filter { it.isNotBlank() }
                 artists.take(2).joinToString(" • ").ifBlank { songsLabel(songs.size) }
@@ -380,6 +409,7 @@ class PlayerViewModel(
         val allSongs = _songs.value
         return when (tab) {
             LibraryTab.All -> allSongs
+            LibraryTab.Favorites -> allSongs.filter { _favoriteIds.value.contains(it.id) }
             LibraryTab.Album -> allSongs.filter { it.album == title || (it.album.isBlank() && title == "Unknown album") }
             LibraryTab.Genre -> allSongs.filter { it.genre == title || (it.genre.isNullOrBlank() && title == "Unknown genre") }
             LibraryTab.Folder -> allSongs.filter { it.folder == title || (it.folder.isNullOrBlank() && title == "Unknown folder") }

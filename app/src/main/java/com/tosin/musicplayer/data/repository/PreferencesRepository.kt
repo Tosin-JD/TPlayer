@@ -21,6 +21,7 @@ class PreferencesRepository(private val context: Context) {
     private val songsCacheFile = File(context.filesDir, "song_cache.json")
     private val equalizerStateFile = File(context.filesDir, "equalizer_state.json")
     private val lyricsAppearanceFile = File(context.filesDir, "lyrics_appearance.json")
+    private val favoritesFile = File(context.filesDir, "favorites.json")
 
     // --- Settings ---
     suspend fun saveSettings(settings: Map<String, Any>) = withContext(Dispatchers.IO) {
@@ -324,6 +325,25 @@ class PreferencesRepository(private val context: Context) {
         }
     }
 
+    // --- Favorites ---
+    suspend fun saveFavoriteIds(ids: Set<Long>) = withContext(Dispatchers.IO) {
+        try {
+            val jsonArray = JSONArray()
+            ids.forEach { jsonArray.put(it) }
+            favoritesFile.writeText(jsonArray.toString())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadFavoriteIds(): Set<Long> = withContext(Dispatchers.IO) {
+        if (!favoritesFile.exists()) return@withContext emptySet()
+        runCatching {
+            val jsonArray = JSONArray(favoritesFile.readText())
+            (0 until jsonArray.length()).map { jsonArray.getLong(it) }.toSet()
+        }.getOrDefault(emptySet())
+    }
+
     // --- Lyrics Appearance ---
     suspend fun saveLyricsAppearance(
         fontSize: String,
@@ -389,6 +409,7 @@ class PreferencesRepository(private val context: Context) {
         put("rating", rating)
         put("playCount", playCount)
         put("lastPlayedMs", lastPlayedMs)
+        volumeName?.let { put("volumeName", it) }
     }
 
     private fun JSONObject.toSong(): Song = Song(
@@ -409,7 +430,8 @@ class PreferencesRepository(private val context: Context) {
         fileSizeBytes = optLongOrNull("fileSizeBytes"),
         rating = optIntOrNull("rating"),
         playCount = optInt("playCount", 0),
-        lastPlayedMs = optLongOrNull("lastPlayedMs")
+        lastPlayedMs = optLongOrNull("lastPlayedMs"),
+        volumeName = optString("volumeName").takeIf { it.isNotBlank() }
     )
 
     private fun JSONObject.optLongOrNull(key: String): Long? =

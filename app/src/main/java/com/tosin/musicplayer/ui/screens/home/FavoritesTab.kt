@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -21,21 +20,17 @@ import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.components.SongActionsSheet
 import com.tosin.musicplayer.ui.components.SongItem
-import com.tosin.musicplayer.ui.components.StorageScopeSelector
-import com.tosin.musicplayer.ui.state.HomeUiState
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
-import com.tosin.musicplayer.ui.state.matchesStorageScope
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
-internal fun AllSongsTab(
-    uiState: HomeUiState,
+internal fun FavoritesTab(
     viewModel: PlayerViewModel,
     settingsViewModel: SettingsViewModel,
     tab: LibraryTab,
@@ -45,25 +40,20 @@ internal fun AllSongsTab(
     availableStorageScopes: List<StorageScope>
 ) {
     val playerState by viewModel.uiState.collectAsState()
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val allSongs = playerState.songs
+    val favoriteSongs = remember(allSongs, favoriteIds) {
+        allSongs.filter { it.id in favoriteIds }
+    }
+
     var showSortMenu by remember { mutableStateOf(false) }
-    val storageScope = remember(settingsViewModel.uiState.collectAsState().value, availableStorageScopes) {
-        val scope = settingsViewModel.getStorageScopeForTab(tab.label)
-        if (scope !in availableStorageScopes && availableStorageScopes.isNotEmpty()) {
-            availableStorageScopes.first()
-        } else {
-            scope
-        }
-    }
-    val visibleSongs = remember(uiState.songs, sortBy, storageScope) {
-        sortSongs(uiState.songs.filter { it.matchesStorageScope(storageScope) }, sortBy)
-    }
     var selectedSongForActions by remember { mutableStateOf<Song?>(null) }
 
-    if (visibleSongs.isEmpty()) {
+    if (favoriteSongs.isEmpty()) {
         EmptyLibraryState(
-            title = "No songs found",
-            message = "Add music to this device and it will appear here in alphabetical order."
+            title = "No favorites yet",
+            message = "Tap the heart icon on any song to add it to your favorites."
         )
         return
     }
@@ -72,18 +62,16 @@ internal fun AllSongsTab(
         SongActionsSheet(
             song = song,
             playlists = playlists,
-            isFavorite = viewModel.isFavorite(song.id),
             onDismiss = { selectedSongForActions = null },
             onPlay = { target ->
-                val index = visibleSongs.indexOfFirst { it.id == target.id }
-                if (index != -1) viewModel.onSongClick(visibleSongs, index) else viewModel.onSongClick(listOf(target), 0)
+                val index = favoriteSongs.indexOfFirst { it.id == target.id }
+                if (index != -1) viewModel.onSongClick(favoriteSongs, index) else viewModel.onSongClick(listOf(target), 0)
                 onNavigateToPlayer()
             },
             onPlayNext = { target -> viewModel.playNextSongs(listOf(target)) },
             onAddToCurrentPlaylist = { target -> viewModel.addSongsToQueue(listOf(target)) },
             onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) },
-            onCreateNewPlaylist = { name -> viewModel.createPlaylist(name) },
-            onToggleFavorite = { target -> viewModel.toggleFavorite(target.id) }
+            onCreateNewPlaylist = { name -> viewModel.createPlaylist(name) }
         )
     }
 
@@ -102,38 +90,29 @@ internal fun AllSongsTab(
     ) {
         item {
             LibrarySummary(
-                title = "All songs",
-                subtitle = "${visibleSongs.size} songs",
+                title = "Favorites",
+                subtitle = "${favoriteSongs.size} songs",
                 onSortClick = { showSortMenu = true },
                 sortLabel = sortBy.label
             )
-            if (availableStorageScopes.size > 1) {
-                StorageScopeSelector(
-                    selected = storageScope,
-                    onSelected = { settingsViewModel.setStorageScopeForTab(tab.label, it) },
-                    modifier = Modifier.padding(top = AppSpacing.small, bottom = AppSpacing.small),
-                    availableScopes = availableStorageScopes
-                )
-            }
         }
 
-        itemsIndexed(
-            items = visibleSongs,
-            key = { _, song -> song.id }
-        ) { index, song ->
+        itemsIndexed(favoriteSongs, key = { _, song -> song.id }) { index, song ->
             SongItem(
                 song = song,
                 isPlaying = playerState.currentSong?.id == song.id,
                 onClick = {
-                    viewModel.onSongClick(visibleSongs, index)
+                    viewModel.onSongClick(favoriteSongs, index)
                     onNavigateToPlayer()
                 },
-                onLongClick = {
-                    selectedSongForActions = song
-                },
+                onLongClick = { selectedSongForActions = song },
                 trailingContent = {
-                    IconButton(onClick = { selectedSongForActions = song }) {
-                        Icon(AppIcons.MoreVert, contentDescription = "Song options", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { viewModel.toggleFavorite(song.id) }) {
+                        Icon(
+                            AppIcons.Favorite,
+                            contentDescription = "Remove from favorites",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )

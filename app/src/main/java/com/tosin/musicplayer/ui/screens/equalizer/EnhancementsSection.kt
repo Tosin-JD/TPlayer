@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun EnhancementsSection(
@@ -39,7 +40,7 @@ fun EnhancementsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
         SectionHeader(
-            icon = Icons.Rounded.GraphicEq,
+            icon = AppIcons.GraphicEq,
             title = "Enhancements",
             subtitle = "Add extra body, width, and loudness where the track needs it."
         )
@@ -55,7 +56,7 @@ fun EnhancementsSection(
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
             ) {
                 EnhancementSliderCard(
-                    icon = Icons.Rounded.GraphicEq,
+                    icon = AppIcons.GraphicEq,
                     title = "Bass Boost",
                     value = bassBoost,
                     valueSuffix = "%",
@@ -66,7 +67,7 @@ fun EnhancementsSection(
                 )
 
                 EnhancementSliderCard(
-                    icon = Icons.Rounded.AutoAwesome,
+                    icon = AppIcons.AutoAwesome,
                     title = "Spatial Width",
                     value = virtualizer,
                     valueSuffix = "%",
@@ -77,7 +78,7 @@ fun EnhancementsSection(
                 )
 
                 EnhancementSliderCard(
-                    icon = Icons.Rounded.GraphicEq,
+                    icon = AppIcons.GraphicEq,
                     title = "Loudness",
                     value = loudness,
                     valueSuffix = "mB",

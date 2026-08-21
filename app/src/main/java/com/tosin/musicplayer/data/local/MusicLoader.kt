@@ -1,8 +1,11 @@
 package com.tosin.musicplayer.data.local
 
 import android.content.ContentResolver
+import android.content.Context
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
+import android.os.storage.StorageManager
 import android.provider.MediaStore
 import com.tosin.musicplayer.data.models.Song
 import java.io.File
@@ -79,6 +82,7 @@ class MusicLoader(
             COLUMN_SIZE,
             COLUMN_YEAR,
             COLUMN_TRACK,
+            MediaStore.Audio.Media.VOLUME_NAME,
             folderColumnName,
             MediaStore.Audio.Media.DATA
         )
@@ -109,6 +113,7 @@ class MusicLoader(
             val trackColumn = cursor.getColumnIndex(COLUMN_TRACK)
             val folderColumn = cursor.getColumnIndex(folderColumnName)
             val dataColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
+            val volumeColumn = cursor.getColumnIndex(MediaStore.Audio.Media.VOLUME_NAME)
 
             val totalCount = cursor.count
             var currentIndex = 0
@@ -124,6 +129,7 @@ class MusicLoader(
                 val mimeType = if (mimeTypeColumn >= 0) cursor.getString(mimeTypeColumn) else null
                 val folder = if (folderColumn >= 0) cursor.getString(folderColumn) else null
                 val absolutePath = if (dataColumn >= 0) cursor.getString(dataColumn) else null
+                val volumeName = if (volumeColumn >= 0) cursor.getString(volumeColumn) else null
 
                 // Filter: skip very short audio (ringtones/notifications) and unsupported formats
                 if (duration < MIN_DURATION_MS) continue
@@ -178,7 +184,8 @@ class MusicLoader(
                         year = year,
                         dateAddedMs = dateAddedSeconds?.times(1000L),
                         fileSizeBytes = sizeBytes,
-                        rating = null
+                        rating = null,
+                        volumeName = volumeName
                     )
                 )
 
@@ -235,6 +242,50 @@ class MusicLoader(
     private fun extractFolderName(rawPath: String?): String? {
         val normalizedPath = normalizeFolderPath(rawPath) ?: return null
         return File(normalizedPath).name.takeIf { it.isNotBlank() }
+    }
+
+    /**
+     * Trigger MediaStore to index SD card content.
+     * On Android 10+, MediaStore may not have indexed SD card content yet.
+     */
+    suspend fun triggerMediaStoreIndexing(context: Context) = withContext(Dispatchers.IO) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Query with a null selection to wake up MediaStore indexing
+            val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            contentResolver.query(
+                uri,
+                arrayOf(MediaStore.Audio.Media._ID),
+                null,
+                null,
+                null
+            )?.close()
+
+            // Also scan common SD card directories
+            val storageManager = context.getSystemService(StorageManager::class.java)
+            storageManager?.storageVolumes?.forEach { volume ->
+                if (volume.isRemovable) {
+                    volume.directory?.let { dir ->
+                        scanDirectory(context, dir)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun scanDirectory(context: Context, directory: File) {
+        if (!directory.exists()) return
+        directory.listFiles()?.forEach { file ->
+            if (file.isDirectory) {
+                scanDirectory(context, file)
+            } else if (file.extension.lowercase() in SUPPORTED_AUDIO_EXTENSIONS) {
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(file.absolutePath),
+                    arrayOf("audio/*"),
+                    null
+                )
+            }
+        }
     }
 }
 

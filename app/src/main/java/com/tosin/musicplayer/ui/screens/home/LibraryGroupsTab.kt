@@ -103,6 +103,13 @@ internal fun LibraryGroupsTab(
             onCreateNewPlaylist = { name ->
                 playerViewModel.createPlaylist(name)
             },
+            onAddAllToFavorites = { songs ->
+                songs.forEach { song ->
+                    if (!playerViewModel.isFavorite(song.id)) {
+                        playerViewModel.toggleFavorite(song.id)
+                    }
+                }
+            },
             onDismiss = { selectedGroupForActions = null }
         )
     }

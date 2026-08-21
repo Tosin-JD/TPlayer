@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun LyricLineCard(
@@ -69,7 +70,7 @@ fun LyricLineCard(
             AssistChip(
                 onClick = { onSeek(line.timeMs) },
                 label = { Text(formatTime(line.timeMs), color = contentColor) },
-                leadingIcon = { Icon(Icons.Rounded.Tune, contentDescription = null, tint = contentColor) }
+                leadingIcon = { Icon(AppIcons.Tune, contentDescription = null, tint = contentColor) }
             )
             Spacer(Modifier.width(AppSpacing.medium))
             Text(

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.state.LibraryTab
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +78,7 @@ fun TabManagementBottomSheet(
                 },
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        imageVector = AppIcons.ArrowBack,
                         contentDescription = "Move Left",
                         tint = if (canMoveLeft) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )
@@ -104,7 +105,7 @@ fun TabManagementBottomSheet(
                 },
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                        imageVector = AppIcons.ArrowForward,
                         contentDescription = "Move Right",
                         tint = if (canMoveRight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )
@@ -131,7 +132,7 @@ fun TabManagementBottomSheet(
                 },
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.Rounded.VisibilityOff,
+                        imageVector = AppIcons.VisibilityOff,
                         contentDescription = "Hide Tab",
                         tint = if (canHide) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )

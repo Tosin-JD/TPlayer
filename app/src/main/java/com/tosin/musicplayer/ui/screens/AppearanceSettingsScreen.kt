@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,12 +26,14 @@ import com.tosin.musicplayer.ui.theme.AccentColors
 import com.tosin.musicplayer.ui.theme.AppThemePreset
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppearanceSettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToThemeStudio: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
@@ -41,11 +44,15 @@ fun AppearanceSettingsScreen(
                 title = { Text("Appearance", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -53,6 +60,25 @@ fun AppearanceSettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
+            // ── Multi-Style Theme Studio ──
+            SettingsSubHeader("Customization Engine")
+
+            ListItem(
+                headlineContent = { Text("Theme Studio", fontWeight = FontWeight.SemiBold) },
+                supportingContent = { Text("Customize blur, shapes, shadows, glows & styles") },
+                leadingContent = {
+                    Icon(AppIcons.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                },
+                trailingContent = {
+                    Icon(AppIcons.ArrowForward, contentDescription = "Open Studio")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onNavigateToThemeStudio)
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.xSmall))
+
             // ── Theme ──
             SettingsSubHeader("Theme")
 
@@ -60,7 +86,7 @@ fun AppearanceSettingsScreen(
                 headlineContent = { Text("Dark Mode") },
                 supportingContent = { Text("Adjust the app theme for low light") },
                 leadingContent = {
-                    Icon(Icons.Rounded.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -74,7 +100,7 @@ fun AppearanceSettingsScreen(
                 headlineContent = { Text("Dynamic Color") },
                 supportingContent = { Text("Use colors from your wallpaper (Android 12+)") },
                 leadingContent = {
-                    Icon(Icons.Rounded.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
                 trailingContent = {
                     Switch(
@@ -155,7 +181,7 @@ fun AppearanceSettingsScreen(
                     ) {
                         if (selected) {
                             Icon(
-                                Icons.Rounded.Check,
+                                AppIcons.Check,
                                 contentDescription = null,
                                 tint = if (color.luminance() > 0.5f) Color.Black else Color.White
                             )
@@ -174,7 +200,7 @@ fun AppearanceSettingsScreen(
                 headlineContent = { Text("Home Screen Tabs") },
                 supportingContent = { Text("Reorder and toggle tabs on the home screen") },
                 leadingContent = {
-                    Icon(Icons.Rounded.ViewList, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(AppIcons.ViewList, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 }
             )
 
@@ -202,13 +228,13 @@ fun AppearanceSettingsScreen(
                             onClick = { if (index > 0) viewModel.reorderTab(index, index - 1) },
                             enabled = index > 0
                         ) {
-                            Icon(Icons.Rounded.ArrowUpward, contentDescription = "Move Up")
+                            Icon(AppIcons.ArrowUp, contentDescription = "Move Up")
                         }
                         IconButton(
                             onClick = { if (index < uiState.tabOrder.size - 1) viewModel.reorderTab(index, index + 1) },
                             enabled = index < uiState.tabOrder.size - 1
                         ) {
-                            Icon(Icons.Rounded.ArrowDownward, contentDescription = "Move Down")
+                            Icon(AppIcons.ArrowDown, contentDescription = "Move Down")
                         }
                     }
                 }
@@ -230,7 +256,7 @@ fun AppearanceSettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            icon = { Icon(Icons.Rounded.RestartAlt, contentDescription = null) },
+            icon = { Icon(AppIcons.RestartAlt, contentDescription = null) },
             title = { Text("Reset Appearance?") },
             text = { Text("This will reset your theme, colors, and tab layouts to defaults.") },
             confirmButton = {

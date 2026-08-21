@@ -19,6 +19,7 @@ import com.tosin.musicplayer.ui.viewmodel.EqualizerViewModel
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.viewmodel.StatsViewModel
+import com.tosin.musicplayer.ui.viewmodel.ThemeViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -31,6 +32,7 @@ fun AppRoutes(
     equalizerViewModel: EqualizerViewModel,
     statsViewModel: StatsViewModel,
     onRequestAudioPermission: () -> Unit,
+    themeViewModel: ThemeViewModel? = null,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -236,8 +238,18 @@ fun AppRoutes(
         composable("settings/appearance") {
             AppearanceSettingsScreen(
                 viewModel = settingsViewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToThemeStudio = { navController.navigate("settings/theme_studio") }
             )
+        }
+
+        composable("settings/theme_studio") {
+            if (themeViewModel != null) {
+                ThemeStudioScreen(
+                    viewModel = themeViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable("settings/playback") {
@@ -280,6 +292,14 @@ fun AppRoutes(
             PlaylistDetailScreen(
                 viewModel = viewModel,
                 playlistId = playlistId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPlayer = { navController.navigate("player") }
+            )
+        }
+
+        composable("favorites") {
+            FavoritesScreen(
+                viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToPlayer = { navController.navigate("player") }
             )

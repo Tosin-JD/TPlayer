@@ -18,7 +18,8 @@ data class Song(
     val fileSizeBytes: Long? = null,
     val rating: Int? = null,
     val playCount: Int = 0,
-    val lastPlayedMs: Long? = null
+    val lastPlayedMs: Long? = null,
+    val volumeName: String? = null
 )
 
 data class Playlist(

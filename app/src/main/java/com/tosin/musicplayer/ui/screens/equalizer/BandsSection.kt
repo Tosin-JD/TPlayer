@@ -24,6 +24,7 @@ import com.tosin.musicplayer.ui.state.EqBand
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun BandsSection(
@@ -33,7 +34,7 @@ fun BandsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
         SectionHeader(
-            icon = Icons.Rounded.Tune,
+            icon = AppIcons.Tune,
             title = "Frequency Bands",
             subtitle = "Slide each band to sculpt the mix. Changes switch the preset to Custom."
         )
