@@ -4,11 +4,29 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,17 +43,21 @@ import coil.request.SuccessResult
 import com.tosin.musicplayer.ui.components.ProgressBar
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
-import com.tosin.musicplayer.ui.screens.player.*
+import com.tosin.musicplayer.ui.icons.AppIcons
+import com.tosin.musicplayer.ui.screens.player.PlayerAlbumArt
+import com.tosin.musicplayer.ui.screens.player.PlayerBottomBar
+import com.tosin.musicplayer.ui.screens.player.PlayerDialogContainer
+import com.tosin.musicplayer.ui.screens.player.PlayerMainControls
+import com.tosin.musicplayer.ui.screens.player.PlayerTopBar
+import com.tosin.musicplayer.ui.screens.player.formatTime
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
     onOpenPlaylist: () -> Unit,
     onOpenLyrics: () -> Unit,
-    onOpenVisualizer: () -> Unit,
     onOpenEqualizer: () -> Unit,
     onOpenSongEditor: (Long) -> Unit,
     onNavigateBack: () -> Unit

@@ -1,7 +1,6 @@
 package com.tosin.musicplayer.ui.screens.player
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,15 +13,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.PlayPauseButton
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.viewmodel.RepeatMode
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun PlayerMainControls(
@@ -47,7 +45,6 @@ fun PlayerMainControls(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(MaterialTheme.shapes.small)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
                         backgroundColor = Color.Black.copy(alpha = 0.15f)
@@ -73,7 +70,6 @@ fun PlayerMainControls(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(MaterialTheme.shapes.small)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
                         backgroundColor = Color.Black.copy(alpha = 0.15f)
@@ -118,7 +114,6 @@ fun PlayerBottomBar(
         Box(
             modifier = Modifier
                 .size(bottomButtonSize)
-                .clip(MaterialTheme.shapes.small)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = if (shuffleEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
@@ -138,7 +133,6 @@ fun PlayerBottomBar(
         Box(
             modifier = Modifier
                 .size(bottomButtonSize)
-                .clip(MaterialTheme.shapes.small)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = if (lyricsVisible) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
@@ -158,7 +152,6 @@ fun PlayerBottomBar(
         Box(
             modifier = Modifier
                 .size(bottomButtonSize)
-                .clip(MaterialTheme.shapes.small)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = Color.Black.copy(alpha = 0.12f)
@@ -191,7 +184,6 @@ fun PlayerBottomBar(
         Box(
             modifier = Modifier
                 .size(bottomButtonSize)
-                .clip(MaterialTheme.shapes.small)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = if (repeatActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.12f)
@@ -226,7 +218,6 @@ fun PlayerBottomBar(
         Box(
             modifier = Modifier
                 .size(bottomButtonSize)
-                .clip(MaterialTheme.shapes.small)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = Color.Black.copy(alpha = 0.12f)

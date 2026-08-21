@@ -8,14 +8,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.icons.AppIcons
@@ -43,7 +41,6 @@ fun PlayerTopBar(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clip(MaterialTheme.shapes.small)
                 .customAppSurface(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = Color.Black.copy(alpha = 0.15f)
@@ -74,7 +71,6 @@ fun PlayerTopBar(
                 val secs = remaining % 60
                 Box(
                     modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
                         .customAppSurface(
                             shape = MaterialTheme.shapes.small,
                             backgroundColor = Color.Black.copy(alpha = 0.15f)
@@ -105,7 +101,6 @@ fun PlayerTopBar(
             if (playbackSpeed != 1.0f) {
                 Box(
                     modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
                         .customAppSurface(
                             shape = MaterialTheme.shapes.small,
                             backgroundColor = Color.Black.copy(alpha = 0.15f)
@@ -125,7 +120,6 @@ fun PlayerTopBar(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(MaterialTheme.shapes.small)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
                         backgroundColor = Color.Black.copy(alpha = 0.15f)
@@ -144,7 +138,6 @@ fun PlayerTopBar(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(MaterialTheme.shapes.small)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
                         backgroundColor = if (isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.15f)

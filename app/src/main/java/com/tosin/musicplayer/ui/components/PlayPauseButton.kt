@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
@@ -42,7 +41,6 @@ fun PlayPauseButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(MaterialTheme.shapes.large)
             .customAppSurface(
                 shape = MaterialTheme.shapes.large,
                 backgroundColor = MaterialTheme.colorScheme.surface
