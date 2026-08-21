@@ -44,14 +44,12 @@ fun AboutSettingsScreen(
         ) {
             SettingsSubHeader("App Info")
 
-            ListItem(
-                headlineContent = { Text("TPlayer") },
-                supportingContent = { Text("Version 1.0 • Alpha") },
-                leadingContent = {
-                    Icon(AppIcons.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
+            ThemedSettingsItem(
+                icon = AppIcons.Info,
+                title = "TPlayer",
+                subtitle = "Version 1.0 • Alpha"
             )
-            
+
             Spacer(Modifier.height(AppSpacing.xLarge))
         }
     }

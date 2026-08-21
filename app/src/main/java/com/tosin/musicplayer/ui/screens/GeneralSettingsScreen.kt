@@ -237,7 +237,7 @@ fun GeneralSettingsScreen(
  * The icon sits in a square whose background matches the page background color.
  */
 @Composable
-private fun ThemedSettingsItem(
+internal fun ThemedSettingsItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String,

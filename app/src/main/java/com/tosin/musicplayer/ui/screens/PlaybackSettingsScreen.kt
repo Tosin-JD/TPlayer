@@ -47,17 +47,16 @@ fun PlaybackSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
             SettingsSubHeader("Audio Options")
 
-            ListItem(
-                headlineContent = { Text("Gapless Playback") },
-                supportingContent = { Text("Seamless transitions between tracks") },
-                leadingContent = {
-                    Icon(AppIcons.SkipNext, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
+            ThemedSettingsItem(
+                icon = AppIcons.SkipNext,
+                title = "Gapless Playback",
+                subtitle = "Seamless transitions between tracks",
+                trailing = {
                     Switch(
                         checked = uiState.gaplessPlayback,
                         onCheckedChange = { viewModel.toggleGaplessPlayback(it) }
@@ -65,13 +64,11 @@ fun PlaybackSettingsScreen(
                 }
             )
 
-            ListItem(
-                headlineContent = { Text("Crossfade") },
-                supportingContent = { Text("Smooth fade between tracks") },
-                leadingContent = {
-                    Icon(AppIcons.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
+            ThemedSettingsItem(
+                icon = AppIcons.Tune,
+                title = "Crossfade",
+                subtitle = "Smooth fade between tracks",
+                trailing = {
                     Switch(
                         checked = uiState.crossfadeEnabled,
                         onCheckedChange = { viewModel.toggleCrossfade(it) }
@@ -80,13 +77,11 @@ fun PlaybackSettingsScreen(
             )
 
             if (uiState.crossfadeEnabled) {
-                ListItem(
-                    headlineContent = { Text("Crossfade Duration") },
-                    supportingContent = { Text("${uiState.crossfadeDuration} seconds") },
-                    leadingContent = {
-                        Icon(AppIcons.Timelapse, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                    },
-                    trailingContent = {
+                ThemedSettingsItem(
+                    icon = AppIcons.Timelapse,
+                    title = "Crossfade Duration",
+                    subtitle = "${uiState.crossfadeDuration} seconds",
+                    trailing = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = {
                                 if (uiState.crossfadeDuration > 1) viewModel.setCrossfadeDuration(uiState.crossfadeDuration - 1)
@@ -103,18 +98,15 @@ fun PlaybackSettingsScreen(
                                 Icon(AppIcons.Add, contentDescription = "Increase")
                             }
                         }
-                    },
-                    modifier = Modifier.animateContentSize()
+                    }
                 )
             }
 
-            ListItem(
-                headlineContent = { Text("Auto-Resume") },
-                supportingContent = { Text("Remember playback position for each track") },
-                leadingContent = {
-                    Icon(AppIcons.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
+            ThemedSettingsItem(
+                icon = AppIcons.Restore,
+                title = "Auto-Resume",
+                subtitle = "Remember playback position for each track",
+                trailing = {
                     Switch(
                         checked = uiState.autoResumeEnabled,
                         onCheckedChange = { viewModel.toggleAutoResume(it) }
@@ -122,13 +114,11 @@ fun PlaybackSettingsScreen(
                 }
             )
 
-            ListItem(
-                headlineContent = { Text("Remember Last Play") },
-                supportingContent = { Text("Resume the last song and its exact position when the app opens") },
-                leadingContent = {
-                    Icon(AppIcons.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
+            ThemedSettingsItem(
+                icon = AppIcons.History,
+                title = "Remember Last Play",
+                subtitle = "Resume the last song and its exact position when the app opens",
+                trailing = {
                     Switch(
                         checked = uiState.rememberLastPlay,
                         onCheckedChange = { viewModel.toggleRememberLastPlay(it) }
@@ -136,13 +126,11 @@ fun PlaybackSettingsScreen(
                 }
             )
 
-            ListItem(
-                headlineContent = { Text("Pause on 0 Volume") },
-                supportingContent = { Text("Pause playback when device volume is muted or zero") },
-                leadingContent = {
-                    Icon(AppIcons.VolumeOff, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
+            ThemedSettingsItem(
+                icon = AppIcons.VolumeOff,
+                title = "Pause on 0 Volume",
+                subtitle = "Pause playback when device volume is muted or zero",
+                trailing = {
                     Switch(
                         checked = uiState.pauseOnZeroVolume,
                         onCheckedChange = { viewModel.togglePauseOnZeroVolume(it) }
