@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.icons.AppIcons
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -47,24 +48,13 @@ fun PlaylistItemCard(
     modifier: Modifier = Modifier,
     dragModifier: Modifier = Modifier
 ) {
-    Card(
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = if (isDragging) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else if (isCurrentlyPlaying) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isDragging) 10.dp else if (isCurrentlyPlaying) 4.dp else 2.dp
-        ),
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
+            .customAppSurface(
+                shape = MaterialTheme.shapes.medium,
+                backgroundColor = containerColor
+            )
             .then(dragModifier)
             .combinedClickable(
                 onClick = onItemClick,

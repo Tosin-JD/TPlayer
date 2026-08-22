@@ -68,6 +68,11 @@ class PlayerViewModel(
             _favoriteIds.value = preferencesRepository.loadFavoriteIds()
         }
         viewModelScope.launch {
+            val savedRepeatMode = preferencesRepository.loadRepeatMode()
+            _repeatMode.value = savedRepeatMode
+            playerController.setRepeatMode(savedRepeatMode)
+        }
+        viewModelScope.launch {
             val (_, savedTab) = preferencesRepository.loadNavigationState()
             val matchingTab = LibraryTab.entries.firstOrNull { it.name.equals(savedTab, ignoreCase = true) }
             if (matchingTab != null) {
@@ -388,14 +393,22 @@ class PlayerViewModel(
 
     suspend fun loadLyricsAppearance(): LyricsAppearance? = preferencesRepository.loadLyricsAppearance()
 
+    fun setRepeatMode(mode: RepeatMode) {
+        _repeatMode.value = mode
+        playerController.setRepeatMode(mode)
+        viewModelScope.launch {
+            preferencesRepository.saveRepeatMode(mode)
+        }
+    }
+
     fun cycleRepeatMode() {
-        _repeatMode.value = when (_repeatMode.value) {
+        val nextMode = when (_repeatMode.value) {
             RepeatMode.PLAY_ALL_ONCE -> RepeatMode.PLAY_ONE_ONCE
             RepeatMode.PLAY_ONE_ONCE -> RepeatMode.REPEAT_ALL
             RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
             RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ALL_ONCE
         }
-        playerController.setRepeatMode(_repeatMode.value)
+        setRepeatMode(nextMode)
     }
 
     fun playSongFromQueue(song: Song) {

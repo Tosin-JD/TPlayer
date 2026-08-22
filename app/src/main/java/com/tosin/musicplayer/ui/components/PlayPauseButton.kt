@@ -19,9 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Pause
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 
 @Composable
@@ -59,14 +57,14 @@ fun PlayPauseButton(
         ) { playing ->
             if (playing) {
                 Icon(
-                    Icons.Default.Pause,
+                    AppIcons.Pause,
                     contentDescription = null,
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
             } else {
                 Icon(
-                    Icons.Default.PlayArrow,
+                    AppIcons.Play,
                     contentDescription = null,
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.primary

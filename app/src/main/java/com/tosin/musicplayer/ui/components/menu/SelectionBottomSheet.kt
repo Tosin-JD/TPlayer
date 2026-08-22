@@ -51,7 +51,13 @@ fun <T> SelectionBottomSheet(
                         )
                     },
                     leadingContent = option.icon?.let { icon ->
-                        { Icon(icon, contentDescription = null) }
+                        {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     },
                     trailingContent = {
                         if (isSelected) {

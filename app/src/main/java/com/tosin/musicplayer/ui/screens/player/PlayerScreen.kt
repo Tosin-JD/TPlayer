@@ -42,6 +42,8 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.tosin.musicplayer.ui.components.ProgressBar
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
+import com.tosin.musicplayer.ui.components.menu.SelectionBottomSheet
+import com.tosin.musicplayer.ui.components.menu.repeatModeOptions
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.theme.AppSpacing
@@ -81,6 +83,7 @@ fun PlayerScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showMoreOptionsSheet by remember { mutableStateOf(false) }
     var showABRepeatDialog by remember { mutableStateOf(false) }
+    var showRepeatModeSheet by remember { mutableStateOf(false) }
 
     var lastSongId by remember { mutableStateOf<Long?>(null) }
     var slideDirection by remember { mutableStateOf(1) }
@@ -319,6 +322,16 @@ fun PlayerScreen(
                 .weight(1f)
         )
 
+        if (showRepeatModeSheet) {
+            SelectionBottomSheet(
+                title = "Repeat Mode",
+                options = repeatModeOptions(),
+                selected = state.repeatMode,
+                onSelect = { mode -> viewModel.setRepeatMode(mode) },
+                onDismiss = { showRepeatModeSheet = false }
+            )
+        }
+
         PlayerBottomBar(
             shuffleEnabled = state.shuffleEnabled,
             lyricsVisible = state.lyricsVisible,
@@ -330,7 +343,7 @@ fun PlayerScreen(
             onToggleShuffle = { viewModel.toggleShuffle() },
             onOpenLyrics = onOpenLyrics,
             onOpenPlaylist = onOpenPlaylist,
-            onCycleRepeatMode = { viewModel.cycleRepeatMode() },
+            onOpenRepeatModeMenu = { showRepeatModeSheet = true },
             onOpenMoreOptions = { showMoreOptionsSheet = true }
         )
     }

@@ -102,12 +102,10 @@ fun PlayerBottomBar(
     onToggleShuffle: () -> Unit,
     onOpenLyrics: () -> Unit,
     onOpenPlaylist: () -> Unit,
-    onCycleRepeatMode: () -> Unit,
+    onOpenRepeatModeMenu: () -> Unit,
     onOpenMoreOptions: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
         modifier = modifier.fillMaxWidth(),
@@ -172,7 +170,7 @@ fun PlayerBottomBar(
 
         // Repeat
         val repeatIcon = when (repeatMode) {
-            RepeatMode.PLAY_ALL_ONCE -> AppIcons.ArrowForward
+            RepeatMode.PLAY_ALL_ONCE -> AppIcons.ParallelRightArrows
             RepeatMode.PLAY_ONE_ONCE -> AppIcons.LooksOne
             RepeatMode.REPEAT_ALL -> AppIcons.Repeat
             RepeatMode.REPEAT_ONE -> AppIcons.RepeatOne
@@ -191,22 +189,7 @@ fun PlayerBottomBar(
                     shape = MaterialTheme.shapes.small,
                     backgroundColor = playerBackgroundColor
                 )
-                .clickable {
-                    val nextMode = when (repeatMode) {
-                        RepeatMode.PLAY_ALL_ONCE -> RepeatMode.PLAY_ONE_ONCE
-                        RepeatMode.PLAY_ONE_ONCE -> RepeatMode.REPEAT_ALL
-                        RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
-                        RepeatMode.REPEAT_ONE -> RepeatMode.PLAY_ALL_ONCE
-                    }
-                    val statusText = when (nextMode) {
-                        RepeatMode.PLAY_ALL_ONCE -> "Play all once"
-                        RepeatMode.PLAY_ONE_ONCE -> "Play one once"
-                        RepeatMode.REPEAT_ALL -> "Repeat all"
-                        RepeatMode.REPEAT_ONE -> "Repeat one"
-                    }
-                    Toast.makeText(context, statusText, Toast.LENGTH_SHORT).show()
-                    onCycleRepeatMode()
-                },
+                .clickable(onClick = onOpenRepeatModeMenu),
             contentAlignment = Alignment.Center
         ) {
             Icon(

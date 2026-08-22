@@ -27,3 +27,28 @@ fun statsRangeOptions(): List<SelectionOption<StatsRange>> =
             label = option.label
         )
     }
+
+fun repeatModeOptions(): List<SelectionOption<com.tosin.musicplayer.ui.viewmodel.RepeatMode>> =
+    listOf(
+        SelectionOption(
+            value = com.tosin.musicplayer.ui.viewmodel.RepeatMode.PLAY_ALL_ONCE,
+            label = "Play all once",
+            icon = com.tosin.musicplayer.ui.icons.AppIcons.ParallelRightArrows
+        ),
+        SelectionOption(
+            value = com.tosin.musicplayer.ui.viewmodel.RepeatMode.PLAY_ONE_ONCE,
+            label = "Play one once",
+            icon = com.tosin.musicplayer.ui.icons.AppIcons.LooksOne
+        ),
+        SelectionOption(
+            value = com.tosin.musicplayer.ui.viewmodel.RepeatMode.REPEAT_ALL,
+            label = "Play all on repeat",
+            icon = com.tosin.musicplayer.ui.icons.AppIcons.Repeat
+        ),
+        SelectionOption(
+            value = com.tosin.musicplayer.ui.viewmodel.RepeatMode.REPEAT_ONE,
+            label = "Play one on repeat",
+            icon = com.tosin.musicplayer.ui.icons.AppIcons.RepeatOne
+        )
+    )
+

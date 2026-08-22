@@ -5,6 +5,7 @@ import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.data.models.SongMetadataOverride
 import com.tosin.musicplayer.ui.state.EqBand
 import com.tosin.musicplayer.ui.state.EqualizerUiState
+import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -82,6 +83,27 @@ class PreferencesRepository(private val context: Context) {
         val route = (settings["lastClosedRoute"] as? String) ?: "home"
         val tab = (settings["lastClosedLibraryTab"] as? String) ?: "All"
         Pair(route, tab)
+    }
+
+    // --- Repeat Mode Persistence ---
+    suspend fun saveRepeatMode(repeatMode: RepeatMode) = withContext(Dispatchers.IO) {
+        try {
+            val current = loadSettings().toMutableMap()
+            current["repeatMode"] = repeatMode.name
+            saveSettings(current)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadRepeatMode(): RepeatMode = withContext(Dispatchers.IO) {
+        val settings = loadSettings()
+        val name = settings["repeatMode"] as? String ?: return@withContext RepeatMode.PLAY_ALL_ONCE
+        try {
+            RepeatMode.valueOf(name)
+        } catch (e: Exception) {
+            RepeatMode.PLAY_ALL_ONCE
+        }
     }
 
     suspend fun saveTabSortOptions(sortMap: Map<String, String>) = withContext(Dispatchers.IO) {

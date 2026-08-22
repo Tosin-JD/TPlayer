@@ -20,10 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.clickable
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.components.PlaylistItemCard
 import com.tosin.musicplayer.ui.components.SongActionsSheet
 import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import kotlin.math.roundToInt
@@ -82,12 +84,32 @@ fun CurrentPlaylistScreen(
             TopAppBar(
                 title = { Text("Current Playlist", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(40.dp)
+                            .customAppSurface(
+                                shape = MaterialTheme.shapes.small,
+                                backgroundColor = MaterialTheme.colorScheme.surface
+                            )
+                            .clickable(onClick = onNavigateBack),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(AppIcons.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { isEditMode = !isEditMode }) {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(40.dp)
+                            .customAppSurface(
+                                shape = MaterialTheme.shapes.small,
+                                backgroundColor = MaterialTheme.colorScheme.surface
+                            )
+                            .clickable { isEditMode = !isEditMode },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = if (isEditMode) AppIcons.Check else AppIcons.Edit,
                             contentDescription = if (isEditMode) "Done" else "Edit Order",
@@ -96,10 +118,11 @@ fun CurrentPlaylistScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         val density = LocalDensity.current
         LazyColumn(
@@ -110,6 +133,29 @@ fun CurrentPlaylistScreen(
             contentPadding = standardScreenPadding(top = 0.dp, bottom = extraBottomPadding),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.itemSpacing)
         ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = AppSpacing.small),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "Now Playing Queue",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "${queue.size} songs",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
             itemsIndexed(
                 items = queue,
                 key = { _, song -> song.id }
@@ -123,7 +169,7 @@ fun CurrentPlaylistScreen(
                 val animatedColor by animateColorAsState(
                     targetValue = when {
                         isDragging -> MaterialTheme.colorScheme.surfaceVariant
-                        currentSong?.id == song.id -> MaterialTheme.colorScheme.primaryContainer
+                        currentSong?.id == song.id -> MaterialTheme.colorScheme.secondaryContainer
                         else -> MaterialTheme.colorScheme.surfaceContainerLow
                     },
                     animationSpec = tween(durationMillis = 180),
@@ -210,14 +256,41 @@ fun CurrentPlaylistScreen(
             if (queue.isEmpty()) {
                 item {
                     Box(
-                        modifier = Modifier.fillParentMaxSize(),
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(horizontal = AppSpacing.xLarge, vertical = AppSpacing.xLarge),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Playlist is empty",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .customAppSurface(
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        backgroundColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = AppIcons.Queue,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Text(
+                                text = "Playlist is empty",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Add songs to queue to see them here.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

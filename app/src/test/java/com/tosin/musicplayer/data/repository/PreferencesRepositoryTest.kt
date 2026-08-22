@@ -1,6 +1,7 @@
 package com.tosin.musicplayer.data.repository
 
 import android.content.Context
+import com.tosin.musicplayer.ui.viewmodel.RepeatMode
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -65,5 +66,19 @@ class PreferencesRepositoryTest {
         assertEquals(visibleTabs, loaded["visibleTabs"])
         assertEquals("home", loaded["lastClosedRoute"])
         assertEquals("Artist", loaded["lastClosedLibraryTab"])
+    }
+
+    @Test
+    fun saveAndLoadRepeatMode_persistsRepeatModeState() = runTest {
+        assertEquals(RepeatMode.PLAY_ALL_ONCE, repository.loadRepeatMode())
+
+        repository.saveRepeatMode(RepeatMode.REPEAT_ALL)
+        assertEquals(RepeatMode.REPEAT_ALL, repository.loadRepeatMode())
+
+        repository.saveRepeatMode(RepeatMode.REPEAT_ONE)
+        assertEquals(RepeatMode.REPEAT_ONE, repository.loadRepeatMode())
+
+        repository.saveRepeatMode(RepeatMode.PLAY_ONE_ONCE)
+        assertEquals(RepeatMode.PLAY_ONE_ONCE, repository.loadRepeatMode())
     }
 }

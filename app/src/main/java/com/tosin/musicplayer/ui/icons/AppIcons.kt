@@ -5,7 +5,13 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.unit.dp
 
 /**
  * Centralized icon mapping using Google Material Icons Rounded.
@@ -25,6 +31,37 @@ object AppIcons {
     val RepeatOne: ImageVector get() = Icons.Rounded.RepeatOne
     val RepeatOneOn: ImageVector get() = Icons.Rounded.RepeatOne
     val LooksOne: ImageVector get() = Icons.Rounded.LooksOne
+    val ParallelRightArrows: ImageVector
+        get() = ImageVector.Builder(
+            name = "ParallelRightArrows",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2.2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                // Top Arrow stem
+                moveTo(4.5f, 7.5f)
+                lineTo(18.5f, 7.5f)
+                // Top Arrow head
+                moveTo(14.5f, 4.5f)
+                lineTo(18.5f, 7.5f)
+                lineTo(14.5f, 10.5f)
+
+                // Bottom Arrow stem
+                moveTo(4.5f, 16.5f)
+                lineTo(18.5f, 16.5f)
+                // Bottom Arrow head
+                moveTo(14.5f, 13.5f)
+                lineTo(18.5f, 16.5f)
+                lineTo(14.5f, 19.5f)
+            }
+        }.build()
 
     // ── Music & Media ──
     val MusicNote: ImageVector get() = Icons.Rounded.MusicNote
