@@ -2,10 +2,8 @@ package com.tosin.musicplayer.ui.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,12 +25,10 @@ import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
-import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 
 @Composable
 internal fun FavoritesTab(
     viewModel: PlayerViewModel,
-    settingsViewModel: SettingsViewModel,
     tab: LibraryTab,
     onNavigateToPlayer: () -> Unit,
     sortBy: LibrarySortOption,

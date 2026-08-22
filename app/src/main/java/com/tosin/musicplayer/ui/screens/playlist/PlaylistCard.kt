@@ -1,4 +1,4 @@
-package com.tosin.musicplayer.ui.screens
+package com.tosin.musicplayer.ui.screens.playlist
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.basicMarquee
@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api

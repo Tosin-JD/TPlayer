@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.CategoryActionsSheet
-import com.tosin.musicplayer.ui.components.StorageScopeSelector
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab

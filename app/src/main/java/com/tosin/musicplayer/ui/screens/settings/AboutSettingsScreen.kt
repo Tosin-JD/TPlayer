@@ -1,65 +1,65 @@
-package com.tosin.musicplayer.ui.screens
+package com.tosin.musicplayer.ui.screens.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tosin.musicplayer.ui.theme.AppSpacing
+import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.theme.engine.ThemeStyle
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
-import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.viewmodel.ThemeViewModel
-import com.tosin.musicplayer.ui.icons.AppIcons
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutSettingsScreen(
+    viewModel: SettingsViewModel,
+    onNavigateBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("About", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(AppIcons.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+        ) {
+            SettingsSubHeader("App Info")
+
+            ThemedSettingsItem(
+                icon = AppIcons.Info,
+                title = "TPlayer",
+                subtitle = "Version 1.0 • Alpha"
+            )
+
+            Spacer(Modifier.height(120.dp))
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,7 +101,12 @@ fun ThemeStudioScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = 16.dp,
+                end = 16.dp,
+                bottom = 120.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // ── 1. Live Interactive Sandbox Container ──
@@ -191,7 +196,12 @@ fun ThemeStudioScreen(
             item {
                 StudioSectionCard(title = "Geometry & Shapes") {
                     Text(
-                        text = "Corner Roundness: ${String.format("%.1fx", params.cornerRadiusScale)}",
+                        text = "Corner Roundness: ${
+                            String.format(
+                                "%.1fx",
+                                params.cornerRadiusScale
+                            )
+                        }",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Slider(
@@ -296,7 +306,12 @@ fun ThemeStudioScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         settingsUiState!!.tabOrder.forEachIndexed { index, tab ->
-                            val isChecked = settingsUiState!!.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+                            val isChecked = settingsUiState!!.visibleTabs.any {
+                                it.equals(
+                                    tab,
+                                    ignoreCase = true
+                                )
+                            }
                             val isLastVisible = isChecked && settingsUiState!!.visibleTabs.size == 1
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -310,16 +325,28 @@ fun ThemeStudioScreen(
                                 Text(
                                     text = tab,
                                     modifier = Modifier.weight(1f),
-                                    color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    color = if (isChecked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.38f
+                                    )
                                 )
                                 IconButton(
-                                    onClick = { if (index > 0) settingsViewModel.reorderTab(index, index - 1) },
+                                    onClick = {
+                                        if (index > 0) settingsViewModel.reorderTab(
+                                            index,
+                                            index - 1
+                                        )
+                                    },
                                     enabled = index > 0
                                 ) {
                                     Icon(AppIcons.ArrowUp, contentDescription = "Move Up")
                                 }
                                 IconButton(
-                                    onClick = { if (index < settingsUiState!!.tabOrder.size - 1) settingsViewModel.reorderTab(index, index + 1) },
+                                    onClick = {
+                                        if (index < settingsUiState!!.tabOrder.size - 1) settingsViewModel.reorderTab(
+                                            index,
+                                            index + 1
+                                        )
+                                    },
                                     enabled = index < settingsUiState!!.tabOrder.size - 1
                                 ) {
                                     Icon(AppIcons.ArrowDown, contentDescription = "Move Down")
@@ -403,7 +430,7 @@ private fun LiveThemePreviewSandbox(
         modifier = Modifier
             .fillMaxWidth()
             .customAppSurface(
-                shape = RoundedCornerShape(4.dp)
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
             )
             .padding(18.dp)
     ) {
@@ -417,7 +444,7 @@ private fun LiveThemePreviewSandbox(
                     modifier = Modifier
                         .size(52.dp)
                         .customAppSurface(
-                            shape = RoundedCornerShape(4.dp),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
                             backgroundColor = MaterialTheme.colorScheme.primary
                         ),
                     contentAlignment = Alignment.Center
@@ -461,7 +488,7 @@ private fun LiveThemePreviewSandbox(
                             .weight(1f)
                             .height(h)
                             .customAppSurface(
-                                shape = RoundedCornerShape(4.dp),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
                                 backgroundColor = MaterialTheme.colorScheme.primary
                             )
                     )

@@ -1,4 +1,4 @@
-package com.tosin.musicplayer.ui.screens
+package com.tosin.musicplayer.ui.screens.misceleneous
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize

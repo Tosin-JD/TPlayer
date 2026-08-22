@@ -2,11 +2,8 @@ package com.tosin.musicplayer.ui.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.components.SongActionsSheet
 import com.tosin.musicplayer.ui.components.SongItem
-import com.tosin.musicplayer.ui.components.StorageScopeSelector
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.state.HomeUiState
 import com.tosin.musicplayer.ui.state.LibrarySortOption
 import com.tosin.musicplayer.ui.state.LibraryTab
@@ -31,7 +28,6 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 internal fun AllSongsTab(

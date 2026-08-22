@@ -1,4 +1,4 @@
-package com.tosin.musicplayer.ui.screens
+package com.tosin.musicplayer.ui.screens.player
 
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
@@ -44,12 +44,6 @@ import com.tosin.musicplayer.ui.components.ProgressBar
 import com.tosin.musicplayer.ui.components.StatusBarColorEffect
 import com.tosin.musicplayer.ui.extensions.orDefaultAlbumArt
 import com.tosin.musicplayer.ui.icons.AppIcons
-import com.tosin.musicplayer.ui.screens.player.PlayerAlbumArt
-import com.tosin.musicplayer.ui.screens.player.PlayerBottomBar
-import com.tosin.musicplayer.ui.screens.player.PlayerDialogContainer
-import com.tosin.musicplayer.ui.screens.player.PlayerMainControls
-import com.tosin.musicplayer.ui.screens.player.PlayerTopBar
-import com.tosin.musicplayer.ui.screens.player.formatTime
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 

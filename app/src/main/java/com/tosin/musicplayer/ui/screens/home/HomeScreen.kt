@@ -178,7 +178,6 @@ fun HomeScreen(
                     )
                     tab == LibraryTab.Favorites -> FavoritesTab(
                         viewModel = viewModel,
-                        settingsViewModel = settingsViewModel,
                         tab = tab,
                         onNavigateToPlayer = onNavigateToPlayer,
                         sortBy = sortState[LibraryTab.Favorites] ?: LibrarySortOption.DateAdded,

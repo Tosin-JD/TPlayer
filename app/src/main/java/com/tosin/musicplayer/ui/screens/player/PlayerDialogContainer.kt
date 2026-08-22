@@ -121,11 +121,9 @@ fun PlayerDialogContainer(
                 TextButton(
                     onClick = {
                         val song = state.currentSong
-                        if (song != null) {
-                            viewModel.deleteSong(song) { success ->
-                                val msg = if (success) "Song deleted permanently" else "Unable to delete file from storage"
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            }
+                        viewModel.deleteSong(song) { success ->
+                            val msg = if (success) "Song deleted permanently" else "Unable to delete file from storage"
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         }
                         onDismissDeleteConfirm()
                     }

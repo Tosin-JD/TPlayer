@@ -1,14 +1,10 @@
-package com.tosin.musicplayer.ui.screens
+package com.tosin.musicplayer.ui.screens.lyrics
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,7 +57,7 @@ fun LyricsEditorScreen(
                         Icon(AppIcons.Check, contentDescription = "Save")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
     ) { paddingValues ->
@@ -101,8 +97,8 @@ fun LyricsEditorScreen(
                         ) {
                             Text(
                                 text = "Embedded lyrics",
-                                style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
                             )
                             OutlinedTextField(
                                 value = simpleLyrics,
@@ -121,8 +117,8 @@ fun LyricsEditorScreen(
                         ) {
                             Text(
                                 text = "Synced lyrics",
-                                style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
                             )
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
@@ -143,8 +139,8 @@ fun LyricsEditorScreen(
                                             ) {
                                                 Text(
                                                     text = formatLyricsTime(line.timeMs),
-                                                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
-                                                    color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    color = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.weight(1f)
                                                 )
                                                 TextButton(

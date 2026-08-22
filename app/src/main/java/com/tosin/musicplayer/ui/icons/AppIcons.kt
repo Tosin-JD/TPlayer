@@ -17,10 +17,6 @@ object AppIcons {
     val Stop: ImageVector get() = Icons.Rounded.Stop
     val SkipPrevious: ImageVector get() = Icons.Rounded.SkipPrevious
     val SkipNext: ImageVector get() = Icons.Rounded.SkipNext
-    val Forward5: ImageVector get() = Icons.Rounded.Forward5
-    val Forward10: ImageVector get() = Icons.Rounded.Forward10
-    val Replay5: ImageVector get() = Icons.Rounded.Replay5
-    val Replay10: ImageVector get() = Icons.Rounded.Replay10
 
     // ── Shuffle & Repeat ──
     val Shuffle: ImageVector get() = Icons.Rounded.Shuffle

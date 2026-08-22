@@ -1,13 +1,8 @@
-package com.tosin.musicplayer.ui.screens
+package com.tosin.musicplayer.ui.screens.settings
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.VolumeOff
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -84,7 +79,9 @@ fun PlaybackSettingsScreen(
                     trailing = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = {
-                                if (uiState.crossfadeDuration > 1) viewModel.setCrossfadeDuration(uiState.crossfadeDuration - 1)
+                                if (uiState.crossfadeDuration > 1) viewModel.setCrossfadeDuration(
+                                    uiState.crossfadeDuration - 1
+                                )
                             }) {
                                 Icon(AppIcons.Remove, contentDescription = "Decrease")
                             }
@@ -93,7 +90,9 @@ fun PlaybackSettingsScreen(
                                 style = MaterialTheme.typography.titleMedium
                             )
                             IconButton(onClick = {
-                                if (uiState.crossfadeDuration < 12) viewModel.setCrossfadeDuration(uiState.crossfadeDuration + 1)
+                                if (uiState.crossfadeDuration < 12) viewModel.setCrossfadeDuration(
+                                    uiState.crossfadeDuration + 1
+                                )
                             }) {
                                 Icon(AppIcons.Add, contentDescription = "Increase")
                             }

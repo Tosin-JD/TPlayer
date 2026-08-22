@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.CardDefaults.cardElevation
@@ -28,9 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.state.EqualizerPresetUi
 import com.tosin.musicplayer.ui.theme.AppSpacing
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun SectionHeader(

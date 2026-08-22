@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.CardDefaults.cardElevation
@@ -23,10 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tosin.musicplayer.ui.icons.AppIcons
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import java.util.Locale
 import kotlin.math.roundToInt
-import com.tosin.musicplayer.ui.icons.AppIcons
 
 @Composable
 fun EnhancementsSection(
