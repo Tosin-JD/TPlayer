@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.components.StorageScopeBottomSheet
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
-import androidx.compose.ui.draw.clip
 import com.tosin.musicplayer.ui.components.StorageScopeBottomSheet
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.engine.customAppSurface
@@ -100,7 +99,6 @@ internal fun LibrarySummary(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(MaterialTheme.shapes.small)
                         .customAppSurface(
                             shape = MaterialTheme.shapes.small,
                             backgroundColor = MaterialTheme.colorScheme.surface
@@ -120,7 +118,6 @@ internal fun LibrarySummary(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(MaterialTheme.shapes.small)
                     .customAppSurface(
                         shape = MaterialTheme.shapes.small,
                         backgroundColor = MaterialTheme.colorScheme.surface
