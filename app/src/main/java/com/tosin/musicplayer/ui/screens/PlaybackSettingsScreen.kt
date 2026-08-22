@@ -145,7 +145,7 @@ fun PlaybackSettingsScreen(
                 onClick = { showResetDialog = true }
             )
 
-            Spacer(Modifier.height(AppSpacing.xLarge))
+            Spacer(Modifier.height(120.dp))
         }
     }
 

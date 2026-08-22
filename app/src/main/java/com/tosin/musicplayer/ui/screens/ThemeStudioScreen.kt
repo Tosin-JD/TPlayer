@@ -30,8 +30,6 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -103,7 +101,7 @@ fun ThemeStudioScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // ── 1. Live Interactive Sandbox Container ──
@@ -498,12 +496,13 @@ private fun StudioSectionCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .customAppSurface(
+                shape = MaterialTheme.shapes.medium,
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow
+            )
     ) {
         Column(
             modifier = Modifier
@@ -543,16 +542,18 @@ private fun ColorPickerRow(
             samplePalette.forEach { color ->
                 val isSelected = color == currentColor
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .background(color)
-                        .border(
-                            width = if (isSelected) 3.dp else 1.dp,
-                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Gray.copy(alpha = 0.5f),
-                            shape = MaterialTheme.shapes.small
-                        )
-                        .clickable { onColorSelected(color) },
+                        modifier = Modifier
+                            .size(32.dp)
+                            .customAppSurface(
+                                shape = MaterialTheme.shapes.small,
+                                backgroundColor = color,
+                                onClick = { onColorSelected(color) }
+                            )
+                            .border(
+                                width = if (isSelected) 3.dp else 1.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Gray.copy(alpha = 0.5f),
+                                shape = MaterialTheme.shapes.small
+                            ),
                     contentAlignment = Alignment.Center
                 ) {
                     if (isSelected) {

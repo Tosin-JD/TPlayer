@@ -181,7 +181,7 @@ fun GeneralSettingsScreen(
 
                 Spacer(Modifier.weight(1f))
                 ResetSettingsButton(label = "Reset General Settings", onClick = { showResetDialog = true })
-                Spacer(Modifier.height(AppSpacing.xLarge))
+                Spacer(Modifier.height(120.dp))
             }
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.SettingsViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
@@ -50,7 +51,7 @@ fun AboutSettingsScreen(
                 subtitle = "Version 1.0 • Alpha"
             )
 
-            Spacer(Modifier.height(AppSpacing.xLarge))
+            Spacer(Modifier.height(120.dp))
         }
     }
 }
