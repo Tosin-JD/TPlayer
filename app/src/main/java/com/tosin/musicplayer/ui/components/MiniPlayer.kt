@@ -27,6 +27,8 @@ import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
 
+import com.tosin.musicplayer.ui.theme.engine.customAppSurface
+
 @Composable
 fun MiniPlayer(
     viewModel: PlayerViewModel,
@@ -39,21 +41,15 @@ fun MiniPlayer(
 
     val dragThreshold = 72
 
-    Card(
-        onClick = { onExpand() },
-        shape = RoundedCornerShape(
-            topStart = 4.dp,
-            topEnd = 4.dp,
-            bottomStart = 4.dp,
-            bottomEnd = 4.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
+            .customAppSurface(
+                shape = MaterialTheme.shapes.medium,
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                onClick = { onExpand() }
+            )
             .pointerInput(Unit) {
                 var dragDistance = 0f
                 detectVerticalDragGestures(
@@ -83,7 +79,7 @@ fun MiniPlayer(
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .clip(MaterialTheme.shapes.small),
                 contentScale = ContentScale.Crop
             )
 

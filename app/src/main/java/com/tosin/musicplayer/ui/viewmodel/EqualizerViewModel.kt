@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tosin.musicplayer.data.repository.PreferencesRepository
 import com.tosin.musicplayer.player.EqualizerManager
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 class EqualizerViewModel(
     private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
