@@ -11,6 +11,12 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicReference
+
+data class TrackPositionSnapshot(
+    val seekPositionUs: Long = 0L,
+    val trackDurationUs: Long = C.TIME_UNSET
+)
 
 /**
  * Shared, thread-safe state driving [CrossfadeAudioProcessor].
@@ -21,8 +27,7 @@ import java.nio.ByteBuffer
 class CrossfadeState {
     @Volatile var enabled: Boolean = false
     @Volatile var fadeDurationUs: Long = 0L
-    @Volatile var seekPositionUs: Long = 0L
-    @Volatile var trackDurationUs: Long = C.TIME_UNSET
+    val position = AtomicReference(TrackPositionSnapshot())
 }
 
 /**
@@ -74,8 +79,9 @@ class CrossfadeAudioProcessor(
     @Deprecated("Deprecated in Java")
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onFlush() {
-        readFrames = toFrames(state.seekPositionUs)
-        trackDurationFrames = toFrames(state.trackDurationUs)
+        val snapshot = state.position.get()
+        readFrames = toFrames(snapshot.seekPositionUs)
+        trackDurationFrames = toFrames(snapshot.trackDurationUs)
     }
 
     override fun onReset() {
@@ -129,7 +135,7 @@ class CrossfadeAudioProcessor(
     }
 
     private fun syncTrackPosition() {
-        val currentTrackDurationUs = state.trackDurationUs
+        val currentTrackDurationUs = state.position.get().trackDurationUs
         if (currentTrackDurationUs != C.TIME_UNSET && currentTrackDurationUs > 0L) {
             val latestDurationFrames = toFrames(currentTrackDurationUs)
             if (trackDurationFrames != latestDurationFrames) {
@@ -141,7 +147,7 @@ class CrossfadeAudioProcessor(
     private fun gainAtPosition(positionFrames: Long): Float {
         if (!state.enabled || state.fadeDurationUs <= 0L || sampleRate <= 0) return 1.0f
 
-        val currentTrackDurationUs = state.trackDurationUs
+        val currentTrackDurationUs = state.position.get().trackDurationUs
         val durationFrames = if (currentTrackDurationUs != C.TIME_UNSET && currentTrackDurationUs > 0L) {
             toFrames(currentTrackDurationUs)
         } else {
@@ -156,18 +162,14 @@ class CrossfadeAudioProcessor(
         val posInTrack = positionFrames.coerceAtLeast(0L)
         val fadeFrames = (state.fadeDurationUs * sampleRate / 1_000_000L).coerceAtLeast(1L)
 
-        // Fade in at the start of the track
-        val fadeIn = if (posInTrack >= fadeFrames) 1.0f else (posInTrack.toFloat() / fadeFrames.toFloat()).coerceIn(0.0f, 1.0f)
-
-        // Fade out at the end of the track
         val remaining = durationFrames - posInTrack
         val fadeOut = when {
-            remaining >= fadeFrames -> 1.0f  // Still far from track end
-            remaining > 0L -> (remaining.toFloat() / fadeFrames.toFloat()).coerceIn(0.0f, 1.0f)  // In fade-out zone
-            else -> 1.0f  // Past expected track end frame bound before next transition: default to full volume to avoid silencing buffer tail
+            remaining >= fadeFrames -> 1.0f
+            remaining > 0L -> (remaining.toFloat() / fadeFrames.toFloat()).coerceIn(0.0f, 1.0f)
+            else -> 1.0f
         }
 
-        return (fadeIn * fadeOut).coerceIn(0.0f, 1.0f)
+        return fadeOut.coerceIn(0.0f, 1.0f)
     }
 
     private fun toFrames(durationUs: Long): Long {

@@ -108,8 +108,7 @@ class PlaybackService : MediaSessionService() {
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 // Reset audio processor position tracking on track change
-                crossfadeState.seekPositionUs = 0L
-                crossfadeState.trackDurationUs = C.TIME_UNSET
+                crossfadeState.position.set(TrackPositionSnapshot())
             }
 
             override fun onPositionDiscontinuity(
@@ -120,7 +119,9 @@ class PlaybackService : MediaSessionService() {
                 if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                     // Update seek position so the audio processor recalculates fade boundaries
                     val posMs = newPosition.positionMs
-                    crossfadeState.seekPositionUs = posMs * 1_000L
+                    crossfadeState.position.updateAndGet { current ->
+                        current.copy(seekPositionUs = posMs * 1_000L)
+                    }
                 }
             }
         })
@@ -219,9 +220,18 @@ class PlaybackService : MediaSessionService() {
             while (isActive) {
                 val posMs = player.currentPosition
                 val durMs = player.duration
-                crossfadeState.seekPositionUs = posMs * 1_000L
+                val seekPositionUs = posMs * 1_000L
                 if (durMs > 0 && durMs != C.TIME_UNSET) {
-                    crossfadeState.trackDurationUs = durMs * 1_000L
+                    crossfadeState.position.set(
+                        TrackPositionSnapshot(
+                            seekPositionUs = seekPositionUs,
+                            trackDurationUs = durMs * 1_000L
+                        )
+                    )
+                } else {
+                    crossfadeState.position.updateAndGet { current ->
+                        current.copy(seekPositionUs = seekPositionUs)
+                    }
                 }
                 delay(200L)
             }
