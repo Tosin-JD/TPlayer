@@ -101,6 +101,30 @@ fun HomeScreen(
     }
 
     var tabForBottomSheet by remember { mutableStateOf<LibraryTab?>(null) }
+    var showSortMenu by remember { mutableStateOf(false) }
+
+    // Default sort per tab
+    val defaultSortForTab: (LibraryTab) -> LibrarySortOption = { tab ->
+        when (tab) {
+            LibraryTab.All -> LibrarySortOption.TitleAz
+            LibraryTab.Favorites -> LibrarySortOption.DateAdded
+            LibraryTab.Album -> LibrarySortOption.TrackNumber
+            LibraryTab.Genre -> LibrarySortOption.TitleAz
+            LibraryTab.Folder -> LibrarySortOption.TitleAz
+            LibraryTab.Artist -> LibrarySortOption.TitleAz
+        }
+    }
+
+    if (showSortMenu) {
+        LibrarySortSheet(
+            selected = sortState[uiState.selectedTab] ?: defaultSortForTab(uiState.selectedTab),
+            onSelect = { option ->
+                sortState[uiState.selectedTab] = option
+                settingsViewModel.setTabSortOption(uiState.selectedTab.name, option.name)
+            },
+            onDismiss = { showSortMenu = false }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -118,6 +142,7 @@ fun HomeScreen(
                 onTabLongClick = { tab ->
                     tabForBottomSheet = tab
                 },
+                onFilterClick = { showSortMenu = true },
                 onNavigateToPlaylists = onNavigateToPlaylists,
                 onNavigateToFavorites = onNavigateToFavorites,
                 onNavigateToSettings = onNavigateToSettings
@@ -169,7 +194,7 @@ fun HomeScreen(
                         settingsViewModel = settingsViewModel,
                         tab = tab,
                         onNavigateToPlayer = onNavigateToPlayer,
-                        sortBy = sortState[LibraryTab.All] ?: LibrarySortOption.TitleAz,
+                        sortBy = sortState[LibraryTab.All] ?: defaultSortForTab(LibraryTab.All),
                         onSortChange = { option ->
                             sortState[LibraryTab.All] = option
                             settingsViewModel.setTabSortOption(LibraryTab.All.name, option.name)
@@ -180,7 +205,7 @@ fun HomeScreen(
                         viewModel = viewModel,
                         tab = tab,
                         onNavigateToPlayer = onNavigateToPlayer,
-                        sortBy = sortState[LibraryTab.Favorites] ?: LibrarySortOption.DateAdded,
+                        sortBy = sortState[LibraryTab.Favorites] ?: defaultSortForTab(LibraryTab.Favorites),
                         onSortChange = { option ->
                             sortState[LibraryTab.Favorites] = option
                             settingsViewModel.setTabSortOption(LibraryTab.Favorites.name, option.name)
@@ -192,7 +217,7 @@ fun HomeScreen(
                         groups = uiState.libraryGroups,
                         playerViewModel = viewModel,
                         settingsViewModel = settingsViewModel,
-                        sortBy = sortState[tab] ?: LibrarySortOption.TitleAz,
+                        sortBy = sortState[tab] ?: defaultSortForTab(tab),
                         onSortChange = { option ->
                             sortState[tab] = option
                             settingsViewModel.setTabSortOption(tab.name, option.name)

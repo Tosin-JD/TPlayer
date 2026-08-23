@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                         ) as T
                     }
                     modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
-                        SettingsViewModel(preferencesRepository, musicRepository) as T
+                        SettingsViewModel(preferencesRepository, musicRepository, playerController) as T
                     }
                     modelClass.isAssignableFrom(EqualizerViewModel::class.java) -> {
                         EqualizerViewModel(preferencesRepository) as T

@@ -94,6 +94,7 @@ class CrossfadeAudioProcessor(
 
         if (!state.enabled || state.fadeDurationUs <= 0L) {
             outputBuffer.put(inputBuffer)
+            outputBuffer.flip()
             readFrames += inputFrames
             return
         }
@@ -124,6 +125,7 @@ class CrossfadeAudioProcessor(
             readFrames++
             framesProcessed++
         }
+        outputBuffer.flip()
     }
 
     private fun syncTrackPosition() {

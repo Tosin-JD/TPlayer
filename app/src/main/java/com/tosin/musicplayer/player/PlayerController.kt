@@ -3,12 +3,14 @@ package com.tosin.musicplayer.player
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import android.os.SystemClock
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
@@ -66,6 +68,7 @@ class PlayerController(
     private var excludedFolders: Set<String> = emptySet()
 
     private var currentRepeatMode = RepeatMode.PLAY_ALL_ONCE
+    private var isShuffleEnabled = false
     
     private var pauseOnZeroVolumeEnabled = true
         private var wasPlayingBeforeZeroVolume = false
@@ -101,6 +104,24 @@ class PlayerController(
         controllerFuture?.addListener({
             setupController()
         }, MoreExecutors.directExecutor())
+    }
+
+    fun setCrossfadeEnabled(enabled: Boolean) {
+        val controller = mediaController ?: return
+        val args = Bundle().apply { putBoolean(PlaybackService.KEY_CROSSFADE_ENABLED, enabled) }
+        controller.sendCustomCommand(
+            SessionCommand(PlaybackService.ACTION_SET_CROSSFADE_ENABLED, Bundle.EMPTY),
+            args
+        )
+    }
+
+    fun setCrossfadeDuration(seconds: Int) {
+        val controller = mediaController ?: return
+        val args = Bundle().apply { putInt(PlaybackService.KEY_CROSSFADE_DURATION_SECONDS, seconds) }
+        controller.sendCustomCommand(
+            SessionCommand(PlaybackService.ACTION_SET_CROSSFADE_DURATION, Bundle.EMPTY),
+            args
+        )
     }
 
     private fun setupController() {
@@ -435,30 +456,30 @@ class PlayerController(
     }
 
     fun setShuffleEnabled(enabled: Boolean) {
-        if (enabled && playlist.size > 1) {
-            val controller = mediaController ?: return
-            val wasPlaying = controller.isPlaying
-            val currentId = _currentSong.value?.id
-            val currentPos = controller.currentPosition
-            val shuffled = playlist.toMutableList()
-            // Remove current song, shuffle the rest, put current song at index 0
-            val currentSongObj = shuffled.firstOrNull { it.id == currentId }
-            if (currentSongObj != null) {
-                shuffled.remove(currentSongObj)
-                shuffled.shuffle()
-                shuffled.add(0, currentSongObj)
-            } else {
-                shuffled.shuffle()
-            }
-            playlist = shuffled
-            val newIndex = if (currentSongObj != null) 0 else 0
-            controller.setMediaItems(shuffled.map { it.toMediaItem() }, newIndex, currentPos)
-            controller.prepare()
-            if (wasPlaying) {
-                controller.play()
-            }
-        }
-        // Don't use Media3's built-in shuffle — we manage it ourselves
+        isShuffleEnabled = enabled
+    }
+
+    /**
+     * Reshuffles the current playlist so the currently playing song is first,
+     * followed by all remaining songs in random order.
+     */
+    fun reshuffleCurrentPlaylist() {
+        val controller = mediaController ?: return
+        if (playlist.isEmpty()) return
+
+        val currentIndex = controller.currentMediaItemIndex.coerceIn(0, playlist.size - 1)
+        val currentSong = playlist[currentIndex]
+        val currentPos = controller.currentPosition
+
+        val remaining = playlist.toMutableList().apply { removeAt(currentIndex) }
+        remaining.shuffle()
+
+        val shuffled = mutableListOf(currentSong).apply { addAll(remaining) }
+        playlist = shuffled
+
+        controller.setMediaItems(shuffled.map { it.toMediaItem() }, 0, currentPos)
+        controller.prepare()
+        controller.play()
     }
 
     fun setRepeatMode(mode: RepeatMode) {
@@ -634,8 +655,14 @@ class PlayerController(
         progressJob?.cancel()
         progressJob = scope.launch {
             while (isActive) {
-                _progress.value = mediaController?.currentPosition ?: 0L
-                delay(500) // More responsive progress updates
+                val controller = mediaController
+                if (controller != null) {
+                    _progress.value = controller.currentPosition.coerceAtLeast(0)
+                } else {
+                    _progress.value = 0L
+                }
+
+                delay(500L)
             }
         }
     }

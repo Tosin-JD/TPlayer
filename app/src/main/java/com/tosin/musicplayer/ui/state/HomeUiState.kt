@@ -26,14 +26,22 @@ enum class LibraryTab(val label: String) {
 
 enum class LibrarySortOption(val label: String) {
     TitleAz("Title (A-Z)"),
+    TitleZa("Title (Z-A)"),
     ArtistAz("Artist (A-Z)"),
+    ArtistZa("Artist (Z-A)"),
     AlbumAz("Album (A-Z)"),
+    AlbumZa("Album (Z-A)"),
     Genre("Genre"),
+    GenreZa("Genre (Z-A)"),
     ReleaseYear("Release Year"),
+    ReleaseYearAsc("Release Year (Oldest)"),
     Duration("Duration"),
+    DurationAsc("Duration (Shortest)"),
     TrackNumber("Track Number"),
+    TrackNumberDesc("Track Number (Desc)"),
     PopularityPlays("Popularity / Plays"),
     DateAdded("Date Added"),
+    DateAddedOldest("Date Added (Oldest)"),
     Rating("Rating"),
     RecentlyPlayed("Recently Played"),
     FileSize("File Size")

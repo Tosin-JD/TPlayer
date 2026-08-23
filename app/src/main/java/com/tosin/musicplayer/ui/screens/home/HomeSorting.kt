@@ -32,14 +32,22 @@ fun sortSongs(
 ): List<Song> {
     return when (sortBy) {
         LibrarySortOption.TitleAz -> songs.sortedBy { it.title.trim().lowercase() }
+        LibrarySortOption.TitleZa -> songs.sortedByDescending { it.title.trim().lowercase() }
         LibrarySortOption.ArtistAz -> songs.sortedBy { it.artist.trim().lowercase() }
+        LibrarySortOption.ArtistZa -> songs.sortedByDescending { it.artist.trim().lowercase() }
         LibrarySortOption.AlbumAz -> songs.sortedBy { it.album.trim().lowercase() }
+        LibrarySortOption.AlbumZa -> songs.sortedByDescending { it.album.trim().lowercase() }
         LibrarySortOption.Genre -> songs.sortedBy { it.genre.orEmpty().trim().lowercase() }
+        LibrarySortOption.GenreZa -> songs.sortedByDescending { it.genre.orEmpty().trim().lowercase() }
         LibrarySortOption.ReleaseYear -> songs.sortedByDescending { it.year ?: 0 }
+        LibrarySortOption.ReleaseYearAsc -> songs.sortedBy { it.year ?: 0 }
         LibrarySortOption.Duration -> songs.sortedByDescending { it.duration }
+        LibrarySortOption.DurationAsc -> songs.sortedBy { it.duration }
         LibrarySortOption.TrackNumber -> songs.sortedBy { it.trackNumber }
+        LibrarySortOption.TrackNumberDesc -> songs.sortedByDescending { it.trackNumber }
         LibrarySortOption.PopularityPlays -> songs.sortedByDescending { it.playCount }
         LibrarySortOption.DateAdded -> songs.sortedByDescending { it.dateAddedMs ?: 0L }
+        LibrarySortOption.DateAddedOldest -> songs.sortedBy { it.dateAddedMs ?: 0L }
         LibrarySortOption.Rating -> songs.sortedByDescending { it.rating ?: 0 }
         LibrarySortOption.RecentlyPlayed -> songs.sortedByDescending { it.lastPlayedMs ?: 0L }
         LibrarySortOption.FileSize -> songs.sortedByDescending { it.fileSizeBytes ?: 0L }
@@ -52,14 +60,22 @@ fun sortLibraryGroups(
 ): List<LibraryGroup> {
     return when (sortBy) {
         LibrarySortOption.TitleAz -> groups.sortedBy { it.title.trim().lowercase() }
+        LibrarySortOption.TitleZa -> groups.sortedByDescending { it.title.trim().lowercase() }
         LibrarySortOption.ArtistAz -> groups.sortedBy { it.songs.firstOrNull()?.artist.orEmpty().trim().lowercase() }
+        LibrarySortOption.ArtistZa -> groups.sortedByDescending { it.songs.firstOrNull()?.artist.orEmpty().trim().lowercase() }
         LibrarySortOption.AlbumAz -> groups.sortedBy { it.songs.firstOrNull()?.album.orEmpty().trim().lowercase() }
+        LibrarySortOption.AlbumZa -> groups.sortedByDescending { it.songs.firstOrNull()?.album.orEmpty().trim().lowercase() }
         LibrarySortOption.Genre -> groups.sortedBy { it.title.trim().lowercase() }
+        LibrarySortOption.GenreZa -> groups.sortedByDescending { it.title.trim().lowercase() }
         LibrarySortOption.ReleaseYear -> groups.sortedByDescending { it.songs.maxOfOrNull { song -> song.year ?: 0 } ?: 0 }
+        LibrarySortOption.ReleaseYearAsc -> groups.sortedBy { it.songs.maxOfOrNull { song -> song.year ?: 0 } ?: 0 }
         LibrarySortOption.Duration -> groups.sortedByDescending { it.songs.sumOf { song -> song.duration } }
+        LibrarySortOption.DurationAsc -> groups.sortedBy { it.songs.sumOf { song -> song.duration } }
         LibrarySortOption.TrackNumber -> groups.sortedBy { it.songs.minOfOrNull { song -> song.trackNumber } ?: Int.MAX_VALUE }
+        LibrarySortOption.TrackNumberDesc -> groups.sortedByDescending { it.songs.minOfOrNull { song -> song.trackNumber } ?: Int.MAX_VALUE }
         LibrarySortOption.PopularityPlays -> groups.sortedByDescending { it.songs.sumOf { song -> song.playCount } }
         LibrarySortOption.DateAdded -> groups.sortedByDescending { it.songs.maxOfOrNull { song -> song.dateAddedMs ?: 0L } ?: 0L }
+        LibrarySortOption.DateAddedOldest -> groups.sortedBy { it.songs.maxOfOrNull { song -> song.dateAddedMs ?: 0L } ?: 0L }
         LibrarySortOption.Rating -> groups.sortedByDescending {
             val ratings = it.songs.mapNotNull { song -> song.rating }
             if (ratings.isEmpty()) 0.0 else ratings.average()

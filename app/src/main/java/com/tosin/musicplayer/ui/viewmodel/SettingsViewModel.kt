@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tosin.musicplayer.data.local.ScanProgress
 import com.tosin.musicplayer.data.repository.MusicRepository
 import com.tosin.musicplayer.data.repository.PreferencesRepository
+import com.tosin.musicplayer.player.PlayerController
 import com.tosin.musicplayer.ui.state.FolderEntry
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.SettingsUiState
@@ -29,7 +30,8 @@ import java.util.Locale
  */
 class SettingsViewModel(
     private val preferencesRepository: PreferencesRepository,
-    private val musicRepository: MusicRepository
+    private val musicRepository: MusicRepository,
+    private val playerController: PlayerController? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -246,10 +248,12 @@ class SettingsViewModel(
 
     fun toggleCrossfade(enabled: Boolean) {
         updateSettings { it.copy(crossfadeEnabled = enabled) }
+        playerController?.setCrossfadeEnabled(enabled)
     }
 
     fun setCrossfadeDuration(seconds: Int) {
         updateSettings { it.copy(crossfadeDuration = seconds) }
+        playerController?.setCrossfadeDuration(seconds)
     }
 
     fun setPlaybackSpeed(speed: Float) {

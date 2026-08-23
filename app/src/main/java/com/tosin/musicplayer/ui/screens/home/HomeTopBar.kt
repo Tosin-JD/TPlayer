@@ -40,6 +40,7 @@ fun HomeTopBar(
     tabs: List<LibraryTab>,
     onTabSelected: (Int) -> Unit,
     onTabLongClick: (LibraryTab) -> Unit = {},
+    onFilterClick: () -> Unit,
     onNavigateToPlaylists: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -85,6 +86,13 @@ fun HomeTopBar(
                 }
             },
             actions = {
+                IconButton(onClick = onFilterClick) {
+                    Icon(
+                        imageVector = AppIcons.Sort,
+                        contentDescription = "Filter / Sort",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 IconButton(onClick = onNavigateToFavorites) {
                     Icon(
                         imageVector = AppIcons.Favorite,

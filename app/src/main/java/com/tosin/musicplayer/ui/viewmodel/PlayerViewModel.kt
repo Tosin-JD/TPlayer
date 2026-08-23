@@ -377,8 +377,14 @@ class PlayerViewModel(
     fun seekTo(position: Long) = playerController.seekTo(position)
 
     fun toggleShuffle() {
-        _shuffle.value = !_shuffle.value
-        playerController.setShuffleEnabled(_shuffle.value)
+        val enabling = !_shuffle.value
+        _shuffle.value = enabling
+        if (enabling) {
+            playerController.setShuffleEnabled(true)
+            playerController.reshuffleCurrentPlaylist()
+        } else {
+            playerController.setShuffleEnabled(false)
+        }
     }
 
     fun setLyricsVisible(visible: Boolean) {
