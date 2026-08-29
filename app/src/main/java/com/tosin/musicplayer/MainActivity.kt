@@ -109,9 +109,18 @@ class MainActivity : ComponentActivity() {
             androidx.compose.runtime.LaunchedEffect(settingsUiState.autoResumeEnabled) {
                 playerViewModel.setAutoResumeEnabled(settingsUiState.autoResumeEnabled)
             }
+            val excludedFoldersInitialized = androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(false)
+            }
             androidx.compose.runtime.LaunchedEffect(settingsUiState.excludedFolders) {
                 playerViewModel.setExcludedFolders(settingsUiState.excludedFolders.toSet())
-                playerViewModel.refreshLibrary()
+                if (excludedFoldersInitialized.value) {
+                    if (!playerController.isServiceActive()) {
+                        playerViewModel.refreshLibrary()
+                    }
+                } else {
+                    excludedFoldersInitialized.value = true
+                }
             }
 
             UniversalAppTheme(
@@ -140,6 +149,10 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIncomingIntent(intent: Intent?) {
         val nonNullIntent = intent ?: return
+
+        // Ignore standard launcher intent cold starts
+        if (nonNullIntent.action == Intent.ACTION_MAIN) return
+
         val uri = when (nonNullIntent.action) {
             Intent.ACTION_VIEW -> nonNullIntent.data
             Intent.ACTION_SEND -> nonNullIntent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)

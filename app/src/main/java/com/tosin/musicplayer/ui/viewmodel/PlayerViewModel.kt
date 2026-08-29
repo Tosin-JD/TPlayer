@@ -217,9 +217,13 @@ class PlayerViewModel(
         val settings = preferencesRepository.loadSettings()
         val rememberLastPlay = settings.boolean("rememberLastPlay", true)
         if (!rememberLastPlay) return
+
+        // Wait for MediaController to connect to PlaybackService so we have the true state
+        playerController.awaitConnection()
         
-        // Guard: If PlaybackService is active/playing, do not interrupt active playback!
-        if (playerController.isPlaying.value || playerController.currentSong.value != null) {
+        // Guard: check the LIVE controller state, not the StateFlow values,
+        // to avoid a race where StateFlow hasn't propagated yet.
+        if (playerController.isServiceActive()) {
             applyPersistedPlaybackSettings(settings)
             return
         }

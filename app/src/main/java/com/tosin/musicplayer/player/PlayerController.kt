@@ -22,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -55,9 +56,28 @@ class PlayerController(
     private val _currentIndex = MutableStateFlow(0)
     val currentIndex = _currentIndex.asStateFlow()
 
+    private val _isConnected = MutableStateFlow(false)
+    val isConnected = _isConnected.asStateFlow()
+
     private var progressJob: Job? = null
     private var sleepTimerJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main)
+
+    suspend fun awaitConnection() {
+        if (_isConnected.value && mediaController != null) return
+        _isConnected.first { it }
+    }
+
+    /**
+     * Returns true if the underlying MediaController is actively playing
+     * or has media loaded (i.e., the PlaybackService is active).
+     * This reads directly from the controller, bypassing StateFlow propagation delays.
+     */
+    fun isServiceActive(): Boolean {
+        val controller = mediaController ?: return false
+        return controller.isPlaying ||
+               (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0)
+    }
 
     private var playlist: List<Song> = emptyList()
         set(value) {
@@ -104,7 +124,9 @@ class PlayerController(
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         controllerFuture?.addListener({
-            setupController()
+            scope.launch(Dispatchers.Main.immediate) {
+                setupController()
+            }
         }, MoreExecutors.directExecutor())
     }
 
@@ -158,9 +180,19 @@ class PlayerController(
         
         _progress.value = controller.currentPosition.coerceAtLeast(0)
         _playbackSpeed.value = controller.playbackParameters.speed
-        setRepeatMode(currentRepeatMode)
-
+        
         val isServiceActive = controller.isPlaying || (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0)
+        if (isServiceActive) {
+            // Adopt active service repeat mode
+            currentRepeatMode = when (controller.repeatMode) {
+                Player.REPEAT_MODE_ALL -> RepeatMode.REPEAT_ALL
+                Player.REPEAT_MODE_ONE -> RepeatMode.REPEAT_ONE
+                else -> currentRepeatMode
+            }
+        } else {
+            setRepeatMode(currentRepeatMode)
+        }
+
         if (playlist.isNotEmpty() && !isServiceActive) {
             val mediaItems = playlist.map { it.toMediaItem() }
             val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
@@ -238,6 +270,11 @@ class PlayerController(
                 if (playbackState == Player.STATE_READY) {
                     _progress.value = controller.currentPosition
                 }
+                // Mark connection as ready now that the session has delivered
+                // a real playback state (not the default STATE_IDLE).
+                if (!_isConnected.value) {
+                    _isConnected.value = true
+                }
             }
 
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
@@ -260,6 +297,22 @@ class PlayerController(
                 }
             }
         })
+
+        // Never mark connected here — the controller may still be in its
+        // initial STATE_IDLE / mediaItemCount=0 state even when the service
+        // is actively playing.  Wait for onPlaybackStateChanged to deliver
+        // the real session state (line 276), or fall back to the safety
+        // timeout below, so restoreQueueState() always sees accurate
+        // isPlaying / playbackState / mediaItemCount values.
+        //
+        // Safety timeout: if no callback arrives within 1 s, connect anyway to
+        // avoid blocking the UI forever (e.g. service just stopped).
+        scope.launch {
+            delay(1_000)
+            if (!_isConnected.value) {
+                _isConnected.value = true
+            }
+        }
     }
 
     fun setPlaylist(songs: List<Song>, startIndex: Int = 0) {
@@ -269,25 +322,19 @@ class PlayerController(
     fun setPlaylist(songs: List<Song>, startIndex: Int = 0, startPositionMs: Long = 0L) {
         playlist = songs
         originalPlaylist = songs
-        if (songs.isNotEmpty() && startIndex in songs.indices) {
-            _currentSong.value = songs[startIndex]
-            _currentIndex.value = startIndex
-            _progress.value = startPositionMs
-        }
+        
         val controller = mediaController ?: return
         val isServiceActive = controller.isPlaying || (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0)
+
         val mediaItems = songs.map { it.toMediaItem() }
         val currentMediaIds = (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId }
         val newMediaIds = songs.map { it.id.toString() }
         val queueChanged = currentMediaIds != newMediaIds || controller.currentMediaItemIndex !in songs.indices
 
-        if (isServiceActive && !queueChanged) {
-            val activeIndex = controller.currentMediaItemIndex
-            if (activeIndex in songs.indices) {
-                _currentIndex.value = activeIndex
-                _currentSong.value = songs[activeIndex]
-            }
-            return
+        if (songs.isNotEmpty() && startIndex in songs.indices) {
+            _currentSong.value = songs[startIndex]
+            _currentIndex.value = startIndex
+            _progress.value = startPositionMs
         }
 
         if (queueChanged) {
@@ -398,16 +445,29 @@ class PlayerController(
 
     fun setExcludedFolders(folders: Set<String>) {
         excludedFolders = folders.map { it.trim().trimEnd('/') }.toSet()
+
+        val controller = mediaController ?: return
+        val isServiceActive = controller.isPlaying || (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0)
+
+        // If the service is actively playing and we don't have a local playlist
+        // (e.g. after a cold start), we can't safely filter or stop — the service
+        // owns its own queue. Just store the excluded folders; they'll be applied
+        // on the next song transition.
+        if (isServiceActive && playlist.isEmpty()) return
+
         val currentSongId = _currentSong.value?.id
         val filteredPlaylist = playlist.filterNot { it.isExcluded(excludedFolders) }
         playlist = filteredPlaylist
 
-        if (currentSongId != null && filteredPlaylist.none { it.id == currentSongId }) {
+        // Stop playback ONLY if we have a local playlist AND the active song is in an excluded folder
+        if (playlist.isNotEmpty() && currentSongId != null && filteredPlaylist.none { it.id == currentSongId }) {
             stop()
             return
         }
 
-        val controller = mediaController ?: return
+        // Do NOT re-set media items on the controller if service is active
+        if (isServiceActive) return
+
         if (filteredPlaylist.isNotEmpty()) {
             val currentIndex = filteredPlaylist.indexOfFirst { it.id == currentSongId }.takeIf { it >= 0 }
                 ?: _currentIndex.value.coerceIn(0, filteredPlaylist.lastIndex)
