@@ -28,6 +28,8 @@ fun TabManagementBottomSheet(
     totalTabs: Int,
     onMoveLeft: () -> Unit,
     onMoveRight: () -> Unit,
+    onMoveExtremeLeft: () -> Unit,
+    onMoveExtremeRight: () -> Unit,
     onHideTab: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -61,6 +63,33 @@ fun TabManagementBottomSheet(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
+
+            val canMoveExtremeLeft = tabIndex > 0
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = "Move to extreme left",
+                        color = if (canMoveExtremeLeft) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
+                },
+                leadingContent = {
+                    Icon(
+                        imageVector = AppIcons.KeyboardDoubleArrowLeft,
+                        contentDescription = "Move to Extreme Left",
+                        tint = if (canMoveExtremeLeft) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (canMoveExtremeLeft) {
+                            Modifier.noRippleClick {
+                                onMoveExtremeLeft()
+                                onDismiss()
+                            }
+                        } else Modifier
+                    )
+            )
 
             val canMoveLeft = tabIndex > 0
             ListItem(
@@ -110,6 +139,33 @@ fun TabManagementBottomSheet(
                         if (canMoveRight) {
                             Modifier.noRippleClick {
                                 onMoveRight()
+                                onDismiss()
+                            }
+                        } else Modifier
+                    )
+            )
+
+            val canMoveExtremeRight = tabIndex < totalTabs - 1
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = "Move to extreme right",
+                        color = if (canMoveExtremeRight) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
+                },
+                leadingContent = {
+                    Icon(
+                        imageVector = AppIcons.KeyboardDoubleArrowRight,
+                        contentDescription = "Move to Extreme Right",
+                        tint = if (canMoveExtremeRight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (canMoveExtremeRight) {
+                            Modifier.noRippleClick {
+                                onMoveExtremeRight()
                                 onDismiss()
                             }
                         } else Modifier

@@ -162,6 +162,12 @@ fun HomeScreen(
                 onMoveRight = {
                     settingsViewModel.moveTabRight(selectedTabForSheet.name)
                 },
+                onMoveExtremeLeft = {
+                    settingsViewModel.moveTabExtremeLeft(selectedTabForSheet.name)
+                },
+                onMoveExtremeRight = {
+                    settingsViewModel.moveTabExtremeRight(selectedTabForSheet.name)
+                },
                 onHideTab = {
                     settingsViewModel.hideTab(selectedTabForSheet.name)
                 },

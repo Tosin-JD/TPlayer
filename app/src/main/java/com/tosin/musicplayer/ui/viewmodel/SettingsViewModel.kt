@@ -163,6 +163,48 @@ class SettingsViewModel(
         }
     }
 
+    fun moveTabExtremeLeft(tabName: String) {
+        updateSettings { state ->
+            val activeTabs = state.tabOrder.filter { tab ->
+                state.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+            }
+            val indexInActive = activeTabs.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+            if (indexInActive > 0) {
+                val firstTabName = activeTabs.first()
+                val fullOrder = state.tabOrder.toMutableList()
+                val idx1 = fullOrder.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+                val idxFirst = fullOrder.indexOfFirst { it.equals(firstTabName, ignoreCase = true) }
+                if (idx1 != -1 && idxFirst != -1) {
+                    val item = fullOrder.removeAt(idx1)
+                    val insertIdx = fullOrder.indexOfFirst { it.equals(firstTabName, ignoreCase = true) }
+                    fullOrder.add(insertIdx, item)
+                }
+                state.copy(tabOrder = fullOrder)
+            } else state
+        }
+    }
+
+    fun moveTabExtremeRight(tabName: String) {
+        updateSettings { state ->
+            val activeTabs = state.tabOrder.filter { tab ->
+                state.visibleTabs.any { it.equals(tab, ignoreCase = true) }
+            }
+            val indexInActive = activeTabs.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+            if (indexInActive != -1 && indexInActive < activeTabs.size - 1) {
+                val lastTabName = activeTabs.last()
+                val fullOrder = state.tabOrder.toMutableList()
+                val idx1 = fullOrder.indexOfFirst { it.equals(tabName, ignoreCase = true) }
+                val idxLast = fullOrder.indexOfFirst { it.equals(lastTabName, ignoreCase = true) }
+                if (idx1 != -1 && idxLast != -1) {
+                    val item = fullOrder.removeAt(idx1)
+                    val insertIdx = fullOrder.indexOfFirst { it.equals(lastTabName, ignoreCase = true) }
+                    fullOrder.add(insertIdx + 1, item)
+                }
+                state.copy(tabOrder = fullOrder)
+            } else state
+        }
+    }
+
     fun hideTab(tabName: String) {
         updateSettings { state ->
             val visible = state.visibleTabs.toMutableList()

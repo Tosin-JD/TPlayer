@@ -114,4 +114,66 @@ class SettingsViewModelTabTest {
 
         assertEquals(listOf("All", "Album", "Artist", "Genre", "Folder"), viewModel.uiState.value.tabOrder)
     }
+
+    @Test
+    fun moveTabExtremeLeft_movesTabToFirstVisiblePosition() = runTest(dispatcher) {
+        coEvery { preferencesRepository.loadSettings() } returns emptyMap()
+
+        val viewModel = SettingsViewModel(preferencesRepository, musicRepository)
+        advanceUntilIdle()
+
+        // Default order: [All, Album, Artist, Genre, Folder]
+        viewModel.moveTabExtremeLeft("Artist")
+        advanceUntilIdle()
+
+        assertEquals(listOf("Artist", "All", "Album", "Genre", "Folder"), viewModel.uiState.value.tabOrder)
+    }
+
+    @Test
+    fun moveTabExtremeRight_movesTabToLastVisiblePosition() = runTest(dispatcher) {
+        coEvery { preferencesRepository.loadSettings() } returns emptyMap()
+
+        val viewModel = SettingsViewModel(preferencesRepository, musicRepository)
+        advanceUntilIdle()
+
+        viewModel.moveTabExtremeRight("All")
+        advanceUntilIdle()
+
+        assertEquals(listOf("Album", "Artist", "Genre", "Folder", "All"), viewModel.uiState.value.tabOrder)
+    }
+
+    @Test
+    fun moveTabExtremeOnHiddenTabs_preservesHiddenPositions() = runTest(dispatcher) {
+        coEvery { preferencesRepository.loadSettings() } returns mapOf(
+            "tabOrder" to listOf("Folder", "Artist", "Album", "All", "Genre"),
+            "visibleTabs" to listOf("Folder", "Artist")
+        )
+
+        val viewModel = SettingsViewModel(preferencesRepository, musicRepository)
+        advanceUntilIdle()
+
+        viewModel.moveTabExtremeRight("Folder")
+        advanceUntilIdle()
+        assertEquals(listOf("Artist", "Folder", "Album", "All", "Genre"), viewModel.uiState.value.tabOrder)
+
+        viewModel.moveTabExtremeLeft("Artist")
+        advanceUntilIdle()
+        assertEquals(listOf("Artist", "Folder", "Album", "All", "Genre"), viewModel.uiState.value.tabOrder)
+    }
+
+    @Test
+    fun moveTabExtreme_isNoOpWhenAlreadyAtExtreme() = runTest(dispatcher) {
+        coEvery { preferencesRepository.loadSettings() } returns emptyMap()
+
+        val viewModel = SettingsViewModel(preferencesRepository, musicRepository)
+        advanceUntilIdle()
+
+        viewModel.moveTabExtremeLeft("All")   // already first
+        advanceUntilIdle()
+        assertEquals(listOf("All", "Album", "Artist", "Genre", "Folder"), viewModel.uiState.value.tabOrder)
+
+        viewModel.moveTabExtremeRight("Folder") // already last
+        advanceUntilIdle()
+        assertEquals(listOf("All", "Album", "Artist", "Genre", "Folder"), viewModel.uiState.value.tabOrder)
+    }
 }

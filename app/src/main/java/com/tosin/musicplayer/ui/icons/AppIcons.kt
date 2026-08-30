@@ -101,6 +101,8 @@ object AppIcons {
     val ArrowBack: ImageVector get() = Icons.AutoMirrored.Rounded.ArrowBack
     val ArrowForward: ImageVector get() = Icons.AutoMirrored.Rounded.ArrowForward
     val KeyboardArrowDown: ImageVector get() = Icons.Rounded.KeyboardArrowDown
+    val KeyboardDoubleArrowLeft: ImageVector get() = Icons.Rounded.KeyboardDoubleArrowLeft
+    val KeyboardDoubleArrowRight: ImageVector get() = Icons.Rounded.KeyboardDoubleArrowRight
     val RestartAlt: ImageVector get() = Icons.Rounded.RestartAlt
     val Restore: ImageVector get() = Icons.Rounded.Restore
 
