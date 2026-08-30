@@ -41,6 +41,9 @@ class PlayerViewModel(
     private var songsJob: Job? = null
     private var hasRestoredQueueState = false
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
     private val _shuffle = MutableStateFlow(false)
     val shuffleEnabled = _shuffle.asStateFlow()
 
@@ -77,6 +80,12 @@ class PlayerViewModel(
             val matchingTab = LibraryTab.entries.firstOrNull { it.name.equals(savedTab, ignoreCase = true) }
             if (matchingTab != null) {
                 _selectedLibraryTab.value = matchingTab
+            }
+        }
+        viewModelScope.launch {
+            val savedQuery = preferencesRepository.loadSearchQuery()
+            if (savedQuery.isNotBlank()) {
+                _searchQuery.value = savedQuery
             }
         }
         viewModelScope.launch {
@@ -437,6 +446,13 @@ class PlayerViewModel(
             LibraryTab.Genre -> allSongs.filter { it.genre == title || (it.genre.isNullOrBlank() && title == "Unknown genre") }
             LibraryTab.Folder -> allSongs.filter { it.folder == title || (it.folder.isNullOrBlank() && title == "Unknown folder") }
             LibraryTab.Artist -> allSongs.filter { it.artist == title || (it.artist.isBlank() && title == "Unknown artist") }
+        }
+    }
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+        viewModelScope.launch {
+            preferencesRepository.saveSearchQuery(query)
         }
     }
 

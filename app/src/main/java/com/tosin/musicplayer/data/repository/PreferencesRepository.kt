@@ -85,6 +85,22 @@ class PreferencesRepository(private val context: Context) {
         Pair(route, tab)
     }
 
+    // --- Search Query Persistence ---
+    suspend fun saveSearchQuery(query: String) = withContext(Dispatchers.IO) {
+        try {
+            val current = loadSettings().toMutableMap()
+            current["lastSearchQuery"] = query
+            saveSettings(current)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadSearchQuery(): String = withContext(Dispatchers.IO) {
+        val settings = loadSettings()
+        (settings["lastSearchQuery"] as? String) ?: ""
+    }
+
     // --- Repeat Mode Persistence ---
     suspend fun saveRepeatMode(repeatMode: RepeatMode) = withContext(Dispatchers.IO) {
         try {

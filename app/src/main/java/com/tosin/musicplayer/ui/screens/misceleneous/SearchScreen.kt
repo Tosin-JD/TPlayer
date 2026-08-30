@@ -34,7 +34,15 @@ fun SearchScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPlayer: () -> Unit
 ) {
-    var query by remember { mutableStateOf("") }
+    val savedQuery by viewModel.searchQuery.collectAsState()
+    var query by remember { mutableStateOf(savedQuery) }
+
+    LaunchedEffect(savedQuery) {
+        if (query != savedQuery) {
+            query = savedQuery
+        }
+    }
+
     val results = remember(query) { viewModel.searchSongs(query) }
     val focusRequester = remember { FocusRequester() }
     val uiState by viewModel.uiState.collectAsState()
@@ -84,7 +92,10 @@ fun SearchScreen(
                             Spacer(Modifier.width(12.dp))
                             BasicTextField(
                                 value = query,
-                                onValueChange = { query = it },
+                                onValueChange = {
+                                query = it
+                                viewModel.updateSearchQuery(it)
+                            },
                                 singleLine = true,
                                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                                     color = MaterialTheme.colorScheme.onSurface
@@ -107,7 +118,10 @@ fun SearchScreen(
                                 }
                             )
                             if (query.isNotEmpty()) {
-                                IconButton(onClick = { query = "" }) {
+                                IconButton(onClick = {
+                                    query = ""
+                                    viewModel.updateSearchQuery("")
+                                }) {
                                     Icon(AppIcons.Close, contentDescription = "Clear")
                                 }
                             }
