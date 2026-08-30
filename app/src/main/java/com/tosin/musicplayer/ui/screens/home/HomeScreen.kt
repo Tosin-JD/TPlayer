@@ -79,16 +79,20 @@ fun HomeScreen(
     val pagerState = rememberPagerState(pageCount = { safeActiveTabs.size })
     val coroutineScope = rememberCoroutineScope()
 
-    // If selected tab was removed (e.g. hidden), fall back to current pager page
+    // Restore pager to the last-selected tab when selectedTab or safeActiveTabs change
+    // (e.g. on cold start from prefs, or when settings load asynchronously)
     LaunchedEffect(uiState.selectedTab, safeActiveTabs) {
-        if (uiState.selectedTab !in safeActiveTabs) {
+        val targetIndex = safeActiveTabs.indexOf(uiState.selectedTab)
+        if (targetIndex >= 0 && pagerState.settledPage != targetIndex) {
+            pagerState.scrollToPage(targetIndex)
+        } else if (targetIndex < 0 && safeActiveTabs.isNotEmpty()) {
             val fallbackIndex = pagerState.currentPage.coerceIn(0, safeActiveTabs.size - 1)
             viewModel.selectLibraryTab(safeActiveTabs[fallbackIndex])
         }
     }
 
-    // Sync selected tab with pager when user scrolls (swipe)
-    LaunchedEffect(pagerState, safeActiveTabs) {
+    // Sync selectedTab when user swipes the pager
+    LaunchedEffect(safeActiveTabs) {
         snapshotFlow { pagerState.settledPage }
             .collect { settledPage ->
                 if (settledPage in safeActiveTabs.indices) {
