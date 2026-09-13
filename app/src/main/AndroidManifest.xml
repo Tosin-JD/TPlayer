@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -30,6 +32,72 @@
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
+
+        <!-- App Widget Provider (resizable) -->
+        <receiver
+            android:name=".widget.PlayerWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/player_widget_info" />
+        </receiver>
+
+        <!-- Compact Bar Widget (4×1) -->
+        <receiver
+            android:name=".widget.CompactWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_name_compact">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_compact_info" />
+        </receiver>
+
+        <!-- Fullscreen Widget (4×4) -->
+        <receiver
+            android:name=".widget.FullscreenWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_name_fullscreen">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_fullscreen_info" />
+        </receiver>
+
+        <!-- Widget Action Receiver -->
+        <receiver
+            android:name=".widget.WidgetActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.tosin.musicplayer.widget.ACTION_PLAY" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_PAUSE" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_STOP" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_NEXT" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_PREV" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_SHUFFLE" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_REPEAT" />
+                <action android:name="com.tosin.musicplayer.widget.ACTION_OPEN_APP" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Boot Completed Receiver -->
+        <receiver
+            android:name=".receiver.BootCompletedReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".MainActivity"

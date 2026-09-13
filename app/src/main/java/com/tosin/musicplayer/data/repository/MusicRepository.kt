@@ -135,11 +135,10 @@ class MusicRepository(
     }
 
     private fun songComparator(): Comparator<Song> {
-        return compareBy(
-            { it.title.trim().lowercase() },
-            { it.artist.trim().lowercase() },
-            { it.album.trim().lowercase() }
-        )
+        return compareBy<Song> { if (it.trackNumber == 0) Int.MAX_VALUE else it.trackNumber }
+            .thenBy { it.title.trim().lowercase() }
+            .thenBy { it.artist.trim().lowercase() }
+            .thenBy { it.album.trim().lowercase() }
     }
 
     private fun normalizePath(path: String): String {

@@ -314,6 +314,12 @@ class PlayerViewModel(
             LibraryTab.All -> return emptyList()
             LibraryTab.Favorites -> return emptyList()
             LibraryTab.Album -> songs.groupBy { it.album.ifBlank { "Unknown album" } }
+                .mapValues { (_, albumSongs) ->
+                    albumSongs.sortedWith(
+                        compareBy<Song> { if (it.trackNumber == 0) Int.MAX_VALUE else it.trackNumber }
+                            .thenBy { it.title.trim().lowercase() }
+                    )
+                }
             LibraryTab.Genre -> songs.groupBy { it.genre?.ifBlank { "Unknown genre" } ?: "Unknown genre" }
             LibraryTab.Folder -> songs.groupBy { it.folder?.ifBlank { "Unknown folder" } ?: "Unknown folder" }
             LibraryTab.Artist -> songs.groupBy { it.artist.ifBlank { "Unknown artist" } }
@@ -439,13 +445,21 @@ class PlayerViewModel(
 
     fun getSongsForGroup(tab: LibraryTab, title: String): List<Song> {
         val allSongs = _songs.value
-        return when (tab) {
+        val filtered = when (tab) {
             LibraryTab.All -> allSongs
             LibraryTab.Favorites -> allSongs.filter { _favoriteIds.value.contains(it.id) }
             LibraryTab.Album -> allSongs.filter { it.album == title || (it.album.isBlank() && title == "Unknown album") }
             LibraryTab.Genre -> allSongs.filter { it.genre == title || (it.genre.isNullOrBlank() && title == "Unknown genre") }
             LibraryTab.Folder -> allSongs.filter { it.folder == title || (it.folder.isNullOrBlank() && title == "Unknown folder") }
             LibraryTab.Artist -> allSongs.filter { it.artist == title || (it.artist.isBlank() && title == "Unknown artist") }
+        }
+        return if (tab == LibraryTab.Album) {
+            filtered.sortedWith(
+                compareBy<Song> { if (it.trackNumber == 0) Int.MAX_VALUE else it.trackNumber }
+                    .thenBy { it.title.trim().lowercase() }
+            )
+        } else {
+            filtered
         }
     }
 

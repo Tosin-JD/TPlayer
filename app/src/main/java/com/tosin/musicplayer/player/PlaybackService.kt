@@ -28,6 +28,10 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.tosin.musicplayer.MainActivity
 import com.tosin.musicplayer.R
 import com.tosin.musicplayer.data.repository.PreferencesRepository
+import com.tosin.musicplayer.widget.WidgetArtworkHelper
+import com.tosin.musicplayer.widget.WidgetState
+import com.tosin.musicplayer.widget.WidgetStateRepository
+import com.tosin.musicplayer.widget.WidgetUpdateDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -104,11 +108,17 @@ class PlaybackService : MediaSessionService() {
                 } else {
                     stopPositionPolling()
                 }
+                syncWidgetState(primaryPlayer)
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 // Reset audio processor position tracking on track change
                 crossfadeState.position.set(TrackPositionSnapshot())
+                syncWidgetState(primaryPlayer)
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                syncWidgetState(primaryPlayer)
             }
 
             override fun onPositionDiscontinuity(
@@ -122,6 +132,7 @@ class PlaybackService : MediaSessionService() {
                     crossfadeState.position.updateAndGet { current ->
                         current.copy(seekPositionUs = posMs * 1_000L)
                     }
+                    syncWidgetState(primaryPlayer)
                 }
             }
         })
@@ -184,6 +195,25 @@ class PlaybackService : MediaSessionService() {
                     return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                         .setAvailableSessionCommands(commands)
                         .build()
+                }
+
+                override fun onPlaybackResumption(
+                    session: MediaSession,
+                    controller: MediaSession.ControllerInfo
+                ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+                    val player = session.player
+                    val mediaItems = (0 until player.mediaItemCount).map {
+                        player.getMediaItemAt(it)
+                    }
+                    val startIndex = player.currentMediaItemIndex.coerceAtLeast(0)
+                    val startPosition = player.currentPosition.coerceAtLeast(0L)
+                    return Futures.immediateFuture(
+                        MediaSession.MediaItemsWithStartPosition(
+                            mediaItems,
+                            startIndex,
+                            startPosition
+                        )
+                    )
                 }
 
                 override fun onCustomCommand(
@@ -286,6 +316,14 @@ class PlaybackService : MediaSessionService() {
     override fun onDestroy() {
         EqualizerManager.release()
         stopPositionPolling()
+        runCatching {
+            runBlocking(Dispatchers.IO) {
+                val repo = WidgetStateRepository(this@PlaybackService)
+                val current = repo.loadState()
+                repo.saveState(current.copy(isPlaying = false, lastUpdatedMs = System.currentTimeMillis()))
+                WidgetUpdateDispatcher.updateAll(this@PlaybackService)
+            }
+        }
         serviceScope.cancel()
         mediaSession?.run {
             player.release()
@@ -293,6 +331,57 @@ class PlaybackService : MediaSessionService() {
             mediaSession = null
         }
         super.onDestroy()
+    }
+
+    private fun syncWidgetState(player: Player) {
+        val currentItem = player.currentMediaItem
+        val isPlaying = player.isPlaying
+        val isShuffle = player.shuffleModeEnabled
+        val repeatModeStr = when (player.repeatMode) {
+            Player.REPEAT_MODE_ALL -> "REPEAT_ALL"
+            Player.REPEAT_MODE_ONE -> "REPEAT_ONE"
+            else -> "PLAY_ALL_ONCE"
+        }
+        val posMs = player.currentPosition.coerceAtLeast(0L)
+        val durMs = player.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: 0L
+        val title = currentItem?.mediaMetadata?.title?.toString().orEmpty()
+        val artist = currentItem?.mediaMetadata?.artist?.toString().orEmpty()
+        val album = currentItem?.mediaMetadata?.albumTitle?.toString().orEmpty()
+        val artUri = currentItem?.mediaMetadata?.artworkUri?.toString()
+        val songUri = currentItem?.localConfiguration?.uri?.toString()
+        val isEmpty = currentItem == null
+
+        serviceScope.launch(Dispatchers.IO) {
+            val repo = WidgetStateRepository(this@PlaybackService)
+            val state = WidgetState(
+                title = title,
+                artist = artist,
+                album = album,
+                isPlaying = isPlaying,
+                isShuffleEnabled = isShuffle,
+                repeatMode = repeatModeStr,
+                progressMs = posMs,
+                durationMs = durMs,
+                albumArtUri = artUri,
+                isEmptyQueue = isEmpty,
+                isOffline = false,
+                lastUpdatedMs = System.currentTimeMillis()
+            )
+            repo.saveState(state)
+
+            val artworkBytes = WidgetArtworkHelper.extractArtworkBytes(
+                context = this@PlaybackService,
+                albumArtUriStr = artUri,
+                songUriStr = songUri
+            )
+            if (artworkBytes != null && artworkBytes.isNotEmpty()) {
+                repo.saveArtwork(artworkBytes)
+            } else {
+                repo.clearArtwork()
+            }
+
+            WidgetUpdateDispatcher.updateAll(this@PlaybackService)
+        }
     }
 
     /**

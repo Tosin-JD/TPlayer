@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_placeholder_art">
+
+    <!-- Background artwork layer (dimmed via overlay) -->
+    <ImageView
+        android:id="@+id/widget_bg_art"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/app_name" />
+
+    <!-- Gradient overlay for text readability -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_gradient_overlay" />
+
+    <!-- Content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="16dp">
+
+        <!-- Large centered album artwork -->
+        <ImageView
+            android:id="@+id/widget_artwork"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_marginTop="8dp"
+            android:scaleType="centerCrop"
+            android:background="@drawable/widget_bg_card"
+            android:src="@drawable/widget_placeholder_art"
+            android:contentDescription="@string/app_name" />
+
+        <!-- Song Title -->
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/widget_nothing_playing"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Artist -->
+        <TextView
+            android:id="@+id/widget_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:text="@string/widget_empty_artist"
+            android:textColor="#D1D4E0"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Album -->
+        <TextView
+            android:id="@+id/widget_album"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:gravity="center"
+            android:text="@string/widget_empty_album"
+            android:textColor="#8E92A4"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/widget_progress_bar"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:max="1000"
+            android:progress="0"
+            android:progressDrawable="@drawable/widget_progress_fullscreen" />
+
+        <!-- Progress Text -->
+        <TextView
+            android:id="@+id/widget_progress_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0:00 / 0:00"
+            android:textColor="#8E92A4"
+            android:textSize="11sp" />
+
+        <!-- Transport Controls Row -->
+        <LinearLayout
+            android:id="@+id/widget_transport_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Shuffle -->
+            <ImageView
+                android:id="@+id/widget_shuffle"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/widget_btn_bg"
+                android:padding="6dp"
+                android:src="@drawable/ic_widget_shuffle"
+                android:contentDescription="@string/app_name" />
+
+            <!-- Previous -->
+            <ImageView
+                android:id="@+id/widget_prev"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/widget_btn_bg"
+                android:padding="7dp"
+                android:src="@drawable/ic_widget_prev"
+                android:contentDescription="@string/app_name" />
+
+            <!-- Play / Pause -->
+            <ImageView
+                android:id="@+id/widget_play_pause"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/widget_btn_bg"
+                android:padding="8dp"
+                android:src="@drawable/ic_widget_play"
+                android:contentDescription="@string/app_name" />
+
+            <!-- Next -->
+            <ImageView
+                android:id="@+id/widget_next"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/widget_btn_bg"
+                android:padding="7dp"
+                android:src="@drawable/ic_widget_next"
+                android:contentDescription="@string/app_name" />
+
+            <!-- Repeat -->
+            <ImageView
+                android:id="@+id/widget_repeat"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/widget_btn_bg"
+                android:padding="6dp"
+                android:src="@drawable/ic_widget_repeat"
+                android:contentDescription="@string/app_name" />
+
+            <!-- Stop -->
+            <ImageView
+                android:id="@+id/widget_stop"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/widget_btn_bg"
+                android:padding="7dp"
+                android:src="@drawable/ic_widget_stop"
+                android:contentDescription="@string/app_name" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

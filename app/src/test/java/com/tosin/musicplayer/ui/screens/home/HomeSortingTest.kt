@@ -39,7 +39,8 @@ class HomeSortingTest {
         year: Int? = null,
         playCount: Int = 0,
         lastPlayedMs: Long? = null,
-        dateAddedMs: Long? = null
+        dateAddedMs: Long? = null,
+        trackNumber: Int = 0
     ) = Song(
         id = id,
         title = title,
@@ -52,6 +53,7 @@ class HomeSortingTest {
         albumArt = null,
         duration = duration,
         year = year,
+        trackNumber = trackNumber,
         playCount = playCount,
         lastPlayedMs = lastPlayedMs,
         dateAddedMs = dateAddedMs
@@ -158,6 +160,92 @@ class HomeSortingTest {
         val sorted = sortSongs(songs, LibrarySortOption.PopularityPlays)
 
         assertEquals(listOf("Popular", "Loved", "Meh"), sorted.map { it.title })
+    }
+
+    // ---- albumTrackComparator ----
+
+    @Test
+    fun `albumTrackComparator sorts by track number then title`() {
+        val songs = listOf(
+            song(1, "Bravo", trackNumber = 3),
+            song(2, "Alpha", trackNumber = 1),
+            song(3, "Charlie", trackNumber = 2),
+            song(4, "Delta", trackNumber = 0)
+        )
+
+        val sorted = songs.sortedWith(albumTrackComparator())
+
+        assertEquals(listOf("Alpha", "Charlie", "Bravo", "Delta"), sorted.map { it.title })
+    }
+
+    @Test
+    fun `albumTrackComparator pushes unknown track numbers to end`() {
+        val songs = listOf(
+            song(1, "Unknown1", trackNumber = 0),
+            song(2, "Known", trackNumber = 1),
+            song(3, "Unknown2", trackNumber = 0)
+        )
+
+        val sorted = songs.sortedWith(albumTrackComparator())
+
+        assertEquals("Known", sorted.first().title)
+        assertEquals(listOf("Unknown1", "Unknown2"), sorted.drop(1).map { it.title })
+    }
+
+    @Test
+    fun `albumTrackComparator sorts equal track numbers alphabetically`() {
+        val songs = listOf(
+            song(1, "Charlie", trackNumber = 1),
+            song(2, "Alpha", trackNumber = 1),
+            song(3, "Bravo", trackNumber = 1)
+        )
+
+        val sorted = songs.sortedWith(albumTrackComparator())
+
+        assertEquals(listOf("Alpha", "Bravo", "Charlie"), sorted.map { it.title })
+    }
+
+    @Test
+    fun `albumTrackComparator handles all unknown track numbers`() {
+        val songs = listOf(
+            song(1, "Zebra", trackNumber = 0),
+            song(2, "Alpha", trackNumber = 0),
+            song(3, "Mango", trackNumber = 0)
+        )
+
+        val sorted = songs.sortedWith(albumTrackComparator())
+
+        assertEquals(listOf("Alpha", "Mango", "Zebra"), sorted.map { it.title })
+    }
+
+    // ---- sortSongs TrackNumber ----
+
+    @Test
+    fun `sortSongs TrackNumber uses albumTrackComparator`() {
+        val songs = listOf(
+            song(1, "Bravo", trackNumber = 3),
+            song(2, "Alpha", trackNumber = 1),
+            song(3, "Charlie", trackNumber = 2),
+            song(4, "Delta", trackNumber = 0)
+        )
+
+        val sorted = sortSongs(songs, LibrarySortOption.TrackNumber)
+
+        assertEquals(listOf("Alpha", "Charlie", "Bravo", "Delta"), sorted.map { it.title })
+    }
+
+    @Test
+    fun `sortSongs TrackNumberDesc reverses albumTrackComparator`() {
+        val songs = listOf(
+            song(1, "Bravo", trackNumber = 3),
+            song(2, "Alpha", trackNumber = 1),
+            song(3, "Charlie", trackNumber = 2),
+            song(4, "Delta", trackNumber = 0)
+        )
+
+        val sorted = sortSongs(songs, LibrarySortOption.TrackNumberDesc)
+
+        assertEquals(listOf("Delta", "Bravo", "Charlie", "Alpha"), sorted.map { it.title })
     }
 
     // ---- sortLibraryGroups ----

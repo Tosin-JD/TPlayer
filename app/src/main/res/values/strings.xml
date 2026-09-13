@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">TPlayer</string>
+    <string name="widget_name">TPlayer Widget</string>
+    <string name="widget_description">Playback controls and track info for TPlayer</string>
+    <string name="widget_name_compact">TPlayer Compact</string>
+    <string name="widget_description_compact">Slim bar with quick playback controls</string>
+    <string name="widget_name_fullscreen">TPlayer Fullscreen</string>
+    <string name="widget_description_fullscreen">Immersive widget with album art and full controls</string>
+    <string name="widget_nothing_playing">Nothing playing</string>
+    <string name="widget_empty_artist">Unknown Artist</string>
+    <string name="widget_empty_album">Unknown Album</string>
 </resources>

@@ -16,6 +16,14 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.viewmodel.RepeatMode
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
+import com.tosin.musicplayer.widget.WidgetArtworkHelper
+import com.tosin.musicplayer.widget.WidgetConstants
+import com.tosin.musicplayer.widget.WidgetState
+import com.tosin.musicplayer.widget.WidgetStateRepository
+import com.tosin.musicplayer.widget.WidgetUpdateDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -221,6 +229,7 @@ class PlayerController(
                     persistPosition(_currentSong.value, mediaController?.currentPosition ?: 0L)
                     accumulateListenSegment()
                 }
+                syncWidgetState()
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -264,6 +273,7 @@ class PlayerController(
                 if (controller.isPlaying) {
                     startListenIfNeeded()
                 }
+                syncWidgetState()
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -275,6 +285,7 @@ class PlayerController(
                 if (!_isConnected.value) {
                     _isConnected.value = true
                 }
+                syncWidgetState()
             }
 
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
@@ -297,6 +308,8 @@ class PlayerController(
                 }
             }
         })
+
+        syncWidgetState()
 
         // Never mark connected here — the controller may still be in its
         // initial STATE_IDLE / mediaItemCount=0 state even when the service
@@ -410,20 +423,22 @@ class PlayerController(
                 val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
                 controller.setMediaItems(playlist.map { it.toMediaItem() }, startIndex, _progress.value.coerceAtLeast(0L))
                 controller.prepare()
-            } else if (controller.playbackState == Player.STATE_IDLE || controller.playbackState == Player.STATE_ENDED) {
-                if (controller.playbackState == Player.STATE_ENDED) {
-                    val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
-                    controller.seekTo(startIndex, 0L)
-                }
+            } else if (playlist.isNotEmpty() && controller.playbackState == Player.STATE_ENDED) {
+                val startIndex = _currentIndex.value.coerceIn(0, playlist.size - 1)
+                controller.seekTo(startIndex, 0L)
+                controller.prepare()
+            } else if (playlist.isNotEmpty() && controller.playbackState == Player.STATE_IDLE) {
                 controller.prepare()
             }
             controller.play()
         }
+        syncWidgetState()
     }
 
     fun pause() {
         pendingPlay = false
         mediaController?.pause()
+        syncWidgetState()
     }
 
     fun stop() {
@@ -441,6 +456,7 @@ class PlayerController(
         sleepTimerJob?.cancel()
         _sleepTimerRemaining.value = null
         clearABRepeat()
+        syncWidgetState()
     }
 
     fun setExcludedFolders(folders: Set<String>) {
@@ -524,6 +540,7 @@ class PlayerController(
         if (!enabled) {
             restoreOriginalPlaylistOrder()
         }
+        syncWidgetState()
     }
 
     /**
@@ -604,6 +621,7 @@ class PlayerController(
                 controller.repeatMode = Player.REPEAT_MODE_ONE
             }
         }
+        syncWidgetState()
     }
 
     fun setPauseOnZeroVolumeEnabled(enabled: Boolean) {
@@ -774,6 +792,78 @@ class PlayerController(
 
     private fun stopProgressUpdate() {
         progressJob?.cancel()
+    }
+
+    suspend fun restoreSavedQueue(startPlaying: Boolean = false): Boolean {
+        val settings = preferencesRepository.loadSettings()
+        val rememberLastPlay = (settings["rememberLastPlay"] as? Boolean) ?: true
+        if (!rememberLastPlay) return false
+
+        awaitConnection()
+        val controller = mediaController
+        val isServiceActive = controller != null && (controller.isPlaying || (controller.playbackState != Player.STATE_IDLE && controller.mediaItemCount > 0))
+        if (isServiceActive) return true
+
+        val queueState = preferencesRepository.loadQueueState() ?: return false
+        if (queueState.songIds.isEmpty()) return false
+
+        var songs = preferencesRepository.loadSongCache()
+        if (songs.isEmpty()) {
+            songs = com.tosin.musicplayer.data.local.MusicLoader(context.contentResolver).loadSongs()
+        }
+        val songMap = songs.associateBy { it.id }
+        val queueSongs = queueState.songIds.mapNotNull { songMap[it] }
+        if (queueSongs.isNotEmpty()) {
+            val startIndex = queueState.currentIndex.coerceIn(0, queueSongs.size - 1)
+            setPlaylist(queueSongs, startIndex, queueState.positionMs)
+            if (startPlaying || queueState.wasPlaying) {
+                ignoreNextPlayForStats()
+                play()
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun syncWidgetState() {
+        val song = _currentSong.value
+        val isPlayingState = _isPlaying.value
+        val progressVal = _progress.value
+        val isShuffle = isShuffleEnabled
+        val repeatModeName = currentRepeatMode.name
+        val isQueueEmpty = song == null && playlist.isEmpty()
+
+        scope.launch(Dispatchers.IO) {
+            val repo = WidgetStateRepository(context)
+            val state = WidgetState(
+                title = song?.title.orEmpty(),
+                artist = song?.artist.orEmpty(),
+                album = song?.album.orEmpty(),
+                isPlaying = isPlayingState,
+                isShuffleEnabled = isShuffle,
+                repeatMode = repeatModeName,
+                progressMs = progressVal,
+                durationMs = song?.duration ?: 0L,
+                albumArtUri = song?.albumArt,
+                isEmptyQueue = isQueueEmpty,
+                isOffline = false,
+                lastUpdatedMs = System.currentTimeMillis()
+            )
+            repo.saveState(state)
+
+            val artworkBytes = WidgetArtworkHelper.extractArtworkBytes(
+                context = context,
+                albumArtUriStr = song?.albumArt,
+                songUriStr = song?.uri
+            )
+            if (artworkBytes != null && artworkBytes.isNotEmpty()) {
+                repo.saveArtwork(artworkBytes)
+            } else {
+                repo.clearArtwork()
+            }
+
+            WidgetUpdateDispatcher.updateAll(context)
+        }
     }
 
     private fun Song.isExcluded(excluded: Set<String>): Boolean {

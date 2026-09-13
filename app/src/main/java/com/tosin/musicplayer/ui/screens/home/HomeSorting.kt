@@ -12,6 +12,15 @@ import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.state.StorageScope
 import com.tosin.musicplayer.ui.state.matchesStorageScope
 
+/**
+ * Default comparator for songs: track number first (unknowns last),
+ * then alphabetical by title.
+ */
+fun albumTrackComparator(): Comparator<Song> {
+    return compareBy<Song> { if (it.trackNumber == 0) Int.MAX_VALUE else it.trackNumber }
+        .thenBy { it.title.trim().lowercase() }
+}
+
 internal val LibrarySortMapSaver =
     Saver<SnapshotStateMap<LibraryTab, LibrarySortOption>, Map<LibraryTab, LibrarySortOption>>(
         save = { map -> LinkedHashMap(map) },
@@ -43,8 +52,8 @@ fun sortSongs(
         LibrarySortOption.ReleaseYearAsc -> songs.sortedBy { it.year ?: 0 }
         LibrarySortOption.Duration -> songs.sortedByDescending { it.duration }
         LibrarySortOption.DurationAsc -> songs.sortedBy { it.duration }
-        LibrarySortOption.TrackNumber -> songs.sortedBy { it.trackNumber }
-        LibrarySortOption.TrackNumberDesc -> songs.sortedByDescending { it.trackNumber }
+        LibrarySortOption.TrackNumber -> songs.sortedWith(albumTrackComparator())
+        LibrarySortOption.TrackNumberDesc -> songs.sortedWith(albumTrackComparator().reversed())
         LibrarySortOption.PopularityPlays -> songs.sortedByDescending { it.playCount }
         LibrarySortOption.DateAdded -> songs.sortedByDescending { it.dateAddedMs ?: 0L }
         LibrarySortOption.DateAddedOldest -> songs.sortedBy { it.dateAddedMs ?: 0L }
