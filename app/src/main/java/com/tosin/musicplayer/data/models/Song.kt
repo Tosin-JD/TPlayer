@@ -29,3 +29,17 @@ data class Playlist(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+/**
+ * Returns true if the song matches the given search query.
+ * Matches against title, artist, album, genre, and folder (case-insensitive).
+ */
+fun Song.matchesSearch(query: String): Boolean {
+    if (query.isBlank()) return true
+    val q = query.lowercase()
+    return title.lowercase().contains(q) ||
+           artist.lowercase().contains(q) ||
+           album.lowercase().contains(q) ||
+           (genre?.lowercase()?.contains(q) == true) ||
+           (folder?.lowercase()?.contains(q) == true)
+}

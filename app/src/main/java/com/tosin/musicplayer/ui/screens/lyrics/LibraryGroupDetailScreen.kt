@@ -34,12 +34,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tosin.musicplayer.data.models.Song
 import com.tosin.musicplayer.ui.components.CategoryActionsSheet
+import com.tosin.musicplayer.ui.components.GroupDetailSearchBar
+import com.tosin.musicplayer.ui.components.GroupDetailSortButton
+import com.tosin.musicplayer.ui.components.GroupDetailSummary
 import com.tosin.musicplayer.ui.components.SongActionsSheet
 import com.tosin.musicplayer.ui.components.SongItem
+import com.tosin.musicplayer.ui.screens.home.LibrarySortSheet
 import com.tosin.musicplayer.ui.state.LibraryGroup
 import com.tosin.musicplayer.ui.state.LibraryTab
 import com.tosin.musicplayer.ui.theme.AppSpacing
 import com.tosin.musicplayer.ui.theme.standardScreenPadding
+import com.tosin.musicplayer.ui.viewmodel.LibraryGroupDetailViewModel
 import com.tosin.musicplayer.ui.viewmodel.PlayerViewModel
 import com.tosin.musicplayer.ui.icons.AppIcons
 
@@ -52,14 +57,19 @@ fun LibraryGroupDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPlayer: () -> Unit
 ) {
+    val detailViewModel = remember(tab, groupTitle) {
+        LibraryGroupDetailViewModel(viewModel, tab, groupTitle)
+    }
+
     val playerState by viewModel.uiState.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
-    val songs = remember(tab, groupTitle, playerState.songs) {
-        viewModel.getSongsForGroup(tab, groupTitle)
-    }
+    val displaySongs by detailViewModel.displaySongs.collectAsState()
+    val searchQuery by detailViewModel.searchQuery.collectAsState()
+    val sortOption by detailViewModel.sortOption.collectAsState()
 
     var selectedSongForActions by remember { mutableStateOf<Song?>(null) }
     var showCategoryActions by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     selectedSongForActions?.let { song ->
         SongActionsSheet(
@@ -67,8 +77,9 @@ fun LibraryGroupDetailScreen(
             playlists = playlists,
             onDismiss = { selectedSongForActions = null },
             onPlay = { target ->
-                val index = songs.indexOfFirst { it.id == target.id }
-                if (index != -1) viewModel.onSongClick(songs, index) else viewModel.onSongClick(listOf(target), 0)
+                val index = displaySongs.indexOfFirst { it.id == target.id }
+                if (index != -1) detailViewModel.onSongClick(displaySongs, index)
+                else detailViewModel.onSongClick(listOf(target), 0)
                 onNavigateToPlayer()
             },
             onPlayNext = { target -> viewModel.playNextSongs(listOf(target)) },
@@ -79,14 +90,14 @@ fun LibraryGroupDetailScreen(
     }
 
     if (showCategoryActions) {
-        val group = remember(tab, groupTitle, songs) {
+        val group = remember(tab, groupTitle, displaySongs) {
             LibraryGroup(
                 id = "${tab.name}-$groupTitle",
                 title = groupTitle,
-                subtitle = "${songs.size} songs",
-                songCount = songs.size,
-                artwork = songs.firstOrNull { it.albumArt != null }?.albumArt,
-                songs = songs
+                subtitle = "${displaySongs.size} songs",
+                songCount = displaySongs.size,
+                artwork = displaySongs.firstOrNull { it.albumArt != null }?.albumArt,
+                songs = displaySongs
             )
         }
         CategoryActionsSheet(
@@ -101,6 +112,14 @@ fun LibraryGroupDetailScreen(
             onAddToPlaylist = { playlistId, songIds -> viewModel.addSongsToPlaylist(playlistId, songIds) },
             onCreateNewPlaylist = { name -> viewModel.createPlaylist(name) },
             onDismiss = { showCategoryActions = false }
+        )
+    }
+
+    if (showSortMenu) {
+        LibrarySortSheet(
+            selected = sortOption,
+            onSelect = { detailViewModel.updateSortOption(it) },
+            onDismiss = { showSortMenu = false }
         )
     }
 
@@ -119,7 +138,7 @@ fun LibraryGroupDetailScreen(
                                 .basicMarquee()
                         )
                         Text(
-                            text = "${tab.label} • ${songs.size} ${if (songs.size == 1) "song" else "songs"}",
+                            text = "${tab.label} • ${displaySongs.size} ${if (displaySongs.size == 1) "song" else "songs"}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -131,6 +150,7 @@ fun LibraryGroupDetailScreen(
                     }
                 },
                 actions = {
+                    GroupDetailSortButton(onClick = { showSortMenu = true })
                     IconButton(onClick = { showCategoryActions = true }) {
                         Icon(
                             Icons.AutoMirrored.Rounded.PlaylistAdd,
@@ -158,8 +178,8 @@ fun LibraryGroupDetailScreen(
                 ) {
                     FilledTonalButton(
                         onClick = {
-                            if (songs.isNotEmpty()) {
-                                viewModel.onSongClick(songs, 0)
+                            if (displaySongs.isNotEmpty()) {
+                                detailViewModel.onSongClick(displaySongs, 0)
                                 onNavigateToPlayer()
                             }
                         },
@@ -171,9 +191,9 @@ fun LibraryGroupDetailScreen(
                     }
                     OutlinedButton(
                         onClick = {
-                            if (songs.isNotEmpty()) {
-                                val shuffled = songs.shuffled()
-                                viewModel.onSongClick(shuffled, 0)
+                            if (displaySongs.isNotEmpty()) {
+                                val shuffled = displaySongs.shuffled()
+                                detailViewModel.onSongClick(shuffled, 0)
                                 onNavigateToPlayer()
                             }
                         },
@@ -186,15 +206,31 @@ fun LibraryGroupDetailScreen(
                 }
             }
 
+            item {
+                GroupDetailSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { detailViewModel.updateSearchQuery(it) },
+                    groupTitle = groupTitle
+                )
+            }
+
+            item {
+                GroupDetailSummary(
+                    songCount = displaySongs.size,
+                    sortBy = sortOption,
+                    onSortClick = { showSortMenu = true }
+                )
+            }
+
             itemsIndexed(
-                items = songs,
+                items = displaySongs,
                 key = { _, song -> song.id }
             ) { index, song ->
                 SongItem(
                     song = song,
                     isPlaying = playerState.currentSong?.id == song.id,
                     onClick = {
-                        viewModel.onSongClick(songs, index)
+                        detailViewModel.onSongClick(displaySongs, index)
                         onNavigateToPlayer()
                     },
                     onLongClick = {
